@@ -5,11 +5,14 @@ import (
 )
 
 var (
-	RedisClient redis.Client
+	RedisClient *redis.Client
+	RedisUrl    string
 )
 
 func init() {
-	//RedisClient = asynq.RedisClientOpt{
-	//	Addr: "localhost:6379", // Redis server address
-	//}
+	RedisUrl = "127.0.0.1:6379"
+	// TODO - read from env ...
+	RedisClient = redis.NewClient(&redis.Options{
+		Addr: RedisUrl, // Redis server address
+	})
 }

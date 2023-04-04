@@ -18,11 +18,9 @@ var (
 )
 
 func init() {
-	// TODO - read from env ...
-
 	// Create and configuring Redis connection.
 	asyncQRedisClient = asynq.RedisClientOpt{
-		Addr: "localhost:6379", // Redis server address
+		Addr: RedisUrl, // Redis server address
 	}
 	QueueClient = asynq.NewClient(asyncQRedisClient)
 
