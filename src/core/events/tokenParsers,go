@@ -1,0 +1,36 @@
+package events
+
+var (
+	EventParserNotFound = error.New("EventParserNotFound")
+)
+
+func parseTransferEvent(Event) (interface, error)  {
+	
+	var transferEvent schema.LogTransfer
+
+	err := contractAbi.UnpackIntoInterface(&transferEvent, "Transfer", vLog.Data)
+	if err == nil {
+		transferEvent.From = common.HexToAddress(vLog.Topics[1].Hex())
+		transferEvent.To = common.HexToAddress(vLog.Topics[2].Hex())
+		transferEvent.TokensStringValue = transferEvent.Tokens.String()
+		transferEvent.EmitterAddress = vLog.Address
+	}
+
+	return transferEvent, err
+
+}
+
+func parseApproveEvent() (interface, error) {
+
+	var approvalEvent schema.LogApproval
+
+	err := contractAbi.UnpackIntoInterface(&approvalEvent, "Approval", vLog.Data)
+	if err != nil {
+		return nil , err
+	}
+	approvalEvent.TokenOwner = common.HexToAddress(vLog.Topics[1].Hex())
+	approvalEvent.Spender = common.HexToAddress(vLog.Topics[2].Hex())
+	approvalEvent.EmitterAddress = vLog.Address
+	approvalEvent.TokensStringValue = approvalEvent.Tokens.String()
+	return approvalEvent, nil
+}
