@@ -2,6 +2,7 @@ package conf
 
 import (
 	"github.com/go-redis/redis/v8"
+	log "github.com/sirupsen/logrus"
 )
 
 var (
@@ -10,9 +11,11 @@ var (
 )
 
 func init() {
-	RedisUrl = "127.0.0.1:6379"
+	RedisUrl = "redis://localhost:6379"
 	// TODO - read from env ...
-	RedisClient = redis.NewClient(&redis.Options{
-		Addr: RedisUrl, // Redis server address
-	})
+	opts, err := redis.ParseURL(RedisUrl)
+	if err != nil {
+		log.Fatalf("Redis: %s", err)
+	}
+	RedisClient = redis.NewClient(opts)
 }

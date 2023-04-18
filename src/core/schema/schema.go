@@ -1,10 +1,12 @@
-package core
+package schema
 
 import (
+	"math/big"
+	"time"
+
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/rpc"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"time"
 )
 
 type Block struct {
@@ -23,4 +25,59 @@ type LogColl struct {
 	BlockHash   common.Hash        `json:"blockHash" bson:"blockHash"`
 	Index       uint               `bson:"logIndex" json:"logIndex"`
 	Removed     bool               `json:"removed" bson:"removed"`
+	Parsed      bool               `json:"parsed" bson:"parsed"` // Flag for parsing
+}
+
+type LogTransfer struct {
+	From              common.Address `bson:"from" json:"from"`
+	To                common.Address `bson:"to" json:"to"`
+	TokensStringValue string         `bson:"tokens" json:"tokens"`
+	EmitterAddress    common.Address `json:"address" bson:"address"`
+	Tokens            *big.Int       `bson:"-" json:"-"`
+	Name              string         `bson:"name" json:"name"`
+}
+
+// FIXME - Conflict With ERC721 Approval Event which states which NFT in collection is approved
+type LogApproval struct {
+	TokenOwner        common.Address `bson:"owner" json:"owner"`
+	Spender           common.Address `bson:"spender" json:"spender"`
+	TokensStringValue string         `bson:"tokens" json:"tokens"`
+	EmitterAddress    common.Address `json:"address" bson:"address"`
+	Tokens            *big.Int       `bson:"-" json:"-"`
+	Name              string         `bson:"name" json:"name"`
+}
+
+// LogApprovalForAll  It's a function implemented in openzeppelin vanilla contract
+type LogApprovalForAll struct {
+	TokenOwner     common.Address `bson:"owner" json:"owner"`
+	Operator       common.Address `bson:"operator" json:"operator"`
+	Approved       bool           `bson:"approved" json:"approved"`
+	EmitterAddress common.Address `json:"address" bson:"address"`
+	Name           string         `bson:"name" json:"name"`
+}
+
+type LogURL struct {
+	Value          string         `bson:"value" json:"value"`
+	NFT_ID         string         `bson:"nft_id" json:"nft_id"`
+	EmitterAddress common.Address `json:"address" bson:"address"`
+	Name           string         `bson:"name" json:"name"`
+}
+type LogTransferBatch struct {
+	Operator       common.Address `bson:"operator" json:"operator"`
+	From           common.Address `bson:"from" json:"from"`
+	To             common.Address `bson:"to" json:"to"`
+	Values         []string       `bson:"values" json:"values"`
+	NFT_IDs        []string       `bson:"nft_ids" json:"nft_ids"`
+	EmitterAddress common.Address `json:"address" bson:"address"`
+	Name           string         `bson:"name" json:"name"`
+}
+
+type LogTransferSingle struct {
+	Operator       common.Address `bson:"operator" json:"operator"`
+	From           common.Address `bson:"from" json:"from"`
+	To             common.Address `bson:"to" json:"to"`
+	Value          string         `bson:"value" json:"value"`
+	NFT_ID         string         `bson:"nft_id" json:"nft_id"`
+	EmitterAddress common.Address `json:"address" bson:"address"`
+	Name           string         `bson:"name" json:"name"`
 }

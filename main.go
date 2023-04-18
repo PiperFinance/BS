@@ -1,48 +1,44 @@
 package main
 
 import (
-	"context"
+	"encoding/json"
 	"fmt"
-	"github.com/PiperFinance/BS/src/core/conf"
-	"github.com/ethereum/go-ethereum"
-	"github.com/kamva/mgm/v3"
 	"log"
-	"math/big"
+
+	"github.com/PiperFinance/BS/src/core/conf"
+	"github.com/PiperFinance/BS/src/core/tasks"
+	"github.com/hibiken/asynq"
+	_ "github.com/joho/godotenv/autoload"
 )
+
+type BlockTask struct {
+	BlockNumber uint64
+}
 
 // ONLY FOR TESTING PURPOSES ...
 func main() {
-	current, _err := conf.EthClient.BlockNumber(context.Background())
-	if _err != nil {
-		log.Fatal(_err)
+	handlers := []conf.MuxHandler{
+		{Key: tasks.ParseBlockEventsKey, Handler: tasks.ParseBlockEventsTaskHandler},
+		{Key: tasks.FetchBlockEventsKey, Handler: tasks.BlockEventsTaskHandler},
+		{Key: tasks.BlockScanKey, Handler: tasks.BlockScanTaskHandler},
 	}
-	fmt.Printf("?/%d\r", current)
-	for i := int64(current) - 100; i < int64(current); i++ {
-		fmt.Printf("[%d/%d] remains:%d\r", i, current, (int64(current) - i))
-		fromBlock := big.NewInt(i)
-		toBlock := big.NewInt(i)
-		logs, err := conf.EthClient.FilterLogs(
-			context.Background(),
-			ethereum.FilterQuery{
-				FromBlock: fromBlock,
-				ToBlock:   toBlock},
-		)
-		for _, log := range logs {
+	//schedules := []conf.QueueSchedules{
+	//	{"@every 50s", tasks.BlockScanKey, nil},
+	//}
+	//schedules := []conf.QueueSchedules{
+	//	{"@every 1s", tasks.BlockScanKey, nil},
+	//}
+	payload, err := json.Marshal(BlockTask{BlockNumber: 16978252})
+	if err != nil {
+		log.Fatal(err)
+	}
+	asynq.NewTask("block:parse_events", payload)
 
-			mgm.Coll(&LogColl{}).CreateWithCtx(context.Background(), &LogColl{
-				Address:     log.Address,
-				Data:        log.Data,
-				Index:       log.Index,
-				Topics:      log.Topics,
-				TxIndex:     log.TxIndex,
-				BlockNumber: log.BlockNumber,
-				BlockHash:   log.BlockHash,
-				Removed:     log.Removed,
-				TxHash:      log.TxHash,
-			}, nil)
-		}
-		if err != nil {
-			fmt.Println(err)
-		}
-	}
+	go conf.RunClient()
+	go conf.RunWorker(handlers)
+	//go conf.RunScheduler(schedules)
+	fmt.Println(conf.QueueStatus())
+
+	select {}
+
 }

@@ -2,31 +2,108 @@ package tasks
 
 import (
 	"context"
+	"encoding/json"
+	"math/big"
+	"time"
+
 	"github.com/PiperFinance/BS/src/core/conf"
+	"github.com/PiperFinance/BS/src/core/events"
+	"github.com/PiperFinance/BS/src/core/schema"
+	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/go-redis/redis/v8"
 	"github.com/hibiken/asynq"
 	log "github.com/sirupsen/logrus"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 const (
-	TypeBlockSearch = "block:search"
-	// TODO - Add a model in db to save fechted block numbers
+	// LastScannedBlockKey TODO - Add a model in db to save fetched block numbers
 	// TODO - use gocache - not redis ...
-	// RedisRetrivedBlocks
 	LastScannedBlockKey = "block:lastScanned"
+
+	ParseBlockEventsKey = "block:parse_events"
+	FetchBlockEventsKey = "block:fetch_events"
+	BlockScanKey        = "block:scan"
+	//TypeBlockSearchKey  = "block:search"
 )
 
-// BlockScanTask Enqueues a task to fetch events if new block is Found
-func BlockScanTask(ctx context.Context, ethCl ethclient.Client, aqCl asynq.Client) error {
+type BlockTask struct {
+	BlockNumber uint64
+}
+
+// BlockScanTaskHandler Uses BlockScanKey and requires no arg
+func BlockScanTaskHandler(ctx context.Context, task *asynq.Task) error {
+	log.Infof("Task blockScan : Started !")
+	err := blockScanTask(ctx, *conf.EthClient, *conf.QueueClient)
+	_ = task
+	log.Infof("Task blockScan [%s] : Finished !", err)
+	return err
+}
+
+// BlockEventsTaskHandler Uses FetchBlockEventsKey and requires BlockTask as arg
+// Calls for events and store them to mongo !
+func BlockEventsTaskHandler(ctx context.Context, task *asynq.Task) error {
+	block := BlockTask{}
+	mongoCollection := conf.MongoDB.Collection("Logs")
+	err := json.Unmarshal(task.Payload(), &block)
+	if err != nil {
+		log.Infof("Task BlockEvents [%s] : Finished !", err)
+		return err
+	}
+	err = blockEventsTask(ctx, *conf.EthClient, *conf.QueueClient, *mongoCollection, block.BlockNumber)
+	log.Infof("Task BlockEvents [%s] : Finished !", err)
+	return err
+}
+
+// ParseBlockEventsTaskHandler Uses ParseBlockEventsKey and requires BlockTask as arg
+// Parses Newly fetched events
+func ParseBlockEventsTaskHandler(ctx context.Context, task *asynq.Task) error {
+	block := BlockTask{}
+	mongoParsedLogsCol := conf.MongoDB.Collection("ParsedLogs")
+	err := json.Unmarshal(task.Payload(), &block)
+	if err != nil {
+		log.Infof("Task ParseBlockEvents [%s] : Finished !", err)
+		return err
+	}
+	ctxFind, cancel := context.WithTimeout(ctx, 5*time.Minute)
+	defer cancel()
+	cursor, err := conf.MongoDB.Collection("Logs").Find(ctxFind, bson.M{"blockNumber": &block.BlockNumber})
+	defer cursor.Close(ctxFind)
+	if err != nil {
+		return err
+	}
+	events.ParseLogs(ctx, mongoParsedLogsCol, cursor)
+	log.Infof("Task ParseBlockEvents [%s] : Finished !", err)
+	return err
+}
+
+// blockScanTask Enqueues a task to fetch events if new block is Found
+func blockScanTask(ctx context.Context, ethCl ethclient.Client, aqCl asynq.Client) error {
 	currentBlock, err := ethCl.BlockNumber(ctx)
 	var lastBlock uint64
+
 	if err != nil {
 		log.Errorf("BlockScan: %s", err)
+		return err
 	}
-	lastBlock, _ = conf.RedisClient.Get(ctx, LastScannedBlockKey).Uint64()
+	if lastBlockVal := conf.RedisClient.Get(ctx, LastScannedBlockKey); lastBlockVal.Err() == redis.Nil {
+		lastBlock = conf.StartingBlock
+	} else {
+		if r, parseErr := lastBlockVal.Int(); parseErr != nil {
+			log.Errorf("blockScanTask: %s \nPossible issue is that somethings overwrote %s's value", parseErr, LastScannedBlockKey)
+			return err
+		} else {
+			lastBlock = uint64(r)
+		}
+	}
 	if lastBlock < currentBlock {
-		for blockNum := uint64(0); blockNum < currentBlock; blockNum++ {
-			EnqueueBlockJobs(blockNum)
+		for blockNum := lastBlock; blockNum < currentBlock; blockNum++ {
+			_err := enqueueBlockJobs(aqCl, blockNum)
+			if _err != nil {
+				return _err
+			}
 		}
 		status := conf.RedisClient.Set(ctx, LastScannedBlockKey, currentBlock, 0)
 		if status != nil && status.Err() != nil {
@@ -36,6 +113,55 @@ func BlockScanTask(ctx context.Context, ethCl ethclient.Client, aqCl asynq.Clien
 	return err
 }
 
-func EnqueueBlockJobs(blockNumber uint64) {
-	
+func enqueueBlockJobs(aqCl asynq.Client, blockNumber uint64) error {
+	payload, err := json.Marshal(BlockTask{blockNumber})
+	if err != nil {
+		return err
+	}
+	_, err = aqCl.Enqueue(asynq.NewTask(FetchBlockEventsKey, payload))
+	return err
+}
+
+// BlockEventsTask Fetches Block Events and stores them to mongo and enqueues another task for parsing them
+func blockEventsTask(
+	ctx context.Context,
+	ethCl ethclient.Client,
+	aqCl asynq.Client,
+	monCl mongo.Collection,
+	blockNum uint64) error {
+	blockNumBigInt := big.NewInt(int64(blockNum))
+	logs, err := ethCl.FilterLogs(
+		context.Background(),
+		ethereum.FilterQuery{
+			FromBlock: blockNumBigInt,
+			ToBlock:   blockNumBigInt},
+	)
+	if err != nil {
+		return err
+	}
+	convLogs := make([]interface{}, len(logs))
+	for i, _log := range logs {
+		convLogs[i] = schema.LogColl{
+			Address:     _log.Address,
+			Data:        _log.Data,
+			Index:       _log.Index,
+			Topics:      _log.Topics,
+			TxIndex:     _log.TxIndex,
+			BlockNumber: _log.BlockNumber,
+			BlockHash:   _log.BlockHash,
+			Removed:     _log.Removed,
+			TxHash:      _log.TxHash,
+		}
+	}
+	_, err = monCl.InsertMany(ctx, convLogs)
+	if err != nil {
+		return err
+	}
+	payload, err := json.Marshal(BlockTask{BlockNumber: blockNum})
+	if err != nil {
+		return err
+	}
+	parsBlockEventsTask := asynq.NewTask(ParseBlockEventsKey, payload)
+	_, err = aqCl.Enqueue(parsBlockEventsTask)
+	return err
 }
