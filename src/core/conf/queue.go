@@ -1,8 +1,11 @@
 package conf
 
 import (
+	"context"
+	"github.com/charmbracelet/log"
 	"github.com/hibiken/asynq"
-	"log"
+	"github.com/hibiken/asynqmon"
+	"net/http"
 	"time"
 )
 
@@ -17,15 +20,30 @@ var (
 	mux               *asynq.ServeMux
 )
 
-func init() {
-	// TODO - read from env ...
+type queueStatus struct {
+	Client    bool
+	Worker    bool
+	Scheduler bool
+}
+type QueueSchedules struct {
+	Cron    string
+	Key     string
+	Payload []byte
+}
 
+type MuxHandler struct {
+	Key     string
+	Handler func(context.Context, *asynq.Task) error
+}
+
+func init() {
 	// Create and configuring Redis connection.
 	asyncQRedisClient = asynq.RedisClientOpt{
-		Addr: "localhost:6379", // Redis server address
+		Addr: RedisUrl, // Redis server address
 	}
 	QueueClient = asynq.NewClient(asyncQRedisClient)
 
+	// Run worker server.
 	QueueServer = asynq.NewServer(asyncQRedisClient, asynq.Config{
 		Concurrency: 10,
 		Queues: map[string]int{
@@ -34,10 +52,9 @@ func init() {
 			"low":      1, // processed 10% of the time
 		},
 	})
-	// Run worker server.
 	mux = asynq.NewServeMux()
+	// Block Related
 
-	// Example of using America/Los_Angeles timezone instead of the default UTC timezone.
 	loc, err := time.LoadLocation("America/Los_Angeles")
 	if err != nil {
 		log.Fatal(err)
@@ -49,23 +66,44 @@ func init() {
 		},
 	)
 
-	// ... Register tasks
-
+}
+func QueueStatus() queueStatus {
+	return queueStatus{RunAsClient, RunAsServer, RunAsScheduler}
 }
 func RunClient() {
 	RunAsClient = true
 }
 
-func RunWorker() {
+func RunWorker(muxHandler []MuxHandler) {
 	RunAsServer = true
+	for _, mh := range muxHandler {
+		mux.HandleFunc(mh.Key, mh.Handler)
+	}
 	if err := QueueServer.Run(mux); err != nil {
 		log.Fatal(err)
 	}
 }
 
-func RunScheduler() {
+func RunScheduler(queueSchedules []QueueSchedules) {
 	RunAsScheduler = true
-	if err2 := QueueScheduler.Run(); err2 != nil {
+	for _, qs := range queueSchedules {
+		_, err := QueueScheduler.Register(qs.Cron, asynq.NewTask(qs.Key, qs.Payload))
+		if err != nil {
+			log.Fatalf("QueueScheduler: %s", err)
+		}
+	}
+	if err2 := QueueScheduler.Start(); err2 != nil {
 		log.Fatal(err2)
 	}
+}
+
+func RunMonitor(URL string) {
+	h := asynqmon.New(asynqmon.Options{
+		RootPath:     "/mon",
+		RedisConnOpt: asyncQRedisClient})
+
+	http.Handle(h.RootPath()+"/", h)
+
+	// Go to http://localhost:8080/monitoring to see asynqmon homepage.
+	log.Fatal(http.ListenAndServe(URL, nil))
 }
