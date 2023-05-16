@@ -3,6 +3,7 @@ package tasks
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"math/big"
 	"time"
 
@@ -21,12 +22,19 @@ import (
 const (
 	// LastScannedBlockKey TODO - Add a model in db to save fetched block numbers
 	// TODO - use gocache - not redis ...
+	// MultiChain ...
 	LastScannedBlockKey = "block:lastScanned"
 
-	ParseBlockEventsKey = "block:parse_events"
-	FetchBlockEventsKey = "block:fetch_events"
-	BlockScanKey        = "block:scan"
-	//TypeBlockSearchKey  = "block:search"
+	FetchBlockEventsKey  = "block:fetch_events"
+	BlockScanKey         = "block:scan"
+	ParseBlockEventsKey  = "block:parse_events"
+	UpdateUserBalanceKey = "user:update_bal"
+
+	VacuumLogsKey     = "chore:vacuum"
+	VacuumLogsLockKey = "chore:vacuum-lock"
+	VacuumLogsHeight  = 100
+
+	// TypeBlockSearchKey  = "block:search"
 )
 
 type BlockTask struct {
@@ -46,13 +54,18 @@ func BlockScanTaskHandler(ctx context.Context, task *asynq.Task) error {
 // Calls for events and store them to mongo !
 func BlockEventsTaskHandler(ctx context.Context, task *asynq.Task) error {
 	block := BlockTask{}
-	mongoCollection := conf.MongoDB.Collection("Logs")
+	mongoCollection := conf.MongoDB.Collection(conf.LogColName)
 	err := json.Unmarshal(task.Payload(), &block)
 	if err != nil {
 		log.Infof("Task BlockEvents [%s] : Finished !", err)
 		return err
 	}
 	err = blockEventsTask(ctx, *conf.EthClient, *conf.QueueClient, *mongoCollection, block.BlockNumber)
+	if err != nil {
+		log.Infof("Task BlockEvents [%s] : Finished !", err)
+		return err
+	}
+	err = enqueueParseBlockJob(*conf.QueueClient, block.BlockNumber)
 	log.Infof("Task BlockEvents [%s] : Finished !", err)
 	return err
 }
@@ -61,7 +74,7 @@ func BlockEventsTaskHandler(ctx context.Context, task *asynq.Task) error {
 // Parses Newly fetched events
 func ParseBlockEventsTaskHandler(ctx context.Context, task *asynq.Task) error {
 	block := BlockTask{}
-	mongoParsedLogsCol := conf.MongoDB.Collection("ParsedLogs")
+	mongoParsedLogsCol := conf.MongoDB.Collection(conf.ParsedLogColName)
 	err := json.Unmarshal(task.Payload(), &block)
 	if err != nil {
 		log.Infof("Task ParseBlockEvents [%s] : Finished !", err)
@@ -69,13 +82,14 @@ func ParseBlockEventsTaskHandler(ctx context.Context, task *asynq.Task) error {
 	}
 	ctxFind, cancel := context.WithTimeout(ctx, 5*time.Minute)
 	defer cancel()
-	cursor, err := conf.MongoDB.Collection("Logs").Find(ctxFind, bson.M{"blockNumber": &block.BlockNumber})
+	cursor, err := conf.MongoDB.Collection(conf.LogColName).Find(ctxFind, bson.M{"blockNumber": &block.BlockNumber})
 	defer cursor.Close(ctxFind)
 	if err != nil {
 		return err
 	}
 	events.ParseLogs(ctx, mongoParsedLogsCol, cursor)
 	log.Infof("Task ParseBlockEvents [%s] : Finished !", err)
+
 	return err
 }
 
@@ -100,7 +114,7 @@ func blockScanTask(ctx context.Context, ethCl ethclient.Client, aqCl asynq.Clien
 	}
 	if lastBlock < currentBlock {
 		for blockNum := lastBlock; blockNum < currentBlock; blockNum++ {
-			_err := enqueueBlockJobs(aqCl, blockNum)
+			_err := enqueueFetchBlockJob(aqCl, blockNum)
 			if _err != nil {
 				return _err
 			}
@@ -113,7 +127,25 @@ func blockScanTask(ctx context.Context, ethCl ethclient.Client, aqCl asynq.Clien
 	return err
 }
 
-func enqueueBlockJobs(aqCl asynq.Client, blockNumber uint64) error {
+func enqueueUpdateUserBalJob(aqCl asynq.Client, blockNumber uint64) error {
+	payload, err := json.Marshal(BlockTask{BlockNumber: blockNumber})
+	if err != nil {
+		return err
+	}
+	_, err = aqCl.Enqueue(asynq.NewTask(UpdateUserBalanceKey, payload))
+	return err
+}
+
+func enqueueParseBlockJob(aqCl asynq.Client, blockNumber uint64) error {
+	payload, err := json.Marshal(BlockTask{BlockNumber: blockNumber})
+	if err != nil {
+		return err
+	}
+	_, err = aqCl.Enqueue(asynq.NewTask(ParseBlockEventsKey, payload))
+	return err
+}
+
+func enqueueFetchBlockJob(aqCl asynq.Client, blockNumber uint64) error {
 	payload, err := json.Marshal(BlockTask{blockNumber})
 	if err != nil {
 		return err
@@ -128,13 +160,15 @@ func blockEventsTask(
 	ethCl ethclient.Client,
 	aqCl asynq.Client,
 	monCl mongo.Collection,
-	blockNum uint64) error {
+	blockNum uint64,
+) error {
 	blockNumBigInt := big.NewInt(int64(blockNum))
 	logs, err := ethCl.FilterLogs(
 		context.Background(),
 		ethereum.FilterQuery{
 			FromBlock: blockNumBigInt,
-			ToBlock:   blockNumBigInt},
+			ToBlock:   blockNumBigInt,
+		},
 	)
 	if err != nil {
 		return err
@@ -157,11 +191,22 @@ func blockEventsTask(
 	if err != nil {
 		return err
 	}
-	payload, err := json.Marshal(BlockTask{BlockNumber: blockNum})
-	if err != nil {
-		return err
-	}
-	parsBlockEventsTask := asynq.NewTask(ParseBlockEventsKey, payload)
-	_, err = aqCl.Enqueue(parsBlockEventsTask)
 	return err
+}
+
+func getLastBlock() (uint64, error) {
+	var lastBlock uint64
+	ctx := context.TODO()
+	c, cancel := context.WithTimeout(ctx, time.Second*3)
+	defer cancel()
+	if res := conf.RedisClient.Get(c, LastScannedBlockKey); res.Err() != nil {
+		return lastBlock, res.Err()
+	} else {
+		val, castErr := res.Uint64()
+		lastBlock = val
+		if castErr != nil {
+			return lastBlock, fmt.Errorf("Can not cast to %d uint , err: %s", lastBlock, castErr)
+		}
+	}
+	return lastBlock, nil
 }

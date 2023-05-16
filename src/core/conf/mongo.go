@@ -2,16 +2,22 @@ package conf
 
 import (
 	"context"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
 	"os"
 	"time"
+
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 const (
 	// LogColName Collection name for transfers events
-	LogColName = "Logs"
+	LogColName          = "Logs"
+	ParsedLogColName    = "ParsedLogs"
+	UserBalColName      = "UsersBalance"
+	TokenVolumeColName  = "TokenVolume"
+	TokenUserMapColName = "TokenUserMap"
+	UserTokenMapColName = "UserTokenMap"
 )
 
 var (

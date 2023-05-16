@@ -2,8 +2,10 @@ package conf
 
 import (
 	"context"
+	"github.com/charmbracelet/log"
 	"github.com/hibiken/asynq"
-	log "github.com/sirupsen/logrus"
+	"github.com/hibiken/asynqmon"
+	"net/http"
 	"time"
 )
 
@@ -93,4 +95,15 @@ func RunScheduler(queueSchedules []QueueSchedules) {
 	if err2 := QueueScheduler.Start(); err2 != nil {
 		log.Fatal(err2)
 	}
+}
+
+func RunMonitor(URL string) {
+	h := asynqmon.New(asynqmon.Options{
+		RootPath:     "/mon",
+		RedisConnOpt: asyncQRedisClient})
+
+	http.Handle(h.RootPath()+"/", h)
+
+	// Go to http://localhost:8080/monitoring to see asynqmon homepage.
+	log.Fatal(http.ListenAndServe(URL, nil))
 }
