@@ -31,7 +31,7 @@ func (r *StartConf) xMonPort() string {
 	AsynqMonUrl, ok := os.LookupEnv("ASYNQ_MON_URL")
 	if !ok {
 		log.Warn("ASYNQ_MON_URL not Found! Setting Default Of :8765")
-		AsynqMonUrl = ":8765"
+		AsynqMonUrl = ":7654"
 	}
 	return AsynqMonUrl
 }
