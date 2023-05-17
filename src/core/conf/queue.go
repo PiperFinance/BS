@@ -47,7 +47,7 @@ func init() {
 
 	// Run worker server.
 	QueueServer = asynq.NewServer(asyncQRedisClient, asynq.Config{
-		Concurrency: 1,
+		Concurrency: 3,
 		Queues: map[string]int{
 			"critical": 6, // processed 60% of the time
 			"default":  3, // processed 30% of the time
