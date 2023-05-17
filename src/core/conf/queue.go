@@ -40,7 +40,8 @@ type MuxHandler struct {
 func init() {
 	// Create and configuring Redis connection.
 	asyncQRedisClient = asynq.RedisClientOpt{
-		Addr: RedisUrl, // Redis server address
+		Addr: "redis:6379", // Redis server address
+		DB:   2,
 	}
 	QueueClient = asynq.NewClient(asyncQRedisClient)
 
