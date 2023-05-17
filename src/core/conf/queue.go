@@ -66,11 +66,12 @@ func init() {
 			Location: loc,
 		},
 	)
-
 }
+
 func QueueStatus() queueStatus {
 	return queueStatus{RunAsClient, RunAsServer, RunAsScheduler}
 }
+
 func RunClient() {
 	RunAsClient = true
 }
@@ -101,7 +102,8 @@ func RunScheduler(queueSchedules []QueueSchedules) {
 func RunMonitor(URL string) {
 	h := asynqmon.New(asynqmon.Options{
 		RootPath:     "/mon",
-		RedisConnOpt: asyncQRedisClient})
+		RedisConnOpt: asyncQRedisClient,
+	})
 
 	http.Handle(h.RootPath()+"/", h)
 
