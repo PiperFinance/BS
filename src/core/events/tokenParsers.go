@@ -5,10 +5,10 @@ import (
 
 	"github.com/PiperFinance/BS/src/core/contracts"
 	"github.com/PiperFinance/BS/src/core/schema"
+	"github.com/charmbracelet/log"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
-	log "github.com/sirupsen/logrus"
 )
 
 var (
@@ -45,9 +45,11 @@ func TransferEventParser(vLog types.Log) (interface{}, error) {
 	}
 	log.From = common.HexToAddress(vLog.Topics[1].Hex())
 	log.To = common.HexToAddress(vLog.Topics[2].Hex())
-	log.TokensStringValue = log.Tokens.String()
+	log.TokensStr = log.Tokens.String()
 	log.EmitterAddress = vLog.Address
 	log.Name = EventName
+	log.Status = schema.Fetched
+	log.BlockNumber = vLog.BlockNumber
 	return log, err
 }
 
@@ -61,9 +63,12 @@ func ApproveEventParser(vLog types.Log) (interface{}, error) {
 	}
 	log.TokenOwner = common.HexToAddress(vLog.Topics[1].Hex())
 	log.Spender = common.HexToAddress(vLog.Topics[2].Hex())
-	log.TokensStringValue = log.Tokens.String()
+	log.TokensStr = log.Tokens.String()
 	log.EmitterAddress = vLog.Address
 	log.Name = EventName
+	log.Status = schema.Fetched
+	log.BlockNumber = vLog.BlockNumber
+
 	return log, nil
 }
 
@@ -79,7 +84,10 @@ func ApproveForAllEventParser(vLog types.Log) (interface{}, error) {
 	log.Operator = common.HexToAddress(vLog.Topics[2].Hex())
 	// log.TokensStringValue = log.Tokens.String()
 	log.EmitterAddress = vLog.Address
+	log.Status = schema.Fetched
 	log.Name = EventName
+	log.BlockNumber = vLog.BlockNumber
+
 	return log, nil
 }
 
@@ -95,6 +103,9 @@ func URLEventParser(vLog types.Log) (interface{}, error) {
 	log.NFT_ID = vLog.Topics[1].Big().String()
 	log.EmitterAddress = vLog.Address
 	log.Name = EventName
+	log.Status = schema.Fetched
+	log.BlockNumber = vLog.BlockNumber
+
 	return log, nil
 }
 
@@ -112,6 +123,9 @@ func TransferBatchEventParser(vLog types.Log) (interface{}, error) {
 	// log.TokensStringValue = log.Tokens.String()
 	log.EmitterAddress = vLog.Address
 	log.Name = EventName
+	log.Status = schema.Fetched
+	log.BlockNumber = vLog.BlockNumber
+
 	return log, nil
 }
 
@@ -129,6 +143,9 @@ func TransferSingleEventParser(vLog types.Log) (interface{}, error) {
 	log.NFT_ID = vLog.Topics[3].Big().String()
 	log.Value = vLog.Topics[4].Big().String()
 	log.EmitterAddress = vLog.Address
+	log.Status = schema.Fetched
 	log.Name = EventName
+	log.BlockNumber = vLog.BlockNumber
+
 	return log, nil
 }

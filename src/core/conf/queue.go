@@ -2,11 +2,12 @@ package conf
 
 import (
 	"context"
+	"net/http"
+	"time"
+
 	"github.com/charmbracelet/log"
 	"github.com/hibiken/asynq"
 	"github.com/hibiken/asynqmon"
-	"net/http"
-	"time"
 )
 
 var (
@@ -45,7 +46,7 @@ func init() {
 
 	// Run worker server.
 	QueueServer = asynq.NewServer(asyncQRedisClient, asynq.Config{
-		Concurrency: 10,
+		Concurrency: 1,
 		Queues: map[string]int{
 			"critical": 6, // processed 60% of the time
 			"default":  3, // processed 30% of the time

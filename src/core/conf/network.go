@@ -1,9 +1,10 @@
 package conf
 
 import (
-	log "github.com/sirupsen/logrus"
 	"os"
 	"strconv"
+
+	"github.com/charmbracelet/log"
 
 	"github.com/ethereum/go-ethereum/ethclient"
 )
@@ -29,7 +30,7 @@ func init() {
 		}
 		StartingBlock = uint64(x)
 	} else {
-		StartingBlock = 10000
+		StartingBlock = 17281645
 	}
 	client, err := ethclient.Dial(RPCURL)
 	if err != nil {

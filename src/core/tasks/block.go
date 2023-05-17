@@ -43,10 +43,13 @@ type BlockTask struct {
 
 // BlockScanTaskHandler Uses BlockScanKey and requires no arg
 func BlockScanTaskHandler(ctx context.Context, task *asynq.Task) error {
-	log.Infof("Task blockScan : Started !")
 	err := blockScanTask(ctx, *conf.EthClient, *conf.QueueClient)
 	_ = task
-	log.Infof("Task blockScan [%s] : Finished !", err)
+	if err != nil{
+		log.Errorf("Task BlockScan [%s] : Finished !", err)
+	}else{
+		log.Infof("Task BlockScan [OK] : Finished !", )
+	}
 	return err
 }
 
@@ -57,16 +60,20 @@ func BlockEventsTaskHandler(ctx context.Context, task *asynq.Task) error {
 	mongoCollection := conf.MongoDB.Collection(conf.LogColName)
 	err := json.Unmarshal(task.Payload(), &block)
 	if err != nil {
-		log.Infof("Task BlockEvents [%s] : Finished !", err)
+		log.Errorf("Task BlockEvents [%s] : Finished !", err)
 		return err
 	}
 	err = blockEventsTask(ctx, *conf.EthClient, *conf.QueueClient, *mongoCollection, block.BlockNumber)
 	if err != nil {
-		log.Infof("Task BlockEvents [%s] : Finished !", err)
+		log.Errorf("Task BlockEvents [%s] : Finished !", err)
 		return err
 	}
 	err = enqueueParseBlockJob(*conf.QueueClient, block.BlockNumber)
-	log.Infof("Task BlockEvents [%s] : Finished !", err)
+	if err != nil{
+		log.Errorf("Task BlockEvents [%d] : Err : %s !",block.BlockNumber, err)
+	}else{
+		log.Infof("Task BlockEvents [%d] : Finished !", block.BlockNumber)
+	}
 	return err
 }
 
@@ -88,7 +95,19 @@ func ParseBlockEventsTaskHandler(ctx context.Context, task *asynq.Task) error {
 		return err
 	}
 	events.ParseLogs(ctx, mongoParsedLogsCol, cursor)
-	log.Infof("Task ParseBlockEvents [%s] : Finished !", err)
+	ctxDel, cancel := context.WithTimeout(ctx, 5*time.Minute)
+	defer cancel()
+	_ , err = conf.MongoDB.Collection(conf.LogColName).DeleteMany(ctxDel, bson.M{"blockNumber": &block.BlockNumber})
+	if err != nil {
+		return err
+	}
+	err = enqueueUpdateUserBalJob(*conf.QueueClient, block.BlockNumber)
+
+	if err != nil{
+		log.Errorf("Task ParseBlockEvents [%d] : Err : %s !",block.BlockNumber, err)
+	}else{
+		log.Infof("Task ParseBlockEvents [%d] : Finished !", block.BlockNumber)
+	}
 
 	return err
 }
@@ -100,7 +119,7 @@ func blockScanTask(ctx context.Context, ethCl ethclient.Client, aqCl asynq.Clien
 
 	if err != nil {
 		log.Errorf("BlockScan: %s", err)
-		return err
+		return err	
 	}
 	if lastBlockVal := conf.RedisClient.Get(ctx, LastScannedBlockKey); lastBlockVal.Err() == redis.Nil {
 		lastBlock = conf.StartingBlock

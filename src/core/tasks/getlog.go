@@ -3,11 +3,12 @@ package tasks
 import (
 	"context"
 	"encoding/json"
+
 	"github.com/PiperFinance/BS/src/core/conf"
 	"github.com/PiperFinance/BS/src/core/contracts"
+	"github.com/charmbracelet/log"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/hibiken/asynq"
-	log "github.com/sirupsen/logrus"
 )
 
 func GetTransferLogsTask(ctx context.Context, t *asynq.Task) error {

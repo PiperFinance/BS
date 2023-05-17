@@ -3,11 +3,11 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/PiperFinance/BS/src/core/conf"
 	"github.com/PiperFinance/BS/src/core/tasks"
-	"github.com/charmbracelet/log"
 	"github.com/hibiken/asynq"
 	_ "github.com/joho/godotenv/autoload"
 )
@@ -24,7 +24,7 @@ func main() {
 	time.Sleep(5 * time.Second)
 
 	// FIXME - Force Create Tasks Here ...
-	payload, err := json.Marshal(BlockTask{BlockNumber: 16978252})
+	payload, err := json.Marshal(BlockTask{BlockNumber: conf.StartingBlock})
 	if err != nil {
 		log.Fatal(err)
 	}
