@@ -18,7 +18,7 @@ type RedisClientExtended struct {
 }
 
 func init() {
-	RedisUrl = "redis://localhost:6379/2"
+	RedisUrl = "redis://redis:6379/2"
 	// TODO - read from env ...
 	opts, err := redis.ParseURL(RedisUrl)
 	if err != nil {
