@@ -1,4 +1,4 @@
-FROM golang:${GO_VERSION}-alpine AS builder
+FROM golang:1.20-alpine AS builder
 
 RUN apk update && apk add alpine-sdk git && rm -rf /var/cache/apk/*
 
@@ -19,6 +19,6 @@ RUN apk update && apk add ca-certificates && rm -rf /var/cache/apk/*
 RUN mkdir -p /api
 WORKDIR /api
 COPY --from=builder /api/app .
-EXPOSE 8765
+EXPOSE 7654
 
 ENTRYPOINT ["./app"]
