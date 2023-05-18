@@ -2,6 +2,7 @@ package conf
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -37,17 +38,18 @@ type MuxHandler struct {
 	Handler func(context.Context, *asynq.Task) error
 }
 
-func init() {
+func LoadQueue() {
 	// Create and configuring Redis connection.
 	asyncQRedisClient = asynq.RedisClientOpt{
-		Addr: "redis:6379", // Redis server address
-		DB:   2,
+		Addr: fmt.Sprintf("%s:%s", Config.RedisHost, Config.RedisPort),
+		DB:   Config.RedisDB,
 	}
 	QueueClient = asynq.NewClient(asyncQRedisClient)
 
 	// Run worker server.
 	QueueServer = asynq.NewServer(asyncQRedisClient, asynq.Config{
-		Concurrency: 3,
+		Concurrency:  Config.MaxConcurrency,
+		ErrorHandler: &QueueErrorHandler{},
 		Queues: map[string]int{
 			"critical": 6, // processed 60% of the time
 			"default":  3, // processed 30% of the time

@@ -2,13 +2,11 @@ package conf
 
 import (
 	"context"
+	"fmt"
 	"time"
 
-	"github.com/charmbracelet/log"
 	"github.com/go-redis/redis/v8"
 )
-
-const RedisUrl = "redis://redis:6379/2"
 
 var RedisClient *RedisClientExtended // RedisUrl    string
 
@@ -16,15 +14,13 @@ type RedisClientExtended struct {
 	redis.Client
 }
 
-func init() {
-	// RedisUrl = "redis://redis:6379/2"
-	// TODO - read from env ...
-	opts, err := redis.ParseURL(RedisUrl)
-	if err != nil {
-		log.Fatalf("Redis: %s", err)
-	}
-	cl := redis.NewClient(opts)
+func LoadRedis() {
+	cl := redis.NewClient(&redis.Options{
+		Addr: fmt.Sprintf("%s:%s", Config.RedisHost, Config.RedisPort),
+		DB:   Config.RedisDB,
+	})
 	RedisClient = &RedisClientExtended{*cl}
+	// TODO - Check Redis connection after setup
 }
 
 func (r *RedisClientExtended) GetOrSet(context context.Context, key string, value string) (string, error) {

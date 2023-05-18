@@ -3,7 +3,6 @@ package conf
 import (
 	"context"
 	"log"
-	"os"
 	"time"
 
 	"go.mongodb.org/mongo-driver/mongo"
@@ -18,29 +17,17 @@ const (
 	TokenVolumeColName  = "TokenVolume"
 	TokenUserMapColName = "TokenUserMap"
 	UserTokenMapColName = "UserTokenMap"
+	QueueErrorsColName  = "QErr"
 )
 
 var (
-	MongoUrl    string
-	MongoDBName string
-	MongoCl     *mongo.Client
-	MongoDB     *mongo.Database
+	MongoCl *mongo.Client
+	MongoDB *mongo.Database
 )
 
-func init() {
-	if url, found := os.LookupEnv("MONGO_URL"); found {
-		MongoUrl = url
-	} else {
-		MongoUrl = "mongodb://localhost:27017"
-	}
-	if db, found := os.LookupEnv("MONGO_DB"); found {
-		MongoDBName = db
-	} else {
-		MongoDBName = "TEST_BS2"
-	}
-
+func LoadMongo() {
 	ctx, _ := context.WithTimeout(context.Background(), 2*time.Second)
-	opts := options.Client().ApplyURI(MongoUrl)
+	opts := options.Client().ApplyURI(Config.MongoUrl)
 
 	var err error
 	MongoCl, err = mongo.Connect(ctx, opts)
@@ -52,5 +39,5 @@ func init() {
 	if err != nil {
 		log.Fatalf("Mongo: %s", err)
 	}
-	MongoDB = MongoCl.Database(MongoDBName)
+	MongoDB = MongoCl.Database(Config.MongoDBName)
 }
