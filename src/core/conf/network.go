@@ -30,7 +30,7 @@ func init() {
 		}
 		StartingBlock = uint64(x)
 	} else {
-		StartingBlock = 17281645
+		StartingBlock = 17287448
 	}
 	client, err := ethclient.Dial(RPCURL)
 	if err != nil {
