@@ -1,0 +1,37 @@
+version: '3'
+
+services:
+  bs:
+    hostname: bs
+    container_name: bs
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - 7654:7654
+    environment:
+      # - ASYNQ_MON_URL=":7654"
+      - REDIS_URL=redis://redis:6379/2
+      - TP_SERVER=http://tp:9765
+      - MONGO_URL=mongodb://piperFinance:Piper2022@mongo:27017
+      - MONGO_DB=ETH
+    networks:
+      - bs_default
+      - tp_default
+      - redis_db
+      - mongo_db
+
+networks:
+  tp_default:
+    external:
+      name: tp_default
+  redis_db:
+    external:
+      name: redis_db
+  mongo_db:
+    external:
+      name: mongo_db
+  bs_default:
+    driver: bridge
+    name: bs_default
