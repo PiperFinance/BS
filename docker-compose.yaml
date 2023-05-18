@@ -11,7 +11,7 @@ services:
     ports:
       - 7654:7654
     environment:
-      - ASYNQ_MON_URL=":7654"
+      # - ASYNQ_MON_URL=":7654"
       - REDIS_URL=redis://redis:6379/2
       - TP_SERVER=http://tp:9765
       - MONGO_URL=mongodb://piperFinance:Piper2022@mongo:27017

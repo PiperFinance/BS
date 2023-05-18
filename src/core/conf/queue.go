@@ -40,13 +40,14 @@ type MuxHandler struct {
 func init() {
 	// Create and configuring Redis connection.
 	asyncQRedisClient = asynq.RedisClientOpt{
-		Addr: RedisUrl, // Redis server address
+		Addr: "redis:6379", // Redis server address
+		DB:   2,
 	}
 	QueueClient = asynq.NewClient(asyncQRedisClient)
 
 	// Run worker server.
 	QueueServer = asynq.NewServer(asyncQRedisClient, asynq.Config{
-		Concurrency: 1,
+		Concurrency: 3,
 		Queues: map[string]int{
 			"critical": 6, // processed 60% of the time
 			"default":  3, // processed 30% of the time
@@ -66,11 +67,12 @@ func init() {
 			Location: loc,
 		},
 	)
-
 }
+
 func QueueStatus() queueStatus {
 	return queueStatus{RunAsClient, RunAsServer, RunAsScheduler}
 }
+
 func RunClient() {
 	RunAsClient = true
 }
@@ -101,7 +103,8 @@ func RunScheduler(queueSchedules []QueueSchedules) {
 func RunMonitor(URL string) {
 	h := asynqmon.New(asynqmon.Options{
 		RootPath:     "/mon",
-		RedisConnOpt: asyncQRedisClient})
+		RedisConnOpt: asyncQRedisClient,
+	})
 
 	http.Handle(h.RootPath()+"/", h)
 
