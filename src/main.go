@@ -16,6 +16,14 @@ type BlockTask struct {
 	BlockNumber uint64
 }
 
+func init() {
+	conf.LoadConfig("./")
+	conf.LoadNetwork()
+	conf.LoadQueue()
+	conf.LoadMongo()
+	conf.LoadRedis()
+}
+
 // ONLY FOR TESTING PURPOSES ...
 func main() {
 	// mainConf := StartConf{}
@@ -24,7 +32,7 @@ func main() {
 	time.Sleep(5 * time.Second)
 
 	// FIXME - Force Create Tasks Here ...
-	payload, err := json.Marshal(BlockTask{BlockNumber: conf.StartingBlock})
+	payload, err := json.Marshal(BlockTask{BlockNumber: conf.Config.StartingBlockNumber})
 	if err != nil {
 		log.Fatal(err)
 	}

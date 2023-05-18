@@ -45,10 +45,10 @@ type BlockTask struct {
 func BlockScanTaskHandler(ctx context.Context, task *asynq.Task) error {
 	err := blockScanTask(ctx, *conf.EthClient, *conf.QueueClient)
 	_ = task
-	if err != nil{
+	if err != nil {
 		log.Errorf("Task BlockScan [%s] : Finished !", err)
-	}else{
-		log.Infof("Task BlockScan [OK] : Finished !", )
+	} else {
+		log.Infof("Task BlockScan [OK] : Finished !")
 	}
 	return err
 }
@@ -69,9 +69,9 @@ func BlockEventsTaskHandler(ctx context.Context, task *asynq.Task) error {
 		return err
 	}
 	err = enqueueParseBlockJob(*conf.QueueClient, block.BlockNumber)
-	if err != nil{
-		log.Errorf("Task BlockEvents [%d] : Err : %s !",block.BlockNumber, err)
-	}else{
+	if err != nil {
+		log.Errorf("Task BlockEvents [%d] : Err : %s !", block.BlockNumber, err)
+	} else {
 		log.Infof("Task BlockEvents [%d] : Finished !", block.BlockNumber)
 	}
 	return err
@@ -97,15 +97,15 @@ func ParseBlockEventsTaskHandler(ctx context.Context, task *asynq.Task) error {
 	events.ParseLogs(ctx, mongoParsedLogsCol, cursor)
 	ctxDel, cancel := context.WithTimeout(ctx, 5*time.Minute)
 	defer cancel()
-	_ , err = conf.MongoDB.Collection(conf.LogColName).DeleteMany(ctxDel, bson.M{"blockNumber": &block.BlockNumber})
+	_, err = conf.MongoDB.Collection(conf.LogColName).DeleteMany(ctxDel, bson.M{"blockNumber": &block.BlockNumber})
 	if err != nil {
 		return err
 	}
 	err = enqueueUpdateUserBalJob(*conf.QueueClient, block.BlockNumber)
 
-	if err != nil{
-		log.Errorf("Task ParseBlockEvents [%d] : Err : %s !",block.BlockNumber, err)
-	}else{
+	if err != nil {
+		log.Errorf("Task ParseBlockEvents [%d] : Err : %s !", block.BlockNumber, err)
+	} else {
 		log.Infof("Task ParseBlockEvents [%d] : Finished !", block.BlockNumber)
 	}
 
@@ -119,10 +119,10 @@ func blockScanTask(ctx context.Context, ethCl ethclient.Client, aqCl asynq.Clien
 
 	if err != nil {
 		log.Errorf("BlockScan: %s", err)
-		return err	
+		return err
 	}
 	if lastBlockVal := conf.RedisClient.Get(ctx, LastScannedBlockKey); lastBlockVal.Err() == redis.Nil {
-		lastBlock = conf.StartingBlock
+		lastBlock = conf.Config.StartingBlockNumber
 	} else {
 		if r, parseErr := lastBlockVal.Int(); parseErr != nil {
 			log.Errorf("blockScanTask: %s \nPossible issue is that somethings overwrote %s's value", parseErr, LastScannedBlockKey)
