@@ -28,12 +28,13 @@ import (
 //     },
 // )
 
-var (
-	userBalanceCol = conf.MongoDB.Collection(conf.UserBalColName)
-	// tokenUserCol   = conf.MongoDB.Collection(conf.TokenUserMapColName)
-	// userTokenCol   = conf.MongoDB.Collection(conf.UserTokenMapColName)
-	TokenVolumeCol = conf.MongoDB.Collection(conf.TokenVolumeColName)
-)
+func TokenVolumeCol() *mongo.Collection {
+	return conf.MongoDB.Collection(conf.TokenVolumeColName)
+}
+
+func userBalanceCol() *mongo.Collection {
+	return conf.MongoDB.Collection(conf.UserBalColName)
+}
 
 func getBalance(ctx context.Context, user common.Address, token common.Address) (*big.Int, error) {
 	if caller, err := contracts.NewERC20Caller(token, conf.EthClient); err != nil {
@@ -50,7 +51,7 @@ func processUserBal(ctx context.Context, blockNumber uint64, user common.Address
 		ChangedAt: blockNumber,
 	}
 	filter := bson.D{{Key: "user", Value: user}, {Key: "token", Value: token}}
-	if res := userBalanceCol.FindOne(ctx, filter); res.Err() != nil {
+	if res := userBalanceCol().FindOne(ctx, filter); res.Err() != nil {
 		if res.Err() == mongo.ErrNoDocuments {
 			// TODO - Get For the first time ...
 			bal, err := getBalance(ctx, user, token)
@@ -59,7 +60,7 @@ func processUserBal(ctx context.Context, blockNumber uint64, user common.Address
 			}
 			userBal.SetBalance(bal)
 			userBal.StartedAt = blockNumber
-			userBalanceCol.InsertOne(ctx, &userBal)
+			userBalanceCol().InsertOne(ctx, &userBal)
 		} else {
 			return nil, res.Err()
 		}
@@ -72,7 +73,7 @@ func processUserBal(ctx context.Context, blockNumber uint64, user common.Address
 		return nil, err
 	}
 	update := bson.D{{Key: "$set", Value: bson.D{{Key: "bal", Value: userBal.GetBalanceStr()}, {Key: "c_t", Value: blockNumber}}}}
-	res, err := userBalanceCol.UpdateOne(ctx, filter, update)
+	res, err := userBalanceCol().UpdateOne(ctx, filter, update)
 	if err != nil {
 		return nil, err
 	}
