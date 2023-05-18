@@ -2,3 +2,4 @@
 .idea/
 .env
 src/__debug_bin
+config
