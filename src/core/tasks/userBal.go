@@ -36,11 +36,13 @@ func userBalanceCol() *mongo.Collection {
 	return conf.MongoDB.Collection(conf.UserBalColName)
 }
 
-func getBalance(ctx context.Context, user common.Address, token common.Address) (*big.Int, error) {
+func getBalance(ctx context.Context, blockNumber uint64, user common.Address, token common.Address) (*big.Int, error) {
 	if caller, err := contracts.NewERC20Caller(token, conf.EthClient); err != nil {
 		return nil, err
 	} else {
-		return caller.BalanceOf(&bind.CallOpts{Context: ctx}, user)
+		return caller.BalanceOf(&bind.CallOpts{
+			Context: ctx, BlockNumber: big.NewInt(int64(blockNumber - 1)),
+		}, user)
 	}
 }
 
@@ -54,7 +56,8 @@ func processUserBal(ctx context.Context, blockNumber uint64, user common.Address
 	if res := userBalanceCol().FindOne(ctx, filter); res.Err() != nil {
 		if res.Err() == mongo.ErrNoDocuments {
 			// TODO - Get For the first time ...
-			bal, err := getBalance(ctx, user, token)
+			fmt.Println(user.String(), token.String())
+			bal, err := getBalance(ctx, blockNumber, user, token)
 			if err != nil {
 				return nil, err
 			}
@@ -69,7 +72,7 @@ func processUserBal(ctx context.Context, blockNumber uint64, user common.Address
 			return nil, err
 		}
 	}
-	if err := userBal.SubBal(amount); err != nil {
+	if err := userBal.AddBal(amount); err != nil {
 		return nil, err
 	}
 	update := bson.D{{Key: "$set", Value: bson.D{{Key: "bal", Value: userBal.GetBalanceStr()}, {Key: "c_t", Value: blockNumber}}}}
