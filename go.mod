@@ -5,9 +5,8 @@ go 1.20
 require (
 	github.com/charmbracelet/log v0.2.1
 	github.com/ethereum/go-ethereum v1.11.5
-	github.com/go-redis/redis v6.15.9+incompatible
+	// github.com/go-redis/redis v6.15.9+incompatible
 	github.com/go-redis/redis/v8 v8.11.5
-	github.com/gofiber/fiber v1.14.6
 	github.com/gofiber/fiber/v2 v2.46.0
 	github.com/hibiken/asynq v0.24.0
 	github.com/hibiken/asynqmon v0.7.1
@@ -17,8 +16,6 @@ require (
 
 require (
 	github.com/andybalholm/brotli v1.0.5 // indirect
-	github.com/gofiber/utils v0.0.10 // indirect
-	github.com/gorilla/schema v1.1.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
