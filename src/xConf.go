@@ -3,6 +3,8 @@ package main
 import (
 	"os"
 
+	"github.com/PiperFinance/BS/src/api"
+	"github.com/PiperFinance/BS/src/api/views"
 	"github.com/PiperFinance/BS/src/core/conf"
 	"github.com/PiperFinance/BS/src/core/tasks"
 	"github.com/PiperFinance/BS/src/core/tasks/handlers"
@@ -27,6 +29,12 @@ func (r *StartConf) xHandlers() []conf.MuxHandler {
 		{Key: tasks.UpdateUserBalanceKey, Handler: handlers.UpdateUserBalTaskHandler, Q: asynq.Queue(conf.ProcessQ)},     // 4
 		{Key: tasks.UpdateUserApproveKey, Handler: handlers.UpdateUserApproveTaskHandler, Q: asynq.Queue(conf.ProcessQ)}, // 4
 		{Key: tasks.VacuumLogsKey, Handler: handlers.VacuumLogHandler, Q: asynq.Queue(conf.UnImportantQ)},                //~TBD
+	}
+}
+
+func (r *StartConf) xUrls() []api.Route {
+	return []api.Route{
+		{Path: "/lsb", Method: api.Get, Handler: views.LastScannedBlock},
 	}
 }
 
@@ -55,6 +63,10 @@ func (r *StartConf) StartMon() {
 	go conf.RunMonitor(r.xMonPort())
 }
 
+func (r *StartConf) StartApi() {
+	go api.RunApi(":1300", r.xUrls())
+}
+
 func (r *StartConf) StartAll() {
 	log.Info("Starting Worker")
 	r.StartWorker() // Consumer
@@ -64,4 +76,6 @@ func (r *StartConf) StartAll() {
 	r.StartScheduler() // Scheduled Producer
 	log.Info("Starting AsynQMon")
 	r.StartMon() // asynqMon
+	log.Info("Starting Api")
+	r.StartApi()
 }

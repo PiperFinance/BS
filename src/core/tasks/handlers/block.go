@@ -3,7 +3,6 @@ package handlers
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"math/big"
 	"time"
 
@@ -24,6 +23,7 @@ import (
 )
 
 // BlockScanTaskHandler Uses BlockScanKey and requires no arg
+// Start Scanning For new blocks -> enqueues a new fetch block task at the end
 func BlockScanTaskHandler(ctx context.Context, task *asynq.Task) error {
 	err := blockScanTask(ctx, *conf.EthClient, *conf.QueueClient)
 	_ = task
@@ -50,6 +50,17 @@ func BlockEventsTaskHandler(ctx context.Context, task *asynq.Task) error {
 		log.Errorf("Task BlockEvents [%s] : Finished !", err)
 		return err
 	}
+
+	bm := schema.BlockM{BlockNumber: block.BlockNumber}
+	bm.SetFetched()
+	if res, err := conf.MongoDB.Collection(conf.BlockColName).ReplaceOne(
+		ctx,
+		bson.M{"no": block.BlockNumber}, &bm); err != nil {
+		log.Errorf("BlockEventsTaskHandler")
+	} else {
+		log.Infof("Replace Result : %s modified", res.ModifiedCount)
+	}
+
 	err = enqueuer.EnqueueParseBlockJob(*conf.QueueClient, block.BlockNumber)
 	if err != nil {
 		log.Errorf("Task BlockEvents [%d] : Err : %s !", block.BlockNumber, err)
@@ -83,8 +94,18 @@ func ParseBlockEventsTaskHandler(ctx context.Context, task *asynq.Task) error {
 	if err != nil {
 		return err
 	}
-	err = enqueuer.EnqueueUpdateUserBalJob(*conf.QueueClient, block.BlockNumber)
 
+	bm := schema.BlockM{BlockNumber: block.BlockNumber}
+	bm.SetParsed()
+	if res, err := conf.MongoDB.Collection(conf.BlockColName).ReplaceOne(
+		ctx,
+		bson.M{"no": block.BlockNumber}, &bm); err != nil {
+		log.Errorf("BlockEventsTaskHandler")
+	} else {
+		log.Infof("Replace Result : %s modified", res.ModifiedCount)
+	}
+
+	err = enqueuer.EnqueueUpdateUserBalJob(*conf.QueueClient, block.BlockNumber)
 	if err != nil {
 		log.Errorf("Task ParseBlockEvents [%d] : Err : %s !", block.BlockNumber, err)
 	} else {
@@ -115,7 +136,9 @@ func blockScanTask(ctx context.Context, ethCl ethclient.Client, aqCl asynq.Clien
 	}
 	if lastBlock < currentBlock {
 		for blockNum := lastBlock; blockNum < currentBlock; blockNum++ {
-			conf.MongoDB.Collection(conf.BlockColName).InsertOne(ctx, blockNum)
+			b := schema.BlockM{BlockNumber: blockNum}
+			b.SetScanned()
+			conf.MongoDB.Collection(conf.BlockColName).InsertOne(ctx, &b)
 			_err := enqueuer.EnqueueFetchBlockJob(aqCl, blockNum)
 			if _err != nil {
 				return _err
@@ -168,21 +191,4 @@ func blockEventsTask(
 	}
 	_ = aqCl
 	return err
-}
-
-func getLastBlock() (uint64, error) {
-	var lastBlock uint64
-	ctx := context.TODO()
-	c, cancel := context.WithTimeout(ctx, time.Second*3)
-	defer cancel()
-	if res := conf.RedisClient.Get(c, tasks.LastScannedBlockKey); res.Err() != nil {
-		return lastBlock, res.Err()
-	} else {
-		val, castErr := res.Uint64()
-		lastBlock = val
-		if castErr != nil {
-			return lastBlock, fmt.Errorf("Can not cast to %d uint , err: %s", lastBlock, castErr)
-		}
-	}
-	return lastBlock, nil
 }

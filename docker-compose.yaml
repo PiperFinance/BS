@@ -10,6 +10,7 @@ services:
     restart: always
     ports:
       - 7654:7654
+      - 1300:1300
     environment:
       # - ASYNQ_MON_URL=":7654"
       - REDIS_URL=redis://redis:6379/2

@@ -2,6 +2,7 @@ package conf
 
 import (
 	"log"
+	"time"
 
 	"github.com/spf13/viper"
 )
@@ -14,10 +15,10 @@ type config struct {
 	RedisHost string `mapstructure:"REDIS_HOST"`
 	RedisDB   int    `mapstructure:"REDIS_DB"`
 
-	MaxConcurrency int `mapstructure:"MAX_CONCURRENT_WORKER"`
-
-	StartingBlockNumber uint64 `mapstructure:"STARTING_BLOCK_NUMBER" default:"3"`
-	RPCUrl              string `mapstructure:"RPC_URL"`
+	MaxConcurrency      int           `mapstructure:"MAX_CONCURRENT_WORKER"`
+	MaxTaskTimeOut      time.Duration `mapstructure:"MaxTaskTimeOut" , default:"10m"`
+	StartingBlockNumber uint64        `mapstructure:"STARTING_BLOCK_NUMBER" default:"3"`
+	RPCUrl              string        `mapstructure:"RPC_URL"`
 }
 
 var Config config

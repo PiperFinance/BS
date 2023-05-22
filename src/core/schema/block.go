@@ -14,11 +14,31 @@ type BlockM struct {
 	StartedAt     time.Time `bson:"s_at"`
 }
 
-func (bm *BlockM) Scan(t BlockTask) BlockM {
+func (bm *BlockM) SetScanned() BlockM {
 	return BlockM{
 		ScannerStatus: Scanned,
-		BlockNumber:   t.BlockNumber,
 		UpdatedAt:     time.Now(),
 		StartedAt:     time.Now(),
+	}
+}
+
+func (bm *BlockM) SetFetched() BlockM {
+	return BlockM{
+		ScannerStatus: Fetched,
+		UpdatedAt:     time.Now(),
+	}
+}
+
+func (bm *BlockM) SetParsed() BlockM {
+	return BlockM{
+		ScannerStatus: Scanned,
+		UpdatedAt:     time.Now(),
+	}
+}
+
+func (bm *BlockM) SetAdded() BlockM {
+	return BlockM{
+		ScannerStatus: Added,
+		UpdatedAt:     time.Now(),
 	}
 }

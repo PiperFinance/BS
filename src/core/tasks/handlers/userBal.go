@@ -64,6 +64,16 @@ func UpdateUserBalTaskHandler(ctx context.Context, task *asynq.Task) error {
 		}
 		processTransferLog(ctx, block.BlockNumber, transfer)
 	}
+
+	bm := schema.BlockM{BlockNumber: block.BlockNumber}
+	bm.SetParsed()
+	if res, err := conf.MongoDB.Collection(conf.BlockColName).ReplaceOne(
+		ctx,
+		bson.M{"no": block.BlockNumber}, &bm); err != nil {
+		log.Errorf("BlockEventsTaskHandler")
+	} else {
+		log.Infof("Replace Result : %s modified", res.ModifiedCount)
+	}
 	if err != nil {
 		log.Errorf("Task UpdateUserBal [%d] : Err : %s !", block.BlockNumber, err)
 	} else {

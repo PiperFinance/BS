@@ -9,12 +9,12 @@ import (
 	"github.com/hibiken/asynq"
 )
 
-func EnqueueUpdateUserBalJob(aqCl asynq.Client, blockNumber uint64) error {
+func EnqueueFetchBlockJob(aqCl asynq.Client, blockNumber uint64) error {
 	payload, err := json.Marshal(schema.BlockTask{BlockNumber: blockNumber})
 	if err != nil {
 		return err
 	}
-	_, err = aqCl.Enqueue(asynq.NewTask(tasks.UpdateUserBalanceKey, payload), asynq.Queue(conf.ProcessQ))
+	_, err = aqCl.Enqueue(asynq.NewTask(tasks.FetchBlockEventsKey, payload), asynq.Queue(conf.FetchQ))
 	return err
 }
 
@@ -27,11 +27,11 @@ func EnqueueParseBlockJob(aqCl asynq.Client, blockNumber uint64) error {
 	return err
 }
 
-func EnqueueFetchBlockJob(aqCl asynq.Client, blockNumber uint64) error {
+func EnqueueUpdateUserBalJob(aqCl asynq.Client, blockNumber uint64) error {
 	payload, err := json.Marshal(schema.BlockTask{BlockNumber: blockNumber})
 	if err != nil {
 		return err
 	}
-	_, err = aqCl.Enqueue(asynq.NewTask(tasks.FetchBlockEventsKey, payload), asynq.Queue(conf.FetchQ))
+	_, err = aqCl.Enqueue(asynq.NewTask(tasks.UpdateUserBalanceKey, payload), asynq.Queue(conf.ProcessQ))
 	return err
 }
