@@ -41,9 +41,7 @@ var (
 	uRIESigHash            common.Hash
 	transferBatchESigHash  common.Hash
 	transferSingleESigHash common.Hash
-
 )
-
 
 func init() {
 	uRIESigHash = crypto.Keccak256Hash([]byte(URI_ESig))
@@ -54,30 +52,32 @@ func init() {
 	transferSingleESigHash = crypto.Keccak256Hash([]byte(TransferSingleESig))
 }
 
-func ErrEventParserNotFound(event string ) error {
-	return fmt.Errorf("EventParserNotFound: event-hash=%s " , event)
-
+func ErrEventParserNotFound(event string) error {
+	return fmt.Errorf("EventParserNotFound: event-hash=%s ", event)
 }
 
 // ParseLog Select Appropriate EventParser For found event !
 func ParseLog(vLog types.Log) (interface{}, error) {
-	event := vLog.Topics[0].Hex()
-	switch event  {
-	case transferESigHash.Hex():
-		return TransferEventParser(vLog)
-	case approvalESigHash.Hex():
-		return ApproveEventParser(vLog)
-	case approvalForAllESigHash.Hex():
-		return ApproveForAllEventParser(vLog)
-	case uRIESigHash.Hex():
-		return URLEventParser(vLog)
-	case transferBatchESigHash.Hex():
-		return TransferBatchEventParser(vLog)
-	case transferSingleESigHash.Hex():
-		return TransferSingleEventParser(vLog)
-	default:
-		return nil, ErrEventParserNotFound(event)
+	if len(vLog.Topics) > 1 {
+		event := vLog.Topics[0].Hex()
+		switch event {
+		case transferESigHash.Hex():
+			return TransferEventParser(vLog)
+		case approvalESigHash.Hex():
+			return ApproveEventParser(vLog)
+		case approvalForAllESigHash.Hex():
+			return ApproveForAllEventParser(vLog)
+		case uRIESigHash.Hex():
+			return URLEventParser(vLog)
+		case transferBatchESigHash.Hex():
+			return TransferBatchEventParser(vLog)
+		case transferSingleESigHash.Hex():
+			return TransferSingleEventParser(vLog)
+		default:
+			return nil, ErrEventParserNotFound(event)
+		}
 	}
+	return nil, ErrEventParserNotFound("No Event")
 }
 
 // ParseLogs Parsers different types of log event and store them to database
@@ -102,5 +102,4 @@ func ParseLogs(ctx context.Context, mongoCol *mongo.Collection, logCursor *mongo
 			}
 		}
 	}
-	
 }
