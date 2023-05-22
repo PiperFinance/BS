@@ -31,9 +31,9 @@ func LastScannedBlocks(c *fiber.Ctx) error {
 			"err": err.Error(),
 		})
 	} else {
-		r := make([]schema.BlockM, 10)
+		r := make([]schema.BlockM, 100)
 		i := 0
-		for i < 10 && cursor.Next(c.Context()) {
+		for i < 100 && cursor.Next(c.Context()) {
 			err = cursor.Decode(&r[i])
 			if err != nil {
 				log.Errorf("Decoding Block Failed @ %s", err)

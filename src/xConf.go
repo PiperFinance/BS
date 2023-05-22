@@ -35,13 +35,16 @@ func (r *StartConf) xHandlers() []conf.MuxHandler {
 func (r *StartConf) xUrls() []api.Route {
 	return []api.Route{
 		{Path: "/lsb", Method: api.Get, Handler: views.LastScannedBlock},
+		{Path: "/lsb/100", Method: api.Get, Handler: views.LastScannedBlocks},
+		{Path: "/bal", Method: api.Get, Handler: views.GetBal},
+		{Path: "/bal/users", Method: api.Get, Handler: views.GetUsers},
 	}
 }
 
 func (r *StartConf) xMonPort() string {
 	AsynqMonUrl, ok := os.LookupEnv("ASYNQ_MON_URL")
 	if !ok {
-		log.Warn("ASYNQ_MON_URL not Found! Setting Default Of :8765")
+		log.Warn("ASYNQ_MON_URL not Found! Setting Default Of :7654")
 		AsynqMonUrl = ":7654"
 	}
 	return AsynqMonUrl
