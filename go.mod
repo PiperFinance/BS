@@ -5,11 +5,11 @@ go 1.20
 require (
 	github.com/charmbracelet/log v0.2.1
 	github.com/ethereum/go-ethereum v1.11.5
+	github.com/go-redis/redis v6.15.9+incompatible
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/hibiken/asynq v0.24.0
 	github.com/hibiken/asynqmon v0.7.1
 	github.com/joho/godotenv v1.5.1
-	github.com/sirupsen/logrus v1.9.0
 	go.mongodb.org/mongo-driver v1.8.3
 )
 
@@ -41,7 +41,6 @@ require (
 	github.com/go-stack/stack v1.8.1 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
-	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/gorilla/mux v1.8.0 // indirect
 	github.com/gorilla/websocket v1.4.2 // indirect

@@ -6,3 +6,4 @@ REDIS_DB=6
 MAX_CONCURRENT_WORKER=3
 STARTING_BLOCK_NUMBER=17288765
 RPC_URL="https://eth.llamarpc.com"
+# RPC_URL="https://eth.llamarpc.com"

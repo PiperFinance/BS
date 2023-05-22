@@ -1,4 +1,4 @@
-package tasks
+package handlers
 
 import (
 	"context"
@@ -10,36 +10,18 @@ import (
 	"github.com/PiperFinance/BS/src/core/conf"
 	"github.com/PiperFinance/BS/src/core/events"
 	"github.com/PiperFinance/BS/src/core/schema"
+	"github.com/PiperFinance/BS/src/core/tasks"
+	"github.com/PiperFinance/BS/src/core/tasks/enqueuer"
+	"github.com/go-redis/redis"
+
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/ethclient"
-	"github.com/go-redis/redis/v8"
 	"github.com/hibiken/asynq"
-	log "github.com/sirupsen/logrus"
+
+	"github.com/charmbracelet/log"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
-
-const (
-	// LastScannedBlockKey TODO - Add a model in db to save fetched block numbers
-	// TODO - use gocache - not redis ...
-	// MultiChain ...
-	LastScannedBlockKey = "block:lastScanned"
-
-	FetchBlockEventsKey  = "block:fetch_events"
-	BlockScanKey         = "block:scan"
-	ParseBlockEventsKey  = "block:parse_events"
-	UpdateUserBalanceKey = "user:update_bal"
-
-	VacuumLogsKey     = "chore:vacuum"
-	VacuumLogsLockKey = "chore:vacuum-lock"
-	VacuumLogsHeight  = 100
-
-	// TypeBlockSearchKey  = "block:search"
-)
-
-type BlockTask struct {
-	BlockNumber uint64
-}
 
 // BlockScanTaskHandler Uses BlockScanKey and requires no arg
 func BlockScanTaskHandler(ctx context.Context, task *asynq.Task) error {
@@ -56,7 +38,7 @@ func BlockScanTaskHandler(ctx context.Context, task *asynq.Task) error {
 // BlockEventsTaskHandler Uses FetchBlockEventsKey and requires BlockTask as arg
 // Calls for events and store them to mongo !
 func BlockEventsTaskHandler(ctx context.Context, task *asynq.Task) error {
-	block := BlockTask{}
+	block := schema.BlockTask{}
 	mongoCollection := conf.MongoDB.Collection(conf.LogColName)
 	err := json.Unmarshal(task.Payload(), &block)
 	if err != nil {
@@ -68,7 +50,7 @@ func BlockEventsTaskHandler(ctx context.Context, task *asynq.Task) error {
 		log.Errorf("Task BlockEvents [%s] : Finished !", err)
 		return err
 	}
-	err = enqueueParseBlockJob(*conf.QueueClient, block.BlockNumber)
+	err = enqueuer.EnqueueParseBlockJob(*conf.QueueClient, block.BlockNumber)
 	if err != nil {
 		log.Errorf("Task BlockEvents [%d] : Err : %s !", block.BlockNumber, err)
 	} else {
@@ -80,7 +62,7 @@ func BlockEventsTaskHandler(ctx context.Context, task *asynq.Task) error {
 // ParseBlockEventsTaskHandler Uses ParseBlockEventsKey and requires BlockTask as arg
 // Parses Newly fetched events
 func ParseBlockEventsTaskHandler(ctx context.Context, task *asynq.Task) error {
-	block := BlockTask{}
+	block := schema.BlockTask{}
 	mongoParsedLogsCol := conf.MongoDB.Collection(conf.ParsedLogColName)
 	err := json.Unmarshal(task.Payload(), &block)
 	if err != nil {
@@ -101,7 +83,7 @@ func ParseBlockEventsTaskHandler(ctx context.Context, task *asynq.Task) error {
 	if err != nil {
 		return err
 	}
-	err = enqueueUpdateUserBalJob(*conf.QueueClient, block.BlockNumber)
+	err = enqueuer.EnqueueUpdateUserBalJob(*conf.QueueClient, block.BlockNumber)
 
 	if err != nil {
 		log.Errorf("Task ParseBlockEvents [%d] : Err : %s !", block.BlockNumber, err)
@@ -121,11 +103,11 @@ func blockScanTask(ctx context.Context, ethCl ethclient.Client, aqCl asynq.Clien
 		log.Errorf("BlockScan: %s", err)
 		return err
 	}
-	if lastBlockVal := conf.RedisClient.Get(ctx, LastScannedBlockKey); lastBlockVal.Err() == redis.Nil {
+	if lastBlockVal := conf.RedisClient.Get(ctx, tasks.LastScannedBlockKey); lastBlockVal.Err() == redis.Nil {
 		lastBlock = conf.Config.StartingBlockNumber
 	} else {
 		if r, parseErr := lastBlockVal.Int(); parseErr != nil {
-			log.Errorf("blockScanTask: %s \nPossible issue is that somethings overwrote %s's value", parseErr, LastScannedBlockKey)
+			log.Errorf("blockScanTask: %s \nPossible issue is that somethings overwrote %s's value", parseErr, tasks.LastScannedBlockKey)
 			return err
 		} else {
 			lastBlock = uint64(r)
@@ -133,43 +115,17 @@ func blockScanTask(ctx context.Context, ethCl ethclient.Client, aqCl asynq.Clien
 	}
 	if lastBlock < currentBlock {
 		for blockNum := lastBlock; blockNum < currentBlock; blockNum++ {
-			_err := enqueueFetchBlockJob(aqCl, blockNum)
+			conf.MongoDB.Collection(conf.BlockColName).InsertOne(ctx, blockNum)
+			_err := enqueuer.EnqueueFetchBlockJob(aqCl, blockNum)
 			if _err != nil {
 				return _err
 			}
 		}
-		status := conf.RedisClient.Set(ctx, LastScannedBlockKey, currentBlock, 0)
+		status := conf.RedisClient.Set(ctx, tasks.LastScannedBlockKey, currentBlock, 0)
 		if status != nil && status.Err() != nil {
 			log.Errorf("BlockScan: %s", status.Err())
 		}
 	}
-	return err
-}
-
-func enqueueUpdateUserBalJob(aqCl asynq.Client, blockNumber uint64) error {
-	payload, err := json.Marshal(BlockTask{BlockNumber: blockNumber})
-	if err != nil {
-		return err
-	}
-	_, err = aqCl.Enqueue(asynq.NewTask(UpdateUserBalanceKey, payload))
-	return err
-}
-
-func enqueueParseBlockJob(aqCl asynq.Client, blockNumber uint64) error {
-	payload, err := json.Marshal(BlockTask{BlockNumber: blockNumber})
-	if err != nil {
-		return err
-	}
-	_, err = aqCl.Enqueue(asynq.NewTask(ParseBlockEventsKey, payload))
-	return err
-}
-
-func enqueueFetchBlockJob(aqCl asynq.Client, blockNumber uint64) error {
-	payload, err := json.Marshal(BlockTask{blockNumber})
-	if err != nil {
-		return err
-	}
-	_, err = aqCl.Enqueue(asynq.NewTask(FetchBlockEventsKey, payload))
 	return err
 }
 
@@ -210,6 +166,7 @@ func blockEventsTask(
 	if err != nil {
 		return err
 	}
+	_ = aqCl
 	return err
 }
 
@@ -218,7 +175,7 @@ func getLastBlock() (uint64, error) {
 	ctx := context.TODO()
 	c, cancel := context.WithTimeout(ctx, time.Second*3)
 	defer cancel()
-	if res := conf.RedisClient.Get(c, LastScannedBlockKey); res.Err() != nil {
+	if res := conf.RedisClient.Get(c, tasks.LastScannedBlockKey); res.Err() != nil {
 		return lastBlock, res.Err()
 	} else {
 		val, castErr := res.Uint64()
