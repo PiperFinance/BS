@@ -1,6 +1,7 @@
 package conf
 
 import (
+	"fmt"
 	"log"
 	"time"
 
@@ -33,7 +34,6 @@ func LoadConfig(path string) error {
 	viper.AddConfigPath(path)
 	viper.SetConfigType("env")
 	// viper.SetConfigName("app")
-
 	viper.AutomaticEnv()
 
 	err := viper.ReadInConfig()
@@ -46,6 +46,8 @@ func LoadConfig(path string) error {
 		log.Fatal(err)
 	}
 	Config = conf
-
+	fmt.Printf("redis[ r://%s:%s/%d] \n ", Config.RedisHost, conf.RedisPort, conf.RedisDB)
+	fmt.Printf("mongo[ m://%s/%s ] \n", Config.MongoUrl, conf.MongoDBName)
+	fmt.Printf("endpoints[ mon://%s  api://%s ] \n ", Config.AsynqMonUrl, conf.ApiUrl)
 	return err
 }
