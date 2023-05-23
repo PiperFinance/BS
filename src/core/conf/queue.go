@@ -55,13 +55,13 @@ func LoadQueue() {
 	// Create and configuring Redis connection.
 	asyncQRedisClient = asynq.RedisClientOpt{
 		Addr: fmt.Sprintf("%s:%s", Config.RedisHost, Config.RedisPort),
-		DB:   Config.RedisDB,
+		DB:   int(Config.RedisDB),
 	}
 	QueueClient = asynq.NewClient(asyncQRedisClient)
 
 	// Run worker server.
 	QueueServer = asynq.NewServer(asyncQRedisClient, asynq.Config{
-		Concurrency:  Config.MaxConcurrency,
+		Concurrency:  int(Config.MaxConcurrency),
 		ErrorHandler: &QueueErrorHandler{},
 		Queues: map[string]int{
 			ProcessQ:     7,

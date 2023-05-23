@@ -17,7 +17,7 @@ type RedisClientExtended struct {
 func LoadRedis() {
 	cl := redis.NewClient(&redis.Options{
 		Addr: fmt.Sprintf("%s:%s", Config.RedisHost, Config.RedisPort),
-		DB:   Config.RedisDB,
+		DB:   int(Config.RedisDB),
 	})
 	RedisClient = &RedisClientExtended{*cl}
 	// TODO - Check Redis connection after setup
