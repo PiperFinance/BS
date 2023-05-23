@@ -11,6 +11,11 @@ x-scanner:
     - redis_db
     - mongo_db
   restart: always
+  logging:
+    driver: "json-file"
+    options:
+      max-size: "5M"
+      max-file: "5"
 
 x-db:
   &db
