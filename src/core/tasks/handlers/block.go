@@ -118,6 +118,9 @@ func ParseBlockEventsTaskHandler(ctx context.Context, task *asynq.Task) error {
 // blockScanTask Enqueues a task to fetch events if new block is Found
 func blockScanTask(ctx context.Context, ethCl ethclient.Client, aqCl asynq.Client) error {
 	currentBlock, err := ethCl.BlockNumber(ctx)
+	if conf.CallCount != nil {
+		conf.CallCount.Add()
+	}
 	var lastBlock uint64
 
 	if err != nil {
@@ -170,6 +173,9 @@ func blockEventsTask(
 	)
 	if err != nil {
 		return err
+	}
+	if conf.CallCount != nil {
+		conf.CallCount.Add()
 	}
 	convLogs := make([]interface{}, len(logs))
 	for i, _log := range logs {

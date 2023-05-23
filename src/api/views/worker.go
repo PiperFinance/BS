@@ -3,7 +3,7 @@ package views
 import (
 	"github.com/PiperFinance/BS/src/core/conf"
 	"github.com/PiperFinance/BS/src/core/schema"
-	"github.com/PiperFinance/BS/src/utils"
+	"github.com/PiperFinance/BS/src/core/utils"
 	"github.com/charmbracelet/log"
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson"
@@ -44,6 +44,12 @@ func LastScannedBlocks(c *fiber.Ctx) error {
 			"res": r,
 		})
 	}
+}
+
+func CallStatus(c *fiber.Ctx) error {
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"msg": conf.CallCount,
+	})
 }
 
 // func MissedBlocks(c *fiber.Ctx) error {

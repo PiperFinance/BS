@@ -121,6 +121,9 @@ func processUserBal(ctx context.Context, blockNumber uint64, user common.Address
 			if err != nil {
 				return nil, err
 			}
+			if conf.CallCount != nil {
+				conf.CallCount.Add()
+			}
 			userBal.SetBalance(bal)
 			userBal.StartedAt = blockNumber
 			userBalanceCol().InsertOne(ctx, &userBal)

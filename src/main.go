@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"time"
 
@@ -22,6 +21,8 @@ func init() {
 	conf.LoadQueue()
 	conf.LoadMongo()
 	conf.LoadRedis()
+
+	conf.LoadDebugItems()
 }
 
 // ONLY FOR TESTING PURPOSES ...
@@ -38,7 +39,7 @@ func main() {
 	}
 	asynq.NewTask(tasks.BlockScanKey, payload)
 
-	fmt.Println(conf.QueueStatus())
+	// fmt.Println(conf.QueueStatus())
 
 	select {}
 }

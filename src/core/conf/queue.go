@@ -22,16 +22,17 @@ var (
 	mux               *asynq.ServeMux
 )
 
-type queueStatus struct {
-	Client    bool
-	Worker    bool
-	Scheduler bool
-}
+//	type queueStatus struct {
+//		Client    bool
+//		Worker    bool
+//		Scheduler bool
+//	}
 type QueueSchedules struct {
 	Cron    string
 	Key     string
 	Payload []byte
 	Q       asynq.Option
+	Timeout time.Duration
 }
 
 type MuxHandler struct {
@@ -87,10 +88,6 @@ func LoadQueue() {
 	)
 }
 
-func QueueStatus() queueStatus {
-	return queueStatus{RunAsClient, RunAsServer, RunAsScheduler}
-}
-
 func RunClient() {
 	RunAsClient = true
 }
@@ -108,7 +105,7 @@ func RunWorker(muxHandler []MuxHandler) {
 func RunScheduler(queueSchedules []QueueSchedules) {
 	RunAsScheduler = true
 	for _, qs := range queueSchedules {
-		_, err := QueueScheduler.Register(qs.Cron, asynq.NewTask(qs.Key, qs.Payload), qs.Q)
+		_, err := QueueScheduler.Register(qs.Cron, asynq.NewTask(qs.Key, qs.Payload), qs.Q, asynq.Timeout(qs.Timeout))
 		if err != nil {
 			log.Fatalf("QueueScheduler: %s", err)
 		}
@@ -123,9 +120,6 @@ func RunMonitor(URL string) {
 		RootPath:     "/mon",
 		RedisConnOpt: asyncQRedisClient,
 	})
-
 	http.Handle(h.RootPath()+"/", h)
-
-	// Go to http://localhost:8080/monitoring to see asynqmon homepage.
 	log.Fatal(http.ListenAndServe(URL, nil))
 }

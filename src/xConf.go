@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"time"
 
 	"github.com/PiperFinance/BS/src/api"
 	"github.com/PiperFinance/BS/src/api/views"
@@ -17,7 +18,7 @@ type StartConf struct{}
 func (r *StartConf) xChainSchedule() []conf.QueueSchedules {
 	// NOTE - Enqueuing Jobs via scheduler...
 	return []conf.QueueSchedules{
-		{Cron: conf.ETHBlocks, Key: tasks.BlockScanKey, Payload: nil, Q: asynq.Queue(conf.ScanQ)},
+		{Cron: conf.ETHBlocks, Key: tasks.BlockScanKey, Payload: nil, Q: asynq.Queue(conf.ScanQ), Timeout: 25 * time.Second},
 	}
 }
 
@@ -38,6 +39,7 @@ func (r *StartConf) xUrls() []api.Route {
 		{Path: "/lsb/100", Method: api.Get, Handler: views.LastScannedBlocks},
 		{Path: "/bal", Method: api.Get, Handler: views.GetBal},
 		{Path: "/bal/users", Method: api.Get, Handler: views.GetUsers},
+		{Path: "/stats/call", Method: api.Get, Handler: views.CallStatus},
 	}
 }
 
