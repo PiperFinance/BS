@@ -57,8 +57,8 @@ func (cc *CallCounter) Add() {
 	t := time.Now()
 	cc.LastCallTime = t
 	for i < cc.timeFramesCount {
-		i++
 		cc.TimeFrames[i].NewCall(t)
+		i++
 	}
 }
 
