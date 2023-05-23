@@ -12,7 +12,7 @@ import (
 
 const (
 	ParseBlockTimeout = 100 * time.Second
-	FetchBlockTimeout = 2 * time.Minute
+	FetchBlockTimeout = 5 * time.Minute
 	BlockTaskGroup    = "Block"
 )
 
