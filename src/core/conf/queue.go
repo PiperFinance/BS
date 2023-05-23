@@ -22,21 +22,34 @@ var (
 	mux               *asynq.ServeMux
 )
 
-type queueStatus struct {
-	Client    bool
-	Worker    bool
-	Scheduler bool
-}
+//	type queueStatus struct {
+//		Client    bool
+//		Worker    bool
+//		Scheduler bool
+//	}
 type QueueSchedules struct {
 	Cron    string
 	Key     string
 	Payload []byte
+	Q       asynq.Option
+	Timeout time.Duration
 }
 
 type MuxHandler struct {
 	Key     string
 	Handler func(context.Context, *asynq.Task) error
+	Q       asynq.Option
 }
+
+const (
+	ScanQ        = "scan"
+	FetchQ       = "fetch"
+	ParseQ       = "Parse"
+	ProcessQ     = "Process"
+	MainQ        = "main"
+	DefaultQ     = "default"
+	UnImportantQ = "Un-Important"
+)
 
 func LoadQueue() {
 	// Create and configuring Redis connection.
@@ -51,9 +64,13 @@ func LoadQueue() {
 		Concurrency:  Config.MaxConcurrency,
 		ErrorHandler: &QueueErrorHandler{},
 		Queues: map[string]int{
-			"critical": 6, // processed 60% of the time
-			"default":  3, // processed 30% of the time
-			"low":      1, // processed 10% of the time
+			ProcessQ:     7,
+			FetchQ:       5,
+			ParseQ:       6,
+			ScanQ:        4,
+			MainQ:        6,
+			DefaultQ:     3,
+			UnImportantQ: 1,
 		},
 	})
 	mux = asynq.NewServeMux()
@@ -69,10 +86,6 @@ func LoadQueue() {
 			Location: loc,
 		},
 	)
-}
-
-func QueueStatus() queueStatus {
-	return queueStatus{RunAsClient, RunAsServer, RunAsScheduler}
 }
 
 func RunClient() {
@@ -92,7 +105,7 @@ func RunWorker(muxHandler []MuxHandler) {
 func RunScheduler(queueSchedules []QueueSchedules) {
 	RunAsScheduler = true
 	for _, qs := range queueSchedules {
-		_, err := QueueScheduler.Register(qs.Cron, asynq.NewTask(qs.Key, qs.Payload))
+		_, err := QueueScheduler.Register(qs.Cron, asynq.NewTask(qs.Key, qs.Payload), qs.Q, asynq.Timeout(qs.Timeout))
 		if err != nil {
 			log.Fatalf("QueueScheduler: %s", err)
 		}
@@ -107,9 +120,6 @@ func RunMonitor(URL string) {
 		RootPath:     "/mon",
 		RedisConnOpt: asyncQRedisClient,
 	})
-
 	http.Handle(h.RootPath()+"/", h)
-
-	// Go to http://localhost:8080/monitoring to see asynqmon homepage.
 	log.Fatal(http.ListenAndServe(URL, nil))
 }
