@@ -29,10 +29,11 @@ type LogColl struct {
 }
 
 type Log struct {
-	Name           string         `bson:"name" json:"name"`
-	Status         ScannerStatus  `bson:"status" json:"status"`
-	EmitterAddress common.Address `json:"address" bson:"address"` // NOTE - transaction executor
-	BlockNumber    uint64         `json:"blockNumber" bson:"blockNumber"`
+	ID             primitive.ObjectID `bson:"_id" json:"_id"`
+	Name           string             `bson:"name" json:"name"`
+	Status         ScannerStatus      `bson:"status" json:"status"`
+	EmitterAddress common.Address     `json:"address" bson:"address"` // NOTE - transaction executor
+	BlockNumber    uint64             `json:"blockNumber" bson:"blockNumber"`
 }
 
 type LogTransfer struct {

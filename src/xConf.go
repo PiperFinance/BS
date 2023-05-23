@@ -43,13 +43,13 @@ func (r *StartConf) xUrls() []api.Route {
 	}
 }
 
-func (r *StartConf) xMonPort() string {
-	AsynqMonUrl, ok := os.LookupEnv("ASYNQ_MON_URL")
+func (r *StartConf) xAPIPort() string {
+	ApiUrl, ok := os.LookupEnv("API_URL")
 	if !ok {
-		log.Warn("ASYNQ_MON_URL not Found! Setting Default Of :7654")
-		AsynqMonUrl = ":7654"
+		log.Warn("ASYNQ_MON_URL not Found! Setting Default Of :1300")
+		ApiUrl = ":1300"
 	}
-	return AsynqMonUrl
+	return ApiUrl
 }
 
 func (r *StartConf) StartClient() {
@@ -65,11 +65,11 @@ func (r *StartConf) StartScheduler() {
 }
 
 func (r *StartConf) StartMon() {
-	go conf.RunMonitor(r.xMonPort())
+	go conf.RunMonitor(conf.Config.AsynqMonUrl)
 }
 
 func (r *StartConf) StartApi() {
-	go api.RunApi(":1300", r.xUrls())
+	go api.RunApi(conf.Config.ApiUrl, r.xUrls())
 }
 
 func (r *StartConf) StartAll() {

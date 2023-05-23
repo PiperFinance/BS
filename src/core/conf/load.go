@@ -16,7 +16,9 @@ type config struct {
 	RedisDB   int    `mapstructure:"REDIS_DB"`
 
 	MaxConcurrency int           `mapstructure:"MAX_CONCURRENT_WORKER"`
-	MaxTaskTimeOut time.Duration `mapstructure:"MaxTaskTimeOut" , default:"10m"`
+	MaxTaskTimeOut time.Duration `mapstructure:"MaxTaskTimeOut" default:"10m"`
+	AsynqMonUrl    string        `mapstructure:"ASYNQ_MON_URL" default:":7654"`
+	ApiUrl         string        `mapstructure:"API_URL" default:":1300"`
 
 	StartingBlockNumber uint64 `mapstructure:"STARTING_BLOCK_NUMBER" default:"3"`
 	RPCUrl              string `mapstructure:"RPC_URL"`

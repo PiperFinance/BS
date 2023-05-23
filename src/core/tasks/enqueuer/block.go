@@ -25,7 +25,7 @@ func EnqueueFetchBlockJob(aqCl asynq.Client, blockNumber uint64) error {
 		asynq.NewTask(tasks.FetchBlockEventsKey, payload),
 		asynq.Queue(conf.FetchQ),
 		asynq.Timeout(FetchBlockTimeout),
-		asynq.Group(BlockTaskGroup))
+	)
 	return err
 }
 
@@ -38,6 +38,6 @@ func EnqueueParseBlockJob(aqCl asynq.Client, blockNumber uint64) error {
 		asynq.NewTask(tasks.ParseBlockEventsKey, payload),
 		asynq.Queue(conf.ParseQ),
 		asynq.Timeout(ParseBlockTimeout),
-		asynq.Group(BlockTaskGroup))
+	)
 	return err
 }
