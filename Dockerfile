@@ -25,4 +25,4 @@ COPY --from=builder /api/app .
 COPY server-config /api/config
 EXPOSE 7654
 
-ENTRYPOINT ["./app"]
+ENTRYPOINT env && /api/app

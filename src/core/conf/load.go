@@ -33,7 +33,7 @@ func LoadConfig(path string) error {
 
 	viper.AddConfigPath(path)
 	viper.SetConfigType("env")
-	// viper.SetConfigName("app")
+	viper.SetConfigName("app")
 	viper.AutomaticEnv()
 
 	err := viper.ReadInConfig()
