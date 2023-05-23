@@ -18,7 +18,7 @@ func GetTransferLogsTask(ctx context.Context, t *asynq.Task) error {
 		log.Errorf("GetTransferLogsTask: %s", err)
 	}
 	var tokenAdd common.Address
-	token, err := contracts.NewERC20(tokenAdd, conf.EthClient)
+	token, err := contracts.NewERC20(tokenAdd, conf.EthClient())
 	_ = token
 	return err
 }

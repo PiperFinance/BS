@@ -16,7 +16,7 @@ type UserBalance struct {
 	Token     common.Address `bson:"token" json:"token"`
 	ChangedAt uint64         `bson:"c_t" json:"c_t"`
 	StartedAt uint64         `bson:"s_t" json:"s_t"`
-	balance   string         `bson:"bal" json:"bal"`
+	Balance   string         `bson:"bal" json:"bal"`
 }
 
 func (ub *UserBalance) SetBalanceInt(newBal int64) {
@@ -24,16 +24,28 @@ func (ub *UserBalance) SetBalanceInt(newBal int64) {
 }
 
 func (ub *UserBalance) SetBalance(newBal *big.Int) {
-	ub.balance = newBal.String()
+	ub.Balance = newBal.String()
 }
 
 func (ub *UserBalance) GetBalance() (*big.Int, bool) {
 	v := big.Int{}
-	return v.SetString(ub.balance, 10)
+	return v.SetString(ub.Balance, 10)
 }
 
 func (ub *UserBalance) GetBalanceStr() string {
-	return ub.balance
+	return ub.Balance
+}
+
+func (ub *UserBalance) AddBal(b *big.Int) error {
+	if b == nil {
+		return fmt.Errorf("b is nil ")
+	}
+	a, ok := ub.GetBalance()
+	if !ok {
+		return fmt.Errorf("failed to cast %s to big.Int", ub.Balance)
+	}
+	ub.SetBalance(a.Add(a, b))
+	return nil
 }
 
 func (ub *UserBalance) SubBal(b *big.Int) error {
@@ -42,7 +54,7 @@ func (ub *UserBalance) SubBal(b *big.Int) error {
 	}
 	a, ok := ub.GetBalance()
 	if !ok {
-		return fmt.Errorf("failed to cast %s to big.Int", ub.balance)
+		return fmt.Errorf("failed to cast %s to big.Int", ub.Balance)
 	}
 	ub.SetBalance(a.Sub(a, b))
 	return nil

@@ -12,6 +12,7 @@ import (
 const (
 	// LogColName Collection name for transfers events
 	LogColName          = "Logs"
+	BlockColName        = "Blocks"
 	ParsedLogColName    = "ParsedLogs"
 	UserBalColName      = "UsersBalance"
 	TokenVolumeColName  = "TokenVolume"
@@ -26,7 +27,8 @@ var (
 )
 
 func LoadMongo() {
-	ctx, _ := context.WithTimeout(context.Background(), 2*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
 	opts := options.Client().ApplyURI(Config.MongoUrl)
 
 	var err error

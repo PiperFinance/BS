@@ -1,26 +1,72 @@
 version: '3'
 
+x-scanner:
+  &scanner
+  build:
+    context: .
+    dockerfile: Dockerfile
+  networks:
+    - bs_default
+    - tp_default
+    - redis_db
+    - mongo_db
+  restart: always
+  logging:
+    driver: "json-file"
+    options:
+      max-size: "5M"
+      max-file: "5"
+
+x-db:
+  &db
+  REDIS_URL: redis://redis:6379
+  REDIS_PORT: 6379
+  REDIS_HOST: redis
+  MONGO_URL: mongodb://piperFinance:Piper2022@mongo:27017
+  TP_SERVER: http://tp:9765
+
 services:
-  bs:
-    hostname: bs
-    container_name: bs
-    build:
-      context: .
-      dockerfile: Dockerfile
-    restart: always
+  bs_eth:
+    <<: *scanner
     ports:
-      - 7654:7654
+      - 7001:7001
+      - 6001:6001
     environment:
-      # - ASYNQ_MON_URL=":7654"
-      - REDIS_URL=redis://redis:6379/2
-      - TP_SERVER=http://tp:9765
-      - MONGO_URL=mongodb://piperFinance:Piper2022@mongo:27017
-      - MONGO_DB=ETH
-    networks:
-      - bs_default
-      - tp_default
-      - redis_db
-      - mongo_db
+      STARTING_BLOCK_NUMBER: 17324400
+      ASYNQ_MON_URL: ":7001"
+      API_URL: ":6001"
+      RPC_URL_MULTI: "https://eth.llamarpc.com,https://endpoints.omniatech.io/v1/eth/mainnet/public,https://rpc.ankr.com/eth,https://ethereum.publicnode.com,https://1rpc.io/eth,https://ethereum.blockpi.network/v1/rpc/public,https://rpc.payload.de,https://rpc.mevblocker.io,https://rpc.flashbots.net,https://uk.rpc.blxrbdn.com,https://singapore.rpc.blxrbdn.com"
+      MONGO_DBNAME: ETH_2
+      REDIS_DB: 2
+      <<: *db
+
+  bs_bsc:
+    <<: *scanner
+    ports:
+      - 7056:7056
+      - 6056:6056
+    environment:
+      STARTING_BLOCK_NUMBER: 28471792
+      ASYNQ_MON_URL: ":7056"
+      API_URL: ":6056"
+      RPC_URL_MULTI: "https://bsc-dataseed.binance.org,https://bsc-dataseed1.defibit.io,https://bsc-dataseed1.ninicoin.io,https://bsc-dataseed4.binance.org,https://endpoints.omniatech.io/v1/bsc/mainnet/public,https://bsc.blockpi.network/v1/rpc/public"
+      MONGO_DBNAME: BSC_1
+      REDIS_DB: 3
+      <<: *db
+
+  bs_ftm:
+    <<: *scanner
+    ports:
+      - 7250:7250
+      - 6250:6250
+    environment:
+      STARTING_BLOCK_NUMBER: 62924300
+      ASYNQ_MON_URL: ":7250"
+      API_URL: ":6250"
+      RPC_URL_MULTI: "https://rpcapi.fantom.network,https://endpoints.omniatech.io/v1/fantom/mainnet/public,https://fantom-mainnet.gateway.pokt.network/v1/lb/62759259ea1b320,https://rpc.ftm.tools,https://rpc.ankr.com/fantom,https://rpc.fantom.network,https://rpc2.fantom.network,https://1rpc.io/ftm,https://fantom.blockpi.network/v1/rpc/public,https://fantom.publicnode.com,https://fantom.api.onfinality.io/public,https://rpc.fantom.gateway.fm"
+      MONGO_DBNAME: FTM_1
+      REDIS_DB: 4
+      <<: *db
 
 networks:
   tp_default:
