@@ -31,17 +31,16 @@ var Config config
 func LoadConfig(path string) error {
 	conf := config{}
 
-	viper.AddConfigPath(path)
+	// viper.AddConfigPath(path)
 	viper.SetConfigType("env")
-	viper.SetConfigName("app")
+
 	viper.AutomaticEnv()
+	// err := viper.ReadInConfig()
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
 
-	err := viper.ReadInConfig()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	err = viper.Unmarshal(&conf)
+	err := viper.Unmarshal(&conf)
 	if err != nil {
 		log.Fatal(err)
 	}
