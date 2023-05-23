@@ -25,7 +25,7 @@ import (
 // BlockScanTaskHandler Uses BlockScanKey and requires no arg
 // Start Scanning For new blocks -> enqueues a new fetch block task at the end
 func BlockScanTaskHandler(ctx context.Context, task *asynq.Task) error {
-	err := blockScanTask(ctx, *conf.EthClient, *conf.QueueClient)
+	err := blockScanTask(ctx, *conf.EthClient(), *conf.QueueClient)
 	_ = task
 	if err != nil {
 		log.Errorf("Task BlockScan [%s] : Finished !", err)
@@ -45,7 +45,7 @@ func BlockEventsTaskHandler(ctx context.Context, task *asynq.Task) error {
 		log.Errorf("Task BlockEvents [%s] : Finished !", err)
 		return err
 	}
-	err = blockEventsTask(ctx, *conf.EthClient, *conf.QueueClient, *mongoCollection, block.BlockNumber)
+	err = blockEventsTask(ctx, *conf.EthClient(), *conf.QueueClient, *mongoCollection, block.BlockNumber)
 	if err != nil {
 		log.Errorf("Task BlockEvents [%s] : Finished !", err)
 		return err

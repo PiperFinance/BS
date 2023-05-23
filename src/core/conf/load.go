@@ -15,10 +15,12 @@ type config struct {
 	RedisHost string `mapstructure:"REDIS_HOST"`
 	RedisDB   int    `mapstructure:"REDIS_DB"`
 
-	MaxConcurrency      int           `mapstructure:"MAX_CONCURRENT_WORKER"`
-	MaxTaskTimeOut      time.Duration `mapstructure:"MaxTaskTimeOut" , default:"10m"`
-	StartingBlockNumber uint64        `mapstructure:"STARTING_BLOCK_NUMBER" default:"3"`
-	RPCUrl              string        `mapstructure:"RPC_URL"`
+	MaxConcurrency int           `mapstructure:"MAX_CONCURRENT_WORKER"`
+	MaxTaskTimeOut time.Duration `mapstructure:"MaxTaskTimeOut" , default:"10m"`
+
+	StartingBlockNumber uint64 `mapstructure:"STARTING_BLOCK_NUMBER" default:"3"`
+	RPCUrl              string `mapstructure:"RPC_URL"`
+	RPCUrls             string `mapstructure:"RPC_URL_MULTI"`
 }
 
 var Config config
@@ -42,5 +44,6 @@ func LoadConfig(path string) error {
 		log.Fatal(err)
 	}
 	Config = conf
+
 	return err
 }

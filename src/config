@@ -7,3 +7,4 @@ MAX_CONCURRENT_WORKER=3
 STARTING_BLOCK_NUMBER=17317037
 RPC_URL="https://eth.llamarpc.com"
 # RPC_URL="https://eth.llamarpc.com"
+RPC_URL_MULTI="https://eth.llamarpc.com,https://endpoints.omniatech.io/v1/eth/mainnet/public,https://rpc.ankr.com/eth,https://ethereum.publicnode.com,https://1rpc.io/eth,https://ethereum.blockpi.network/v1/rpc/public,https://rpc.payload.de,https://rpc.mevblocker.io,https://rpc.flashbots.net,https://uk.rpc.blxrbdn.com,https://singapore.rpc.blxrbdn.com"

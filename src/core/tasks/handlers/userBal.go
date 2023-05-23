@@ -28,7 +28,7 @@ func TokenVolumeCol() *mongo.Collection {
 }
 
 func getBalance(ctx context.Context, blockNumber uint64, user common.Address, token common.Address) (*big.Int, error) {
-	if caller, err := contracts.NewERC20Caller(token, conf.EthClient); err != nil {
+	if caller, err := contracts.NewERC20Caller(token, conf.EthClient()); err != nil {
 		return nil, err
 	} else {
 		return caller.BalanceOf(&bind.CallOpts{
