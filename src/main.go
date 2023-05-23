@@ -1,10 +1,6 @@
 package main
 
 import (
-	"context"
-	"fmt"
-	"time"
-
 	"github.com/PiperFinance/BS/src/core/conf"
 	_ "github.com/joho/godotenv/autoload"
 )

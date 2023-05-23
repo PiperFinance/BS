@@ -63,8 +63,20 @@ func UpdateUserBalTaskHandler(ctx context.Context, task *asynq.Task) error {
 			continue
 		}
 		processTransferLog(ctx, block.BlockNumber, transfer)
+		if res, err := conf.MongoDB.Collection(conf.ParsedLogColName).DeleteOne(ctxFind, bson.M{"_id": transfer.ID}); err != nil {
+			log.Error(err)
+		} else {
+			log.Info(res)
+		}
 	}
-
+	// if res, err := conf.MongoDB.Collection(conf.ParsedLogColName).DeleteMany(ctxFind, bson.M{
+	// 	"log.blockNumber": &block.BlockNumber,
+	// 	"log.name":        events.TransferE,
+	// }); err != nil {
+	// 	log.Errorf("BlockEventsTaskHandler")
+	// } else {
+	// 	log.Infof("Deleted Logs : %s Deleted", res.DeletedCount)
+	// }
 	bm := schema.BlockM{BlockNumber: block.BlockNumber}
 	bm.SetParsed()
 	if res, err := conf.MongoDB.Collection(conf.BlockColName).ReplaceOne(

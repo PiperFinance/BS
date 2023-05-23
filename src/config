@@ -1,10 +1,14 @@
 MONGO_URL=mongodb://localhost:27017
-MONGO_DBNAME=TEST_BS8
+MONGO_DBNAME=BS_FTM_1
 REDIS_PORT=6379
 REDIS_HOST=localhost
-REDIS_DB=1
-MAX_CONCURRENT_WORKER=3
-STARTING_BLOCK_NUMBER=17317037
-RPC_URL="https://eth.llamarpc.com"
+REDIS_DB=2
+MAX_CONCURRENT_WORKER=2
+STARTING_BLOCK_NUMBER=62924241
+ASYNQ_MON_URL=":7056"
+API_URL=":6056"
+      
 # RPC_URL="https://eth.llamarpc.com"
-RPC_URL_MULTI="https://eth.llamarpc.com,https://endpoints.omniatech.io/v1/eth/mainnet/public,https://rpc.ankr.com/eth,https://ethereum.publicnode.com,https://1rpc.io/eth,https://ethereum.blockpi.network/v1/rpc/public,https://rpc.payload.de,https://rpc.mevblocker.io,https://rpc.flashbots.net,https://uk.rpc.blxrbdn.com,https://singapore.rpc.blxrbdn.com"
+# RPC_URL_MULTI="https://eth.llamarpc.com,https://endpoints.omniatech.io/v1/eth/mainnet/public,https://rpc.ankr.com/eth,https://ethereum.publicnode.com,https://1rpc.io/eth,https://ethereum.blockpi.network/v1/rpc/public,https://rpc.payload.de,https://rpc.mevblocker.io,https://rpc.flashbots.net,https://uk.rpc.blxrbdn.com,https://singapore.rpc.blxrbdn.com"
+# RPC_URL_MULTI="https://bsc-dataseed.binance.org,https://bsc-dataseed1.defibit.io,https://bsc-dataseed1.ninicoin.io,https://bsc-dataseed4.binance.org,https://endpoints.omniatech.io/v1/bsc/mainnet/public,https://bsc.blockpi.network/v1/rpc/public"
+RPC_URL_MULTI="https://rpcapi.fantom.network,https://endpoints.omniatech.io/v1/fantom/mainnet/public,https://fantom-mainnet.gateway.pokt.network/v1/lb/62759259ea1b320,https://rpc.ftm.tools,https://rpc.ankr.com/fantom,https://rpc.fantom.network,https://rpc2.fantom.network,https://1rpc.io/ftm,https://fantom.blockpi.network/v1/rpc/public,https://fantom.publicnode.com,https://fantom.api.onfinality.io/public,https://rpc.fantom.gateway.fm"
