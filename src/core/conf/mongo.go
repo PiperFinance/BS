@@ -29,7 +29,7 @@ var (
 func LoadMongo() {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
-	opts := options.Client().ApplyURI(Config.MongoUrl)
+	opts := options.Client().ApplyURI(Config.MongoUrl.String())
 
 	var err error
 	MongoCl, err = mongo.Connect(ctx, opts)

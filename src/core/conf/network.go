@@ -1,8 +1,7 @@
 package conf
 
 import (
-	"strings"
-
+	"github.com/PiperFinance/BS/src/utils"
 	"github.com/charmbracelet/log"
 
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -17,7 +16,8 @@ var (
 )
 
 func LoadNetwork() {
-	rpcs = strings.Split(Config.RPCUrls, ",")
+	// rpcs = strings.Split(Config.RPCUrls, ",")
+	rpcs = utils.GetNetworkRpcUrls(ETHNetwork.GoodRpc)
 	EthClientS = make([]*ethclient.Client, len(rpcs))
 	for i, v := range rpcs {
 		client, err := ethclient.Dial(v)

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"os"
 	"time"
 
 	"github.com/PiperFinance/BS/src/api"
@@ -41,15 +40,6 @@ func (r *StartConf) xUrls() []api.Route {
 		{Path: "/bal/users", Method: api.Get, Handler: views.GetUsers},
 		{Path: "/stats/call", Method: api.Get, Handler: views.CallStatus},
 	}
-}
-
-func (r *StartConf) xAPIPort() string {
-	ApiUrl, ok := os.LookupEnv("API_URL")
-	if !ok {
-		log.Warn("ASYNQ_MON_URL not Found! Setting Default Of :1300")
-		ApiUrl = ":1300"
-	}
-	return ApiUrl
 }
 
 func (r *StartConf) StartClient() {

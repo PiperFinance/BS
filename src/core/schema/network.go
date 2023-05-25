@@ -1,55 +1,53 @@
 package schema
 
-import (
-	"github.com/ethereum/go-ethereum/common"
-	"net/url"
-)
+type RPC struct {
+	Url             string `json:"url"`
+	Tracking        string `json:"tracking,omitempty"`
+	TrackingDetails string `json:"trackingDetails,omitempty"`
+	IsOpenSource    bool   `json:"isOpenSource,omitempty"`
+}
 
 type Network struct {
+	Name     string `json:"name"`
+	Chain    string `json:"chain"`
+	Icon     string `json:"icon,omitempty"`
+	Rpc      []RPC  `json:"rpc"`
+	Features []struct {
+		Name string `json:"name"`
+	} `json:"features,omitempty"`
+	Faucets        []string `json:"faucets"`
 	NativeCurrency struct {
 		Name     string `json:"name"`
 		Symbol   string `json:"symbol"`
 		Decimals int    `json:"decimals"`
 	} `json:"nativeCurrency"`
-	ChainId int      `json:"id"`
-	Name    string   `json:"name"`
-	Network string   `json:"network"`
-	RPC     []string `json:"rpc"`
-	RpcUrls struct {
-		Infura  string `json:"infura"`
-		Default string `json:"default"`
-		Public  string `json:"public"`
-	} `json:"rpcUrls"`
-	Ens struct {
-		Address string `json:"address"`
-	} `json:"ens"`
-	Multicall struct {
-		Address      string `json:"address"`
-		BlockCreated int    `json:"blockCreated"`
-	} `json:"multicall"`
-	BlockExplorers struct {
-		Default struct {
-			Name string `json:"name"`
-			Url  string `json:"url"`
-		} `json:"default"`
-		Public struct {
-			Name string `json:"name"`
-			Url  string `json:"url"`
-		} `json:"public"`
-	} `json:"blockExplorers"`
-	Testnet bool `json:"testnet"`
-}
-
-type NativeNetworkCurrency struct {
-	Name     `json:"name"`
-	Symbol   `json:"symbol"`
-	Decimals `json:"decimals"`
-}
-type NetworkExplorer struct {
-	Name     `json:"name"`
-	Url      url.URL                 `json:"url"`
-	Standard NetworkExplorerStandard `json:"standard"`
-}
-type ENS struct {
-	Registry common.Address `json:"registry"`
+	InfoURL   string `json:"infoURL"`
+	ShortName string `json:"shortName"`
+	ChainId   int64  `json:"chainId"`
+	NetworkId int64  `json:"networkId"`
+	Slip44    int64  `json:"slip44,omitempty"`
+	Ens       struct {
+		Registry string `json:"registry"`
+	} `json:"ens,omitempty"`
+	Explorers []struct {
+		Name     string `json:"name"`
+		Url      string `json:"url"`
+		Standard string `json:"standard"`
+		Icon     string `json:"icon,omitempty"`
+	} `json:"explorers,omitempty"`
+	Tvl       float64 `json:"tvl,omitempty"`
+	ChainSlug string  `json:"chainSlug,omitempty"`
+	Parent    struct {
+		Type    string `json:"type"`
+		Chain   string `json:"chain"`
+		Bridges []struct {
+			Url string `json:"url"`
+		} `json:"bridges,omitempty"`
+	} `json:"parent,omitempty"`
+	Title    string   `json:"title,omitempty"`
+	Status   string   `json:"status,omitempty"`
+	RedFlags []string `json:"redFlags,omitempty"`
+	// NOTE - is calculated after running connection check
+	GoodRpc []*RPC
+	BadRpc  []*RPC
 }
