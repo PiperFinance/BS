@@ -22,7 +22,8 @@ RUN apk update \
 RUN mkdir -p /api
 WORKDIR /api
 COPY --from=builder /api/app .
-COPY server-config /api/config
+COPY ./data/ /api/
+# COPY server-config /api/config
 EXPOSE 7654
 
-ENTRYPOINT ["./app"]
+ENTRYPOINT env && /api/app
