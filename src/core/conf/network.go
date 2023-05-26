@@ -2,6 +2,7 @@ package conf
 
 import (
 	"context"
+	"sync"
 
 	"github.com/PiperFinance/BS/src/utils"
 	"github.com/charmbracelet/log"
@@ -12,12 +13,14 @@ import (
 var (
 	// EthClient  *ethclient.Client
 	EthClientS    map[int64][]*ethclient.Client
+	selectorMutex sync.Mutex
 	selectorIndex map[int64]int
 	clientCount   map[int64]int
 	rpcs          map[int64][]string
 )
 
 func LoadNetwork() {
+	selectorMutex = sync.Mutex{}
 	rpcs = make(map[int64][]string, len(Config.SupportedChains))
 	EthClientS = make(map[int64][]*ethclient.Client, len(Config.SupportedChains))
 	clientCount = make(map[int64]int, len(Config.SupportedChains))
@@ -41,10 +44,12 @@ func LoadNetwork() {
 
 func EthClient(chain int64) *ethclient.Client {
 	defer func() {
+		selectorMutex.Lock()
 		selectorIndex[chain]++
 		if selectorIndex[chain] >= clientCount[chain] {
 			selectorIndex[chain] = 0
 		}
+		selectorMutex.Unlock()
 	}()
 	return EthClientS[chain][selectorIndex[chain]]
 }

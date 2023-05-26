@@ -19,10 +19,11 @@ type config struct {
 	ApiUrl               string        `env:"API_URL" envDefault:":1300"`
 	StartingBlockNumber  uint64        `env:"STARTING_BLOCK_NUMBER" envDefault:"3"`
 	SupportedChains      []int64       `env:"SUPPORTED_CHAINS" envSeparator:","`
-	UserBalUpdateTimeout time.Duration `env:"USER_BAL_UPDATE_TIMEOUT" envDefault:"50s"`
 	ParseBlockTimeout    time.Duration `env:"PARSE_BLOCK_TIMEOUT" envDefault:"2m"`
 	FetchBlockTimeout    time.Duration `env:"FETCH_BLOCK_TIMEOUT" envDefault:"5m"`
+	UserBalUpdateTimeout time.Duration `env:"USER_BAL_UPDATE_TIMEOUT" envDefault:"5m"`
 	TestTimeout          time.Duration `env:"TEST_RPC_CONNECTION_TIMEOUT" envDefault:"10s"`
+	ScanTaskTimeout      time.Duration `env:"SCAN_TASK_TIMEOUT" envDefault:"25s"`
 }
 
 var Config config

@@ -1,8 +1,6 @@
 package main
 
 import (
-	"time"
-
 	"github.com/PiperFinance/BS/src/api"
 	"github.com/PiperFinance/BS/src/api/views"
 	"github.com/PiperFinance/BS/src/core/conf"
@@ -16,13 +14,12 @@ import (
 type StartConf struct{}
 
 func (r *StartConf) xChainSchedule() []conf.QueueSchedules {
-	// NOTE - Enqueuing Jobs via scheduler...
-	return []conf.QueueSchedules{
-		{Cron: "@every 5s", Payload: utils.BlockTaskGenUnsafe(1), Q: asynq.Queue(conf.ScanQ), Timeout: 25 * time.Second, Key: tasks.BlockScanKey},
-		{Cron: "@every 3s", Payload: utils.BlockTaskGenUnsafe(56), Q: asynq.Queue(conf.ScanQ), Timeout: 25 * time.Second, Key: tasks.BlockScanKey},
-		{Cron: "@every 1s", Payload: utils.BlockTaskGenUnsafe(250), Q: asynq.Queue(conf.ScanQ), Timeout: 25 * time.Second, Key: tasks.BlockScanKey},
-		{Cron: "@every 1s", Payload: utils.BlockTaskGenUnsafe(137), Q: asynq.Queue(conf.ScanQ), Timeout: 25 * time.Second, Key: tasks.BlockScanKey},
+	// NOTE - Enqueuing Jobs via scheduler... Use only supported Chains !
+	sq := make([]conf.QueueSchedules, 0)
+	for chainId := range conf.SupportedNetworks {
+		sq = append(sq, conf.QueueSchedules{Cron: "@every 10s", Payload: utils.BlockTaskGenUnsafe(chainId), Q: asynq.Queue(conf.ScanQ), Timeout: conf.Config.ScanTaskTimeout, Key: tasks.BlockScanKey})
 	}
+	return sq
 }
 
 func (r *StartConf) xHandlers() []conf.MuxHandler {
