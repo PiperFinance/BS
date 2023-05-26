@@ -19,9 +19,9 @@ x-scanner:
 
 x-db:
   &db
-  REDIS_URL: redis://redis:6379
+  REDIS_URL: redis://redis_host:6379
   REDIS_PORT: 6379
-  REDIS_HOST: redis
+  REDIS_HOST: redis_host
   MONGO_URL: mongodb://piperFinance:Piper2022@mongo:27017
   TP_SERVER: http://tp:9765
 
@@ -34,7 +34,7 @@ services:
     environment:
       ASYNQ_MON_URL: ":7001"
       API_URL: ":6001"
-      MONGO_DBNAME: BS_T1
+      MONGO_DBNAME: BS_T2
       REDIS_DB: 4
       MAX_CONCURRENT_WORKER: 60
       SUPPORTED_CHAINS: "1,250,56,137,43114"
@@ -43,21 +43,16 @@ services:
 
   bs_redis:
     image: redis:latest
-    hostname: redis
-    environment:
-      - REDIS_DISABLE_COMMANDS=FLUSHDB,FLUSHALL
-      - REDIS_PORT_NUMBER=6379
-      - REDIS_AOF_ENABLED=no
+    hostname: redis_host
     expose:
       - 6379
     restart: always
-    command: redis-server --appendonly yes
     networks:
       - bs_redis_db
     healthcheck:
       test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
     volumes:
-      - ./data/redis:/data
+      - ./data/redis2:/data
 
 networks:
   tp_default:
