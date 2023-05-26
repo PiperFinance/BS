@@ -29,15 +29,15 @@ func BlockScanTaskHandler(ctx context.Context, task *asynq.Task) error {
 	blockTask := schema.BlockTask{}
 	err := json.Unmarshal(task.Payload(), &blockTask)
 	if err != nil {
-		log.Errorf("Task BlockScan [%s] : Finished !", err)
+		log.Errorf("Task BlockScan [%+v] : %s ", blockTask, err)
 		return err
 	}
 	err = blockScanTask(ctx, blockTask, *conf.QueueClient)
 	_ = task
 	if err != nil {
-		log.Errorf("Task BlockScan [%s] : Finished !", err)
+		log.Errorf("Task BlockScan [%+v] : %s ", blockTask, err)
 	} else {
-		log.Infof("Task BlockScan [OK] : Finished !")
+		log.Infof("Task BlockScan [%+v] ", blockTask)
 	}
 	return err
 }
@@ -48,7 +48,7 @@ func BlockEventsTaskHandler(ctx context.Context, task *asynq.Task) error {
 	blockTask := schema.BlockTask{}
 	err := json.Unmarshal(task.Payload(), &blockTask)
 	if err != nil {
-		log.Errorf("Task BlockEvents [%s] : Finished !", err)
+		log.Errorf("Task BlockEvents [%+v] : %s ", blockTask, err)
 		return err
 	}
 	err = blockEventsTask(
@@ -58,7 +58,7 @@ func BlockEventsTaskHandler(ctx context.Context, task *asynq.Task) error {
 		*conf.MongoDB.Collection(conf.LogColName),
 		blockTask.BlockNumber)
 	if err != nil {
-		log.Errorf("Task BlockEvents [%s] : Finished !", err)
+		log.Errorf("Task BlockEvents [%+v] : %s ", blockTask, err)
 		return err
 	}
 
@@ -67,16 +67,16 @@ func BlockEventsTaskHandler(ctx context.Context, task *asynq.Task) error {
 	if _, err := conf.MongoDB.Collection(conf.BlockColName).ReplaceOne(
 		ctx,
 		bson.M{"no": blockTask.BlockNumber}, &bm); err != nil {
-		log.Errorf("BlockEventsTaskHandler")
+		log.Errorf("Task BlockEvents [%+v] : %s ", blockTask, err)
 	} else {
 		// log.Infof("Replace Result : %d modified", res.ModifiedCount)
 	}
 
 	err = enqueuer.EnqueueParseBlockJob(*conf.QueueClient, blockTask)
 	if err != nil {
-		log.Errorf("Task BlockEvents [%d] : Err : %s !", blockTask.BlockNumber, err)
+		log.Errorf("Task BlockEvents [%+v] : %s ", blockTask, err)
 	} else {
-		log.Infof("Task BlockEvents [%d] : Finished !", blockTask.BlockNumber)
+		log.Infof("Task BlockEvents [%+v] ", blockTask)
 	}
 	return err
 }
@@ -88,7 +88,7 @@ func ParseBlockEventsTaskHandler(ctx context.Context, task *asynq.Task) error {
 	mongoParsedLogsCol := conf.MongoDB.Collection(conf.ParsedLogColName)
 	err := json.Unmarshal(task.Payload(), &blockTask)
 	if err != nil {
-		log.Infof("Task ParseBlockEvents [%s] : Finished !", err)
+		log.Errorf("Task ParseBlockEvents [%+v] %s", blockTask, err)
 		return err
 	}
 	ctxFind, cancel := context.WithTimeout(ctx, 5*time.Minute)
@@ -111,16 +111,17 @@ func ParseBlockEventsTaskHandler(ctx context.Context, task *asynq.Task) error {
 	if _, err := conf.MongoDB.Collection(conf.BlockColName).ReplaceOne(
 		ctx,
 		bson.M{"no": blockTask.BlockNumber}, &bm); err != nil {
-		log.Errorf("BlockEventsTaskHandler")
+		log.Errorf("Task ParseBlockEvents [%+v] %s", blockTask, err)
+		return err
 	} else {
 		// log.Infof("Replace Result : %d modified", res.ModifiedCount)
 	}
 
 	err = enqueuer.EnqueueUpdateUserBalJob(*conf.QueueClient, blockTask)
 	if err != nil {
-		log.Errorf("Task ParseBlockEvents [%d] : Err : %s !", blockTask.BlockNumber, err)
+		log.Errorf("Task ParseBlockEvents [%+v] %s", blockTask, err)
 	} else {
-		log.Infof("Task ParseBlockEvents [%d] : Finished !", blockTask.BlockNumber)
+		log.Infof("Task ParseBlockEvents [%+v]", blockTask)
 	}
 
 	return err
@@ -137,14 +138,14 @@ func blockScanTask(ctx context.Context, blockTask schema.BlockTask, aqCl asynq.C
 	var lastBlock uint64
 
 	if err != nil {
-		log.Errorf("BlockScan: %s", err)
+		log.Errorf("Task BlockScan [%+v] : %s ", blockTask, err)
 		return err
 	}
-	if lastBlockVal := conf.RedisClient.Get(ctx, tasks.LastScannedBlockKey); lastBlockVal.Err() == redis.Nil {
+	if lastBlockVal := conf.RedisClient.Get(ctx, tasks.LastScannedBlockKey(chain)); lastBlockVal.Err() == redis.Nil {
 		lastBlock = conf.StartingBlock(ctx, blockTask.ChainId)
 	} else {
 		if r, parseErr := lastBlockVal.Int(); parseErr != nil {
-			log.Errorf("blockScanTask: %s \nPossible issue is that somethings overwrote %s's value", parseErr, tasks.LastScannedBlockKey)
+			log.Errorf("blockScanTask: %s \nPossible issue is that somethings overwrote %s's value", parseErr, tasks.LastScannedBlockKey(chain))
 			return err
 		} else {
 			lastBlock = uint64(r)
@@ -160,9 +161,9 @@ func blockScanTask(ctx context.Context, blockTask schema.BlockTask, aqCl asynq.C
 				return _err
 			}
 		}
-		status := conf.RedisClient.Set(ctx, tasks.LastScannedBlockKey, currentBlock, 0)
+		status := conf.RedisClient.Set(ctx, tasks.LastScannedBlockKey(chain), currentBlock, 0)
 		if status != nil && status.Err() != nil {
-			log.Errorf("BlockScan: %s", status.Err())
+			log.Errorf("Task BlockScan [%+v] : %s ", blockTask, err)
 		}
 	}
 	return err

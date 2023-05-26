@@ -11,7 +11,8 @@ import (
 )
 
 func LastScannedBlock(c *fiber.Ctx) error {
-	lastBlock, err := utils.GetLastBlock()
+	// TODO - FIX this to be multi chain ...
+	lastBlock, err := utils.GetLastBlock(1)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"err": err.Error(),

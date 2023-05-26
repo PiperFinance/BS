@@ -37,7 +37,7 @@ func getBalance(ctx context.Context, block schema.BlockTask, user common.Address
 	}
 }
 
-// UpdateUserBalTaskHandler Updates Online User's Balance and then vacumes log record from database to save space
+// UpdateUserBalTaskHandler Updates Online User's Balance and then vacuums log record from database to save space
 func UpdateUserBalTaskHandler(ctx context.Context, task *asynq.Task) error {
 	ctxFind, cancel := context.WithTimeout(ctx, 5*time.Minute)
 	defer cancel()
@@ -100,7 +100,7 @@ func processTransferLog(ctx context.Context, block schema.BlockTask, transfer sc
 	if b, ok := transfer.GetAmount(); ok {
 		amount = b
 	} else {
-		return fmt.Errorf("transfer log get amount failure, transfer=%s", transfer)
+		return fmt.Errorf("transfer log get amount failure, transfer=%+v", transfer)
 	}
 	if _, err := processUserBal(
 		ctx, block,

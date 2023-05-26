@@ -16,5 +16,6 @@ func VacuumLogHandler(ctx context.Context, task *asynq.Task) error {
 	// }getLastBlock()
 
 	// // Save LastVacuumed BlockNumber
+	_, _ = ctx, task
 	return nil
 }
