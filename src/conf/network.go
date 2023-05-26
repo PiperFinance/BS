@@ -72,7 +72,7 @@ func StartingBlock(ctx context.Context, chain int64) uint64 {
 	if b, err := EthClient(chain).BlockNumber(ctx); err != nil {
 		return Config.StartingBlockNumber
 	} else {
-		return b
+		return b - Config.BlockHeadDelay
 	}
 }
 
