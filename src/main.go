@@ -10,12 +10,12 @@ type BlockTask struct {
 }
 
 func init() {
-	conf.LoadConfig("./")
-	conf.LoadNetwork()
-	conf.LoadQueue()
+	conf.LoadConfig()
 	conf.LoadMongo()
 	conf.LoadRedis()
-
+	conf.LoadMainNets()
+	conf.LoadNetwork()
+	conf.LoadQueue()
 	conf.LoadDebugItems()
 }
 

@@ -1,14 +1,12 @@
 package main
 
 import (
-	"os"
-	"time"
-
 	"github.com/PiperFinance/BS/src/api"
 	"github.com/PiperFinance/BS/src/api/views"
 	"github.com/PiperFinance/BS/src/core/conf"
 	"github.com/PiperFinance/BS/src/core/tasks"
 	"github.com/PiperFinance/BS/src/core/tasks/handlers"
+	"github.com/PiperFinance/BS/src/utils"
 	"github.com/charmbracelet/log"
 	"github.com/hibiken/asynq"
 )
@@ -16,10 +14,12 @@ import (
 type StartConf struct{}
 
 func (r *StartConf) xChainSchedule() []conf.QueueSchedules {
-	// NOTE - Enqueuing Jobs via scheduler...
-	return []conf.QueueSchedules{
-		{Cron: conf.ETHBlocks, Key: tasks.BlockScanKey, Payload: nil, Q: asynq.Queue(conf.ScanQ), Timeout: 25 * time.Second},
+	// NOTE - Enqueuing Jobs via scheduler... Use only supported Chains !
+	sq := make([]conf.QueueSchedules, 0)
+	for chainId := range conf.SupportedNetworks {
+		sq = append(sq, conf.QueueSchedules{Cron: "@every 10s", Payload: utils.BlockTaskGenUnsafe(chainId), Q: asynq.Queue(conf.ScanQ), Timeout: conf.Config.ScanTaskTimeout, Key: tasks.BlockScanKey})
 	}
+	return sq
 }
 
 func (r *StartConf) xHandlers() []conf.MuxHandler {
@@ -41,15 +41,6 @@ func (r *StartConf) xUrls() []api.Route {
 		{Path: "/bal/users", Method: api.Get, Handler: views.GetUsers},
 		{Path: "/stats/call", Method: api.Get, Handler: views.CallStatus},
 	}
-}
-
-func (r *StartConf) xAPIPort() string {
-	ApiUrl, ok := os.LookupEnv("API_URL")
-	if !ok {
-		log.Warn("ASYNQ_MON_URL not Found! Setting Default Of :1300")
-		ApiUrl = ":1300"
-	}
-	return ApiUrl
 }
 
 func (r *StartConf) StartClient() {

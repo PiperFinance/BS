@@ -1,10 +1,12 @@
 package tasks
 
+import "fmt"
+
 const (
 	// LastScannedBlockKey TODO - Add a model in db to save fetched block numbers
 	// TODO - use gocache - not redis ...
 	// MultiChain ...
-	LastScannedBlockKey = "block:lastScanned"
+	lastScannedBlockKey = "block:lastScanned"
 
 	FetchBlockEventsKey  = "block:fetch_events"
 	BlockScanKey         = "block:scan"
@@ -15,3 +17,7 @@ const (
 	VacuumLogsLockKey    = "chore:vacuum-lock"
 	VacuumLogsHeight     = 100
 )
+
+func LastScannedBlockKey(chain int64) string {
+	return fmt.Sprintf("[%d]:%s", chain, lastScannedBlockKey)
+}

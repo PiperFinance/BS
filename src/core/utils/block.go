@@ -18,12 +18,12 @@ import (
 // 	}
 // }
 
-func GetLastBlock() (uint64, error) {
+func GetLastBlock(chain int64) (uint64, error) {
 	var lastBlock uint64
 	ctx := context.TODO()
 	c, cancel := context.WithTimeout(ctx, time.Second*3)
 	defer cancel()
-	if res := conf.RedisClient.Get(c, tasks.LastScannedBlockKey); res.Err() != nil {
+	if res := conf.RedisClient.Get(c, tasks.LastScannedBlockKey(chain)); res.Err() != nil {
 		return lastBlock, res.Err()
 	} else {
 		val, castErr := res.Uint64()

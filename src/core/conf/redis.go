@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/charmbracelet/log"
 	"github.com/go-redis/redis/v8"
 )
 
@@ -16,11 +17,13 @@ type RedisClientExtended struct {
 
 func LoadRedis() {
 	cl := redis.NewClient(&redis.Options{
-		Addr: fmt.Sprintf("%s:%s", Config.RedisHost, Config.RedisPort),
-		DB:   int(Config.RedisDB),
+		Addr: fmt.Sprintf("%s:%s", Config.RedisUrl.Hostname(), Config.RedisUrl.Port()),
+		DB:   Config.RedisDB,
 	})
 	RedisClient = &RedisClientExtended{*cl}
-	// TODO - Check Redis connection after setup
+	if _, err := RedisClient.GetOrSetTTL(context.Background(), "-cconn-", "-ok-", time.Second); err != nil {
+		log.Fatalf("RedisConnectionCheck: %+v", err)
+	}
 }
 
 func (r *RedisClientExtended) GetOrSet(context context.Context, key string, value string) (string, error) {
