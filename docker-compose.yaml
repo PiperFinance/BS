@@ -52,7 +52,7 @@ services:
     healthcheck:
       test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
     volumes:
-      - ./data/redis:/data
+      - ./data/redis2:/data
 
 networks:
   tp_default:
