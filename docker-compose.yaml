@@ -8,7 +8,7 @@ x-scanner:
   networks:
     - bs_default
     - tp_default
-    - redis_db
+    - bs_redis_db
     - mongo_db
   restart: always
   logging:
@@ -41,13 +41,30 @@ services:
       # SUPPORTED_CHAINS: "1,250,56,137,43114,12306,42161,100,2021,40,9001,1284,10,58,121"
       <<: *db
 
+  bs_redis:
+    image: redis:latest
+    hostname: redis
+    environment:
+      - REDIS_DISABLE_COMMANDS=FLUSHDB,FLUSHALL
+      - REDIS_PORT_NUMBER=6379
+      - REDIS_AOF_ENABLED=no
+    expose:
+      - 6379
+    restart: always
+    command: redis-server --appendonly yes
+    networks:
+      - bs_redis_db
+    healthcheck:
+      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+    volumes:
+      - ./data/redis:/data
+
 networks:
   tp_default:
     external:
       name: tp_default
-  redis_db:
-    external:
-      name: redis_db
+  bs_redis_db:
+    name: redis_db
   mongo_db:
     external:
       name: mongo_db
