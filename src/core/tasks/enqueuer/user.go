@@ -3,7 +3,7 @@ package enqueuer
 import (
 	"encoding/json"
 
-	"github.com/PiperFinance/BS/src/core/conf"
+	"github.com/PiperFinance/BS/src/conf"
 	"github.com/PiperFinance/BS/src/core/schema"
 	"github.com/PiperFinance/BS/src/core/tasks"
 	"github.com/hibiken/asynq"

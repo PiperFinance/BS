@@ -3,7 +3,6 @@ package conf
 import (
 	"context"
 	"sync"
-	"time"
 
 	"github.com/PiperFinance/BS/src/utils"
 	"github.com/charmbracelet/log"
@@ -40,7 +39,6 @@ func LoadNetwork() {
 			EthClientS[net.ChainId][i] = client
 		}
 	}
-	time.Sleep(100 * time.Millisecond)
 }
 
 func EthClient(chain int64) *ethclient.Client {
@@ -52,10 +50,19 @@ func EthClient(chain int64) *ethclient.Client {
 		}
 		selectorMutex.Unlock()
 	}()
+	// defer func() {
+	// 	if r := recover(); r != nil {
+	// 		fmt.Println("Recovered in f", r)
+	// 	}
+	// }()
 	// TODO - Try to recover panic here !
 	if clients, ok := EthClientS[chain]; ok {
 		if index, ok := selectorIndex[chain]; ok {
-			return clients[index]
+			if len(clients) == 0 {
+				Logger.Errorf("EthCLient Selector : No RPCs found for chain %d", chain)
+			} else {
+				return clients[index]
+			}
 		}
 	}
 	return nil

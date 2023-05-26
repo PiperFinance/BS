@@ -3,9 +3,8 @@ package views
 import (
 	"strconv"
 
-	"github.com/PiperFinance/BS/src/core/conf"
+	"github.com/PiperFinance/BS/src/conf"
 	"github.com/PiperFinance/BS/src/core/schema"
-	"github.com/charmbracelet/log"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson"
@@ -34,7 +33,7 @@ func GetBal(c *fiber.Ctx) error {
 		ub := schema.UserBalance{}
 		err := curs.Decode(&ub)
 		if err != nil {
-			log.Errorf("GetBal: %s", err.Error())
+			conf.Logger.Errorf("GetBal: %s", err.Error())
 		}
 		r = append(r, ub)
 	}

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/PiperFinance/BS/src/core/conf"
+	"github.com/PiperFinance/BS/src/conf"
 	"github.com/PiperFinance/BS/src/core/tasks"
 )
 

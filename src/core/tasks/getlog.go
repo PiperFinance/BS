@@ -4,7 +4,7 @@ package tasks
 // 	var blockNum uint64
 // 	err := json.Unmarshal(t.Payload(), &blockNum)
 // 	if err != nil {
-// 		log.Errorf("GetTransferLogsTask: %s", err)
+// 		conf.Logger.Errorf("GetTransferLogsTask: %s", err)
 // 	}
 // 	var tokenAdd common.Address
 // 	token, err := contracts.NewERC20(tokenAdd, conf.EthClient())

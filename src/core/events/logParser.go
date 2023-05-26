@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/charmbracelet/log"
+	"github.com/PiperFinance/BS/src/conf"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -89,17 +89,17 @@ func ParseLogs(ctx context.Context, mongoCol *mongo.Collection, logCursor *mongo
 		var vLog types.Log
 		errDecode := logCursor.Decode(&vLog)
 		if errDecode != nil {
-			log.Errorf("ParseLogs: [%T] :%s", errDecode, errDecode)
+			conf.Logger.Errorf("ParseLogs: [%T] :%s", errDecode, errDecode)
 		}
 
 		if parsedLog, parseErr := ParseLog(vLog); parseErr != nil {
-			// log.Errorf("ParseLogs: [%T] : %s", parseErr, parseErr)
-			// TODO - Suppresing the error
+			// conf.Logger.Errorf("ParseLogs: [%T] : %s", parseErr, parseErr)
+			// TODO - Suppressing the error
 		} else {
 			// TODO - Make this insert many
 			_, insertionErr := mongoCol.InsertOne(ctx, parsedLog)
 			if insertionErr != nil {
-				log.Errorf("ParseLogs: [%T] : %s", insertionErr, insertionErr)
+				conf.Logger.Errorf("ParseLogs: [%T] : %s", insertionErr, insertionErr)
 			}
 		}
 	}

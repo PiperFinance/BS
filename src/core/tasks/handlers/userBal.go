@@ -7,11 +7,10 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/PiperFinance/BS/src/core/conf"
+	"github.com/PiperFinance/BS/src/conf"
 	"github.com/PiperFinance/BS/src/core/contracts"
 	"github.com/PiperFinance/BS/src/core/events"
 	"github.com/PiperFinance/BS/src/core/schema"
-	"github.com/charmbracelet/log"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/hibiken/asynq"
@@ -46,7 +45,7 @@ func UpdateUserBalTaskHandler(ctx context.Context, task *asynq.Task) error {
 	blockTask := schema.BlockTask{}
 	err := json.Unmarshal(task.Payload(), &blockTask)
 	if err != nil {
-		// log.Infof("Task ParseBlockEvents [%s] : Finished !", err)
+		// conf.Logger.Infof("Task ParseBlockEvents [%s] : Finished !", err)
 		return err
 	}
 	cursor, err := conf.GetMongoCol(blockTask.ChainId, conf.ParsedLogColName).Find(ctxFind, bson.M{
@@ -61,37 +60,37 @@ func UpdateUserBalTaskHandler(ctx context.Context, task *asynq.Task) error {
 	for cursor.Next(ctx) {
 		transfer := schema.LogTransfer{}
 		if err := cursor.Decode(&transfer); err != nil {
-			log.Error(err)
+			conf.Logger.Error(err)
 			continue
 		}
 		processTransferLog(ctx, blockTask, transfer)
 		if _, err := conf.GetMongoCol(blockTask.ChainId, conf.ParsedLogColName).DeleteOne(ctxFind, bson.M{"_id": transfer.ID}); err != nil {
-			log.Error(err)
+			conf.Logger.Error(err)
 		} else {
-			// log.Info(res)
+			// conf.Logger.Info(res)
 		}
 	}
 	// if res, err := conf.GetMongoCol(blockTask.ChainId, conf.ParsedLogColName).DeleteMany(ctxFind, bson.M{
 	// 	"log.blockNumber": &block.BlockNumber,
 	// 	"log.name":        events.TransferE,
 	// }); err != nil {
-	// 	log.Errorf("BlockEventsTaskHandler")
+	// 	conf.Logger.Errorf("BlockEventsTaskHandler")
 	// } else {
-	// 	log.Infof("Deleted Logs : %s Deleted", res.DeletedCount)
+	// 	conf.Logger.Infof("Deleted Logs : %s Deleted", res.DeletedCount)
 	// }
 	bm := schema.BlockM{BlockNumber: blockTask.BlockNumber}
 	bm.SetParsed()
 	if _, err := conf.GetMongoCol(blockTask.ChainId, conf.BlockColName).ReplaceOne(
 		ctx,
 		bson.M{"no": blockTask.BlockNumber}, &bm); err != nil {
-		log.Errorf("BlockEventsTaskHandler")
+		conf.Logger.Errorf("BlockEventsTaskHandler")
 	} else {
-		// log.Infof("Replace Result : %s modified", res.ModifiedCount)
+		// conf.Logger.Infof("Replace Result : %s modified", res.ModifiedCount)
 	}
 	if err != nil {
-		log.Errorf("Task UpdateUserBal [%d] : Err : %s !", blockTask.BlockNumber, err)
+		conf.Logger.Errorf("Task UpdateUserBal [%d] : Err : %s !", blockTask.BlockNumber, err)
 	} else {
-		// log.Infof("Task UpdateUserBal [%d] : Finished !", block.BlockNumber)
+		// conf.Logger.Infof("Task UpdateUserBal [%d] : Finished !", block.BlockNumber)
 	}
 	return err
 }
@@ -156,6 +155,6 @@ func processUserBal(ctx context.Context, blockTask schema.BlockTask, user common
 	if err != nil {
 		return nil, err
 	}
-	// log.Infof("Modified: %d , MatchedCount: %d ", res.ModifiedCount, res.MatchedCount)
+	// conf.Logger.Infof("Modified: %d , MatchedCount: %d ", res.ModifiedCount, res.MatchedCount)
 	return &userBal, nil
 }
