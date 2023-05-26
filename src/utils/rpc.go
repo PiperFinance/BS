@@ -1,6 +1,9 @@
 package utils
 
-import "time"
+import (
+	"sync"
+	"time"
+)
 
 const (
 	MAX_RESULTS = 100
@@ -30,36 +33,47 @@ func (tfc *TimeFrameCounter) NewCall(t time.Time) {
 }
 
 type CallCounter struct {
-	LastCallTime    time.Time
-	TimeFrames      []TimeFrameCounter
-	timeFramesCount int
+	LastCallTime    map[int64]time.Time
+	TimeFrames      map[int64][]TimeFrameCounter
+	timeFramesCount map[int64]int
+	mutex           sync.Mutex
 }
 
-func NewCallCounter(timeFrames ...time.Duration) *CallCounter {
+func NewCallCounter(chains []int64, timeFrames ...time.Duration) *CallCounter {
 	t := time.Now()
 	r := new(CallCounter)
-	tfs := make([]TimeFrameCounter, len(timeFrames))
-	for i, tf := range timeFrames {
-		tfs[i] = TimeFrameCounter{
-			Name:      tf.String(),
-			Window:    tf,
-			StartedAt: t,
-			EndsAt:    t.Add(tf),
+	r.mutex = sync.Mutex{}
+	r.timeFramesCount = make(map[int64]int, len(chains))
+	r.LastCallTime = make(map[int64]time.Time, len(chains))
+	r.TimeFrames = make(map[int64][]TimeFrameCounter, len(chains))
+	for _, chain := range chains {
+
+		tfs := make([]TimeFrameCounter, len(timeFrames))
+		for i, tf := range timeFrames {
+			tfs[i] = TimeFrameCounter{
+				Name:      tf.String(),
+				Window:    tf,
+				StartedAt: t,
+				EndsAt:    t.Add(tf),
+			}
 		}
+		r.TimeFrames[chain] = tfs
+		r.timeFramesCount[chain] = len(tfs)
+		r.LastCallTime[chain] = t
 	}
-	r.TimeFrames = tfs
-	r.timeFramesCount = len(tfs)
 	return r
 }
 
-func (cc *CallCounter) Add() {
+func (cc *CallCounter) Add(chain int64) {
 	i := 0
 	t := time.Now()
-	cc.LastCallTime = t
-	for i < cc.timeFramesCount {
-		cc.TimeFrames[i].NewCall(t)
+	cc.mutex.Lock()
+	cc.LastCallTime[chain] = t
+	for i < cc.timeFramesCount[chain] {
+		cc.TimeFrames[chain][i].NewCall(t)
 		i++
 	}
+	cc.mutex.Unlock()
 }
 
 func (cc *CallCounter) Status() {

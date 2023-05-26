@@ -24,8 +24,8 @@ const (
 )
 
 var (
-	mongoCl            *mongo.Client
-	mongoDB            *mongo.Database
+	mongoCl *mongo.Client
+	// mongoDB            *mongo.Database
 	MongoDefaultErrCol *mongo.Collection
 )
 
@@ -44,10 +44,10 @@ func LoadMongo() {
 	if err != nil {
 		log.Fatalf("Mongo: %s", err)
 	}
-	mongoDB = mongoCl.Database(Config.MongoDBName)
+	// mongoDB = mongoCl.Database(Config.MongoDBName)
 	MongoDefaultErrCol = mongoCl.Database(BlockScannerDB).Collection(QueueErrorsColName)
 }
 
 func GetMongoCol(chain int64, colName string) *mongo.Collection {
-	return mongoCl.Database(fmt.Sprintf("CID_%d", chain)).Collection(colName)
+	return mongoCl.Database(fmt.Sprintf("%s_%d", Config.MongoDBName, chain)).Collection(colName)
 }

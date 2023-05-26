@@ -14,7 +14,6 @@ import (
 	"github.com/go-redis/redis/v8"
 
 	"github.com/ethereum/go-ethereum"
-	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/hibiken/asynq"
 
 	"github.com/charmbracelet/log"
@@ -53,7 +52,7 @@ func BlockEventsTaskHandler(ctx context.Context, task *asynq.Task) error {
 	}
 	err = blockEventsTask(
 		ctx,
-		*conf.EthClient(blockTask.ChainId),
+		blockTask,
 		*conf.QueueClient,
 		*conf.GetMongoCol(blockTask.ChainId, conf.LogColName),
 		blockTask.BlockNumber)
@@ -71,7 +70,6 @@ func BlockEventsTaskHandler(ctx context.Context, task *asynq.Task) error {
 	} else {
 		// log.Infof("Replace Result : %d modified", res.ModifiedCount)
 	}
-
 	err = enqueuer.EnqueueParseBlockJob(*conf.QueueClient, blockTask)
 	if err != nil {
 		log.Errorf("Task BlockEvents [%+v] : %s ", blockTask, err)
@@ -85,7 +83,6 @@ func BlockEventsTaskHandler(ctx context.Context, task *asynq.Task) error {
 // Parses Newly fetched events
 func ParseBlockEventsTaskHandler(ctx context.Context, task *asynq.Task) error {
 	blockTask := schema.BlockTask{}
-	mongoParsedLogsCol := conf.GetMongoCol(blockTask.ChainId, conf.ParsedLogColName)
 	err := json.Unmarshal(task.Payload(), &blockTask)
 	if err != nil {
 		log.Errorf("Task ParseBlockEvents [%+v] %s", blockTask, err)
@@ -98,7 +95,8 @@ func ParseBlockEventsTaskHandler(ctx context.Context, task *asynq.Task) error {
 	if err != nil {
 		return err
 	}
-	events.ParseLogs(ctx, mongoParsedLogsCol, cursor)
+	parsedLogsCol := conf.GetMongoCol(blockTask.ChainId, conf.ParsedLogColName)
+	events.ParseLogs(ctx, parsedLogsCol, cursor)
 	ctxDel, cancel := context.WithTimeout(ctx, 5*time.Minute)
 	defer cancel()
 	_, err = conf.GetMongoCol(blockTask.ChainId, conf.LogColName).DeleteMany(ctxDel, bson.M{"blockNumber": &blockTask.BlockNumber})
@@ -133,7 +131,7 @@ func blockScanTask(ctx context.Context, blockTask schema.BlockTask, aqCl asynq.C
 	chain := blockTask.ChainId
 	currentBlock, err := ethCl.BlockNumber(ctx)
 	if conf.CallCount != nil {
-		conf.CallCount.Add()
+		conf.CallCount.Add(blockTask.ChainId)
 	}
 	var lastBlock uint64
 
@@ -172,13 +170,13 @@ func blockScanTask(ctx context.Context, blockTask schema.BlockTask, aqCl asynq.C
 // BlockEventsTask Fetches Block Events and stores them to mongo and enqueues another task for parsing them
 func blockEventsTask(
 	ctx context.Context,
-	ethCl ethclient.Client,
+	blockTask schema.BlockTask,
 	aqCl asynq.Client,
 	monCl mongo.Collection,
 	blockNum uint64,
 ) error {
 	blockNumBigInt := big.NewInt(int64(blockNum))
-	logs, err := ethCl.FilterLogs(
+	logs, err := conf.EthClient(blockTask.ChainId).FilterLogs(
 		context.Background(),
 		ethereum.FilterQuery{
 			FromBlock: blockNumBigInt,
@@ -189,7 +187,7 @@ func blockEventsTask(
 		return err
 	}
 	if conf.CallCount != nil {
-		conf.CallCount.Add()
+		conf.CallCount.Add(blockTask.ChainId)
 	}
 	if len(logs) < 1 {
 		return nil

@@ -10,6 +10,7 @@ var CallCount *utils.CallCounter
 
 func LoadDebugItems() {
 	CallCount = utils.NewCallCounter(
+		Config.SupportedChains,
 		1*time.Second,
 		10*time.Second,
 		100*time.Second,

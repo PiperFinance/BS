@@ -135,7 +135,7 @@ func processUserBal(ctx context.Context, blockTask schema.BlockTask, user common
 				return nil, err
 			}
 			if conf.CallCount != nil {
-				conf.CallCount.Add()
+				conf.CallCount.Add(blockTask.ChainId)
 			}
 			userBal.SetBalance(bal)
 			userBal.StartedAt = blockTask.BlockNumber
