@@ -2,7 +2,6 @@ package enqueuer
 
 import (
 	"encoding/json"
-	"time"
 
 	"github.com/PiperFinance/BS/src/core/conf"
 	"github.com/PiperFinance/BS/src/core/schema"
@@ -11,33 +10,31 @@ import (
 )
 
 const (
-	ParseBlockTimeout = 100 * time.Second
-	FetchBlockTimeout = 5 * time.Minute
-	BlockTaskGroup    = "Block"
+	BlockTaskGroup = "Block"
 )
 
-func EnqueueFetchBlockJob(aqCl asynq.Client, blockNumber uint64) error {
-	payload, err := json.Marshal(schema.BlockTask{BlockNumber: blockNumber})
+func EnqueueFetchBlockJob(aqCl asynq.Client, blockTask schema.BlockTask) error {
+	payload, err := json.Marshal(blockTask)
 	if err != nil {
 		return err
 	}
 	_, err = aqCl.Enqueue(
 		asynq.NewTask(tasks.FetchBlockEventsKey, payload),
 		asynq.Queue(conf.FetchQ),
-		asynq.Timeout(FetchBlockTimeout),
+		asynq.Timeout(conf.Config.FetchBlockTimeout),
 	)
 	return err
 }
 
-func EnqueueParseBlockJob(aqCl asynq.Client, blockNumber uint64) error {
-	payload, err := json.Marshal(schema.BlockTask{BlockNumber: blockNumber})
+func EnqueueParseBlockJob(aqCl asynq.Client, blockTask schema.BlockTask) error {
+	payload, err := json.Marshal(blockTask)
 	if err != nil {
 		return err
 	}
 	_, err = aqCl.Enqueue(
 		asynq.NewTask(tasks.ParseBlockEventsKey, payload),
 		asynq.Queue(conf.ParseQ),
-		asynq.Timeout(ParseBlockTimeout),
+		asynq.Timeout(conf.Config.ParseBlockTimeout),
 	)
 	return err
 }

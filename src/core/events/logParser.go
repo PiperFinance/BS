@@ -93,7 +93,8 @@ func ParseLogs(ctx context.Context, mongoCol *mongo.Collection, logCursor *mongo
 		}
 
 		if parsedLog, parseErr := ParseLog(vLog); parseErr != nil {
-			log.Errorf("ParseLogs: [%T] : %s", parseErr, parseErr)
+			// log.Errorf("ParseLogs: [%T] : %s", parseErr, parseErr)
+			// TODO - Suppresing the error
 		} else {
 			// TODO - Make this insert many
 			_, insertionErr := mongoCol.InsertOne(ctx, parsedLog)

@@ -8,6 +8,7 @@ import (
 	"github.com/PiperFinance/BS/src/core/conf"
 	"github.com/PiperFinance/BS/src/core/tasks"
 	"github.com/PiperFinance/BS/src/core/tasks/handlers"
+	"github.com/PiperFinance/BS/src/utils"
 	"github.com/charmbracelet/log"
 	"github.com/hibiken/asynq"
 )
@@ -17,7 +18,10 @@ type StartConf struct{}
 func (r *StartConf) xChainSchedule() []conf.QueueSchedules {
 	// NOTE - Enqueuing Jobs via scheduler...
 	return []conf.QueueSchedules{
-		{Cron: conf.ETHBlocks, Key: tasks.BlockScanKey, Payload: nil, Q: asynq.Queue(conf.ScanQ), Timeout: 25 * time.Second},
+		{Cron: "@every 5s", Payload: utils.BlockTaskGenUnsafe(1), Q: asynq.Queue(conf.ScanQ), Timeout: 25 * time.Second, Key: tasks.BlockScanKey},
+		{Cron: "@every 3s", Payload: utils.BlockTaskGenUnsafe(56), Q: asynq.Queue(conf.ScanQ), Timeout: 25 * time.Second, Key: tasks.BlockScanKey},
+		{Cron: "@every 1s", Payload: utils.BlockTaskGenUnsafe(250), Q: asynq.Queue(conf.ScanQ), Timeout: 25 * time.Second, Key: tasks.BlockScanKey},
+		{Cron: "@every 1s", Payload: utils.BlockTaskGenUnsafe(137), Q: asynq.Queue(conf.ScanQ), Timeout: 25 * time.Second, Key: tasks.BlockScanKey},
 	}
 }
 

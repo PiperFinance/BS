@@ -4,6 +4,7 @@ import "time"
 
 type BlockTask struct {
 	BlockNumber uint64
+	ChainId     int64
 }
 
 // MBlock Block Stored At Mongo
@@ -12,6 +13,7 @@ type BlockM struct {
 	BlockNumber   uint64    `bson:"no"`
 	UpdatedAt     time.Time `bson:"c_at"`
 	StartedAt     time.Time `bson:"s_at"`
+	ChainId       int64     `bson:"chain"`
 }
 
 func (bm *BlockM) SetScanned() BlockM {

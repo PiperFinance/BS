@@ -12,15 +12,13 @@ import (
 )
 
 var (
-	MainNets       []*schema.Network
-	ETHNetwork     *schema.Network
-	PolygonNetwork *schema.Network
-	FTMNetwork     *schema.Network
-	BSCNetwork     *schema.Network
+	MainNets          []*schema.Network
+	SupportedNetworks map[int64]*schema.Network
 )
 
 func LoadMainNets() {
 	MainNets = make([]*schema.Network, 0)
+	SupportedNetworks = make(map[int64]*schema.Network, len(Config.SupportedChains))
 	jsonFile, err := os.Open("data/mainnets.json")
 	defer jsonFile.Close()
 	if err != nil {
@@ -30,22 +28,11 @@ func LoadMainNets() {
 	if err := json.Unmarshal(byteValue, &MainNets); err != nil {
 		log.Fatal(err)
 	}
-	TestTimeout := 30 * time.Second
 	for _, _net := range MainNets {
-		switch _net.ChainId {
-		case 1:
-			ETHNetwork = _net
-			go utils.NetworkConnectionCheck(ETHNetwork, TestTimeout)
-		case 56:
-			BSCNetwork = _net
-			go utils.NetworkConnectionCheck(BSCNetwork, TestTimeout)
-		case 137:
-			PolygonNetwork = _net
-			go utils.NetworkConnectionCheck(PolygonNetwork, TestTimeout)
-		case 250:
-			FTMNetwork = _net
-			go utils.NetworkConnectionCheck(FTMNetwork, TestTimeout)
+		if utils.Contains(Config.SupportedChains, _net.ChainId) {
+			go utils.NetworkConnectionCheck(_net, Config.TestTimeout)
+			SupportedNetworks[_net.ChainId] = _net
 		}
 	}
-	time.Sleep(TestTimeout)
+	time.Sleep(Config.TestTimeout)
 }
