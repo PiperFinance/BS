@@ -34,8 +34,8 @@ services:
     environment:
       ASYNQ_MON_URL: ":7001"
       API_URL: ":6001"
-      MONGO_DBNAME: BS_T2
-      REDIS_DB: 4
+      MONGO_DBNAME: BS_T3
+      REDIS_DB: 1
       MAX_CONCURRENT_WORKER: 60
       SUPPORTED_CHAINS: "1,250,56,137,43114"
       # SUPPORTED_CHAINS: "1,250,56,137,43114,12306,42161,100,2021,40,9001,1284,10,58,121"
@@ -52,7 +52,7 @@ services:
     healthcheck:
       test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
     volumes:
-      - ./data/redis2:/data
+      - ./data/redis:/data
 
 networks:
   tp_default:
