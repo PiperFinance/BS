@@ -3,8 +3,8 @@ package schema
 import "time"
 
 type BlockTask struct {
-	BlockNumber uint64
-	ChainId     int64
+	BlockNumber uint64 `bson:"no"`
+	ChainId     int64  `bson:"chain"`
 }
 
 // MBlock Block Stored At Mongo

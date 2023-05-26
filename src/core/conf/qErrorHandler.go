@@ -2,10 +2,13 @@ package conf
 
 import (
 	"context"
+	"encoding/json"
 	"time"
 
+	"github.com/PiperFinance/BS/src/core/schema"
 	"github.com/hibiken/asynq"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type QueueErrorHandler struct{}
@@ -13,14 +16,23 @@ type QueueErrorHandler struct{}
 func (er *QueueErrorHandler) HandleError(ctx context.Context, task *asynq.Task, err error) {
 	retried, _ := asynq.GetRetryCount(ctx)
 	maxRetry, _ := asynq.GetMaxRetry(ctx)
-	// err = fmt.`Errorf("retry exhausted for task %s: %w", task.Type, err)
+	var errCol *mongo.Collection
+	blockTask := schema.BlockTask{}
+	if err := json.Unmarshal(task.Payload(), &blockTask); err == nil && blockTask.ChainId > 0 {
+		errCol = GetMongoCol(blockTask.ChainId, QueueErrorsColName)
+	} else {
+		errCol = MongoDefaultErrCol
+	}
+
 	insertCtx, cancel := context.WithTimeout(context.TODO(), time.Second)
 	defer cancel()
-	MongoDB.Collection(QueueErrorsColName).InsertOne(insertCtx, bson.M{
+
+	errCol.InsertOne(insertCtx, bson.M{
 		"time": time.Now().Unix(),
 		"task": bson.M{
-			"payload": task.Payload(),
-			"type":    task.Type(),
+			"payload":   task.Payload(),
+			"blockTask": blockTask,
+			"type":      task.Type(),
 		},
 		"err":      err.Error(),
 		"retries":  retried,

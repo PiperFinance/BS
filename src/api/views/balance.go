@@ -1,6 +1,8 @@
 package views
 
 import (
+	"strconv"
+
 	"github.com/PiperFinance/BS/src/core/conf"
 	"github.com/PiperFinance/BS/src/core/schema"
 	"github.com/charmbracelet/log"
@@ -14,8 +16,14 @@ func GetBal(c *fiber.Ctx) error {
 	if !common.IsHexAddress(user) {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"err": "user field in required and should be in formate of 0x...!"})
 	}
+	chainQ := c.Query("chain", "")
+	chain, err := strconv.ParseInt(chainQ, 10, 64)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"err": "chain field should be an int!"})
+	}
 	add := common.HexToAddress(user)
-	curs, err := conf.MongoDB.Collection(conf.UserBalColName).Find(c.Context(), bson.M{
+
+	curs, err := conf.GetMongoCol(chain, conf.UserBalColName).Find(c.Context(), bson.M{
 		"user": add,
 	})
 	if err != nil {

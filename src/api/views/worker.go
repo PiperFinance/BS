@@ -1,6 +1,8 @@
 package views
 
 import (
+	"strconv"
+
 	"github.com/PiperFinance/BS/src/core/conf"
 	"github.com/PiperFinance/BS/src/core/schema"
 	"github.com/PiperFinance/BS/src/core/utils"
@@ -25,7 +27,13 @@ func LastScannedBlock(c *fiber.Ctx) error {
 }
 
 func LastScannedBlocks(c *fiber.Ctx) error {
-	cursor, err := conf.MongoDB.Collection(conf.BlockColName).Find(
+	chainQ := c.Query("chain", "")
+	chain, err := strconv.ParseInt(chainQ, 10, 64)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"err": "chain field should be an int!"})
+	}
+
+	cursor, err := conf.GetMongoCol(chain, conf.BlockColName).Find(
 		c.Context(),
 		bson.M{})
 	if err != nil {

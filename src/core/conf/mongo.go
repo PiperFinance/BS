@@ -2,6 +2,7 @@ package conf
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
@@ -19,11 +20,13 @@ const (
 	TokenUserMapColName = "TokenUserMap"
 	UserTokenMapColName = "UserTokenMap"
 	QueueErrorsColName  = "QErr"
+	BlockScannerDB      = "BS_Main"
 )
 
 var (
-	MongoCl *mongo.Client
-	MongoDB *mongo.Database
+	mongoCl            *mongo.Client
+	mongoDB            *mongo.Database
+	MongoDefaultErrCol *mongo.Collection
 )
 
 func LoadMongo() {
@@ -32,14 +35,19 @@ func LoadMongo() {
 	opts := options.Client().ApplyURI(Config.MongoUrl.String())
 
 	var err error
-	MongoCl, err = mongo.Connect(ctx, opts)
+	mongoCl, err = mongo.Connect(ctx, opts)
 	if err != nil {
 		log.Fatalf("Mongo: %s", err)
 	}
 
-	err = MongoCl.Ping(ctx, nil)
+	err = mongoCl.Ping(ctx, nil)
 	if err != nil {
 		log.Fatalf("Mongo: %s", err)
 	}
-	MongoDB = MongoCl.Database(Config.MongoDBName)
+	mongoDB = mongoCl.Database(Config.MongoDBName)
+	MongoDefaultErrCol = mongoCl.Database(BlockScannerDB).Collection(QueueErrorsColName)
+}
+
+func GetMongoCol(chain int64, colName string) *mongo.Collection {
+	return mongoCl.Database(fmt.Sprintf("CID_%d", chain)).Collection(colName)
 }

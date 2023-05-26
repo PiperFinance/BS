@@ -55,7 +55,7 @@ func BlockEventsTaskHandler(ctx context.Context, task *asynq.Task) error {
 		ctx,
 		*conf.EthClient(blockTask.ChainId),
 		*conf.QueueClient,
-		*conf.MongoDB.Collection(conf.LogColName),
+		*conf.GetMongoCol(blockTask.ChainId, conf.LogColName),
 		blockTask.BlockNumber)
 	if err != nil {
 		log.Errorf("Task BlockEvents [%+v] : %s ", blockTask, err)
@@ -64,7 +64,7 @@ func BlockEventsTaskHandler(ctx context.Context, task *asynq.Task) error {
 
 	bm := schema.BlockM{BlockNumber: blockTask.BlockNumber}
 	bm.SetFetched()
-	if _, err := conf.MongoDB.Collection(conf.BlockColName).ReplaceOne(
+	if _, err := conf.GetMongoCol(blockTask.ChainId, conf.BlockColName).ReplaceOne(
 		ctx,
 		bson.M{"no": blockTask.BlockNumber}, &bm); err != nil {
 		log.Errorf("Task BlockEvents [%+v] : %s ", blockTask, err)
@@ -85,7 +85,7 @@ func BlockEventsTaskHandler(ctx context.Context, task *asynq.Task) error {
 // Parses Newly fetched events
 func ParseBlockEventsTaskHandler(ctx context.Context, task *asynq.Task) error {
 	blockTask := schema.BlockTask{}
-	mongoParsedLogsCol := conf.MongoDB.Collection(conf.ParsedLogColName)
+	mongoParsedLogsCol := conf.GetMongoCol(blockTask.ChainId, conf.ParsedLogColName)
 	err := json.Unmarshal(task.Payload(), &blockTask)
 	if err != nil {
 		log.Errorf("Task ParseBlockEvents [%+v] %s", blockTask, err)
@@ -93,7 +93,7 @@ func ParseBlockEventsTaskHandler(ctx context.Context, task *asynq.Task) error {
 	}
 	ctxFind, cancel := context.WithTimeout(ctx, 5*time.Minute)
 	defer cancel()
-	cursor, err := conf.MongoDB.Collection(conf.LogColName).Find(ctxFind, bson.M{"blockNumber": &blockTask.BlockNumber})
+	cursor, err := conf.GetMongoCol(blockTask.ChainId, conf.LogColName).Find(ctxFind, bson.M{"blockNumber": &blockTask.BlockNumber})
 	defer cursor.Close(ctxFind)
 	if err != nil {
 		return err
@@ -101,14 +101,14 @@ func ParseBlockEventsTaskHandler(ctx context.Context, task *asynq.Task) error {
 	events.ParseLogs(ctx, mongoParsedLogsCol, cursor)
 	ctxDel, cancel := context.WithTimeout(ctx, 5*time.Minute)
 	defer cancel()
-	_, err = conf.MongoDB.Collection(conf.LogColName).DeleteMany(ctxDel, bson.M{"blockNumber": &blockTask.BlockNumber})
+	_, err = conf.GetMongoCol(blockTask.ChainId, conf.LogColName).DeleteMany(ctxDel, bson.M{"blockNumber": &blockTask.BlockNumber})
 	if err != nil {
 		return err
 	}
 
 	bm := schema.BlockM{BlockNumber: blockTask.BlockNumber, ChainId: blockTask.ChainId}
 	bm.SetParsed()
-	if _, err := conf.MongoDB.Collection(conf.BlockColName).ReplaceOne(
+	if _, err := conf.GetMongoCol(blockTask.ChainId, conf.BlockColName).ReplaceOne(
 		ctx,
 		bson.M{"no": blockTask.BlockNumber}, &bm); err != nil {
 		log.Errorf("Task ParseBlockEvents [%+v] %s", blockTask, err)
@@ -155,7 +155,7 @@ func blockScanTask(ctx context.Context, blockTask schema.BlockTask, aqCl asynq.C
 		for blockNum := lastBlock; blockNum < currentBlock; blockNum++ {
 			b := schema.BlockM{BlockNumber: blockNum, ChainId: chain}
 			b.SetScanned()
-			conf.MongoDB.Collection(conf.BlockColName).InsertOne(ctx, &b)
+			conf.GetMongoCol(blockTask.ChainId, conf.BlockColName).InsertOne(ctx, &b)
 			_err := enqueuer.EnqueueFetchBlockJob(aqCl, schema.BlockTask{BlockNumber: b.BlockNumber, ChainId: chain})
 			if _err != nil {
 				return _err

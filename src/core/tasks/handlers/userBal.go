@@ -19,12 +19,12 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func userBalanceCol() *mongo.Collection {
-	return conf.MongoDB.Collection(conf.UserBalColName)
+func userBalanceCol(chain int64) *mongo.Collection {
+	return conf.GetMongoCol(chain, conf.UserBalColName)
 }
 
-func TokenVolumeCol() *mongo.Collection {
-	return conf.MongoDB.Collection(conf.TokenVolumeColName)
+func TokenVolumeCol(chain int64) *mongo.Collection {
+	return conf.GetMongoCol(chain, conf.TokenVolumeColName)
 }
 
 func getBalance(ctx context.Context, block schema.BlockTask, user common.Address, token common.Address) (*big.Int, error) {
@@ -39,17 +39,18 @@ func getBalance(ctx context.Context, block schema.BlockTask, user common.Address
 
 // UpdateUserBalTaskHandler Updates Online User's Balance and then vacuums log record from database to save space
 func UpdateUserBalTaskHandler(ctx context.Context, task *asynq.Task) error {
+	// TODO - Why fixed timeout ?
 	ctxFind, cancel := context.WithTimeout(ctx, 5*time.Minute)
 	defer cancel()
 
-	block := schema.BlockTask{}
-	err := json.Unmarshal(task.Payload(), &block)
+	blockTask := schema.BlockTask{}
+	err := json.Unmarshal(task.Payload(), &blockTask)
 	if err != nil {
 		// log.Infof("Task ParseBlockEvents [%s] : Finished !", err)
 		return err
 	}
-	cursor, err := conf.MongoDB.Collection(conf.ParsedLogColName).Find(ctxFind, bson.M{
-		"log.blockNumber": &block.BlockNumber,
+	cursor, err := conf.GetMongoCol(blockTask.ChainId, conf.ParsedLogColName).Find(ctxFind, bson.M{
+		"log.blockNumber": &blockTask.BlockNumber,
 		// TODO - Chain check here ....
 		"log.name": events.TransferE,
 	})
@@ -63,14 +64,14 @@ func UpdateUserBalTaskHandler(ctx context.Context, task *asynq.Task) error {
 			log.Error(err)
 			continue
 		}
-		processTransferLog(ctx, block, transfer)
-		if _, err := conf.MongoDB.Collection(conf.ParsedLogColName).DeleteOne(ctxFind, bson.M{"_id": transfer.ID}); err != nil {
+		processTransferLog(ctx, blockTask, transfer)
+		if _, err := conf.GetMongoCol(blockTask.ChainId, conf.ParsedLogColName).DeleteOne(ctxFind, bson.M{"_id": transfer.ID}); err != nil {
 			log.Error(err)
 		} else {
 			// log.Info(res)
 		}
 	}
-	// if res, err := conf.MongoDB.Collection(conf.ParsedLogColName).DeleteMany(ctxFind, bson.M{
+	// if res, err := conf.GetMongoCol(blockTask.ChainId, conf.ParsedLogColName).DeleteMany(ctxFind, bson.M{
 	// 	"log.blockNumber": &block.BlockNumber,
 	// 	"log.name":        events.TransferE,
 	// }); err != nil {
@@ -78,17 +79,17 @@ func UpdateUserBalTaskHandler(ctx context.Context, task *asynq.Task) error {
 	// } else {
 	// 	log.Infof("Deleted Logs : %s Deleted", res.DeletedCount)
 	// }
-	bm := schema.BlockM{BlockNumber: block.BlockNumber}
+	bm := schema.BlockM{BlockNumber: blockTask.BlockNumber}
 	bm.SetParsed()
-	if _, err := conf.MongoDB.Collection(conf.BlockColName).ReplaceOne(
+	if _, err := conf.GetMongoCol(blockTask.ChainId, conf.BlockColName).ReplaceOne(
 		ctx,
-		bson.M{"no": block.BlockNumber}, &bm); err != nil {
+		bson.M{"no": blockTask.BlockNumber}, &bm); err != nil {
 		log.Errorf("BlockEventsTaskHandler")
 	} else {
 		// log.Infof("Replace Result : %s modified", res.ModifiedCount)
 	}
 	if err != nil {
-		log.Errorf("Task UpdateUserBal [%d] : Err : %s !", block.BlockNumber, err)
+		log.Errorf("Task UpdateUserBal [%d] : Err : %s !", blockTask.BlockNumber, err)
 	} else {
 		// log.Infof("Task UpdateUserBal [%d] : Finished !", block.BlockNumber)
 	}
@@ -119,17 +120,17 @@ func processTransferLog(ctx context.Context, block schema.BlockTask, transfer sc
 	return nil
 }
 
-func processUserBal(ctx context.Context, block schema.BlockTask, user common.Address, token common.Address, amount *big.Int) (*schema.UserBalance, error) {
+func processUserBal(ctx context.Context, blockTask schema.BlockTask, user common.Address, token common.Address, amount *big.Int) (*schema.UserBalance, error) {
 	userBal := schema.UserBalance{
 		User:      user,
 		Token:     token,
-		ChangedAt: block.BlockNumber,
+		ChangedAt: blockTask.BlockNumber,
 	}
 	filter := bson.D{{Key: "user", Value: user}, {Key: "token", Value: token}}
-	if res := userBalanceCol().FindOne(ctx, filter); res.Err() != nil {
+	if res := userBalanceCol(blockTask.ChainId).FindOne(ctx, filter); res.Err() != nil {
 		if res.Err() == mongo.ErrNoDocuments {
 			// TODO - Get For the first time ...
-			bal, err := getBalance(ctx, block, user, token)
+			bal, err := getBalance(ctx, blockTask, user, token)
 			if err != nil {
 				return nil, err
 			}
@@ -137,8 +138,8 @@ func processUserBal(ctx context.Context, block schema.BlockTask, user common.Add
 				conf.CallCount.Add()
 			}
 			userBal.SetBalance(bal)
-			userBal.StartedAt = block.BlockNumber
-			userBalanceCol().InsertOne(ctx, &userBal)
+			userBal.StartedAt = blockTask.BlockNumber
+			userBalanceCol(blockTask.ChainId).InsertOne(ctx, &userBal)
 		} else {
 			return nil, res.Err()
 		}
@@ -150,8 +151,8 @@ func processUserBal(ctx context.Context, block schema.BlockTask, user common.Add
 	if err := userBal.AddBal(amount); err != nil {
 		return nil, err
 	}
-	update := bson.D{{Key: "$set", Value: bson.D{{Key: "bal", Value: userBal.GetBalanceStr()}, {Key: "c_t", Value: block.BlockNumber}}}}
-	_, err := userBalanceCol().UpdateOne(ctx, filter, update)
+	update := bson.D{{Key: "$set", Value: bson.D{{Key: "bal", Value: userBal.GetBalanceStr()}, {Key: "c_t", Value: blockTask.BlockNumber}}}}
+	_, err := userBalanceCol(blockTask.ChainId).UpdateOne(ctx, filter, update)
 	if err != nil {
 		return nil, err
 	}
