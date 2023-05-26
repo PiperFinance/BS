@@ -10,6 +10,7 @@ COPY ./go.sum .
 RUN go mod download
 
 COPY ./src ./src
+COPY ./data ./data
 RUN go build -o ./app  github.com/PiperFinance/BS/src
 
 FROM alpine:latest
