@@ -3,18 +3,22 @@ package views
 import (
 	"strconv"
 
-	"github.com/PiperFinance/BS/src/core/conf"
+	"github.com/PiperFinance/BS/src/conf"
 	"github.com/PiperFinance/BS/src/core/schema"
 	"github.com/PiperFinance/BS/src/core/utils"
 
-	"github.com/charmbracelet/log"
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson"
 )
 
 func LastScannedBlock(c *fiber.Ctx) error {
 	// TODO - FIX this to be multi chain ...
-	lastBlock, err := utils.GetLastBlock(1)
+	chainQ := c.Query("chain", "")
+	chain, err := strconv.ParseInt(chainQ, 10, 64)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"err": "chain field should be an int!"})
+	}
+	lastBlock, err := utils.GetLastBlock(chain)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"err": err.Error(),
@@ -46,7 +50,7 @@ func LastScannedBlocks(c *fiber.Ctx) error {
 		for i < 100 && cursor.Next(c.Context()) {
 			err = cursor.Decode(&r[i])
 			if err != nil {
-				log.Errorf("Decoding Block Failed @ %s", err)
+				conf.Logger.Errorf("Decoding Block Failed @ %s", err)
 				continue
 			}
 		}

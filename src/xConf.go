@@ -3,11 +3,10 @@ package main
 import (
 	"github.com/PiperFinance/BS/src/api"
 	"github.com/PiperFinance/BS/src/api/views"
-	"github.com/PiperFinance/BS/src/core/conf"
+	"github.com/PiperFinance/BS/src/conf"
 	"github.com/PiperFinance/BS/src/core/tasks"
 	"github.com/PiperFinance/BS/src/core/tasks/handlers"
 	"github.com/PiperFinance/BS/src/utils"
-	"github.com/charmbracelet/log"
 	"github.com/hibiken/asynq"
 )
 
@@ -64,14 +63,14 @@ func (r *StartConf) StartApi() {
 }
 
 func (r *StartConf) StartAll() {
-	log.Info("Starting Worker")
+	conf.Logger.Info("Starting Worker")
 	r.StartWorker() // Consumer
-	log.Info("Starting Client")
+	conf.Logger.Info("Starting Client")
 	r.StartClient() // Producer
-	log.Info("Starting Scheduler")
+	conf.Logger.Info("Starting Scheduler")
 	r.StartScheduler() // Scheduled Producer
-	log.Info("Starting AsynQMon")
+	conf.Logger.Info("Starting AsynQMon")
 	r.StartMon() // asynqMon
-	log.Info("Starting Api")
+	conf.Logger.Info("Starting Api")
 	r.StartApi()
 }

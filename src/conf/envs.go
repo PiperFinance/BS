@@ -1,11 +1,12 @@
 package conf
 
 import (
+	"fmt"
 	"net/url"
 	"time"
 
 	"github.com/caarlos0/env/v8"
-	"github.com/charmbracelet/log"
+	"go.uber.org/zap/zapcore"
 )
 
 type config struct {
@@ -24,16 +25,23 @@ type config struct {
 	UserBalUpdateTimeout time.Duration `env:"USER_BAL_UPDATE_TIMEOUT" envDefault:"5m"`
 	TestTimeout          time.Duration `env:"TEST_RPC_CONNECTION_TIMEOUT" envDefault:"10s"`
 	ScanTaskTimeout      time.Duration `env:"SCAN_TASK_TIMEOUT" envDefault:"25s"`
+	LogLevel             string        `env:"LOG_LEVEL" envDefault:"warn"`
+	DEV                  bool          `env:"DEV_DEBUG" envDefault:"true"`
+	ZapLogLevel          zapcore.Level
 }
 
 var Config config
 
 func LoadConfig() {
-	cfg := config{}
-	if err := env.Parse(&cfg); err != nil {
-		log.Fatalf("%+v", err)
+	// cfg := config{}
+	if err := env.Parse(&Config); err != nil {
+		panic(fmt.Sprintf("%+v", err))
 	}
-	Config = cfg
+	if lvl, err := zapcore.ParseLevel(Config.LogLevel); err != nil {
+		panic(fmt.Sprintf("%+v", err))
+	} else {
+		Config.ZapLogLevel = lvl
+	}
 
-	log.Infof("%+v", Config)
+	// log.Infof("%+v", Config)
 }

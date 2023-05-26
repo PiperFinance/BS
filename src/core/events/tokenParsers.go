@@ -3,9 +3,9 @@ package events
 import (
 	"strings"
 
+	"github.com/PiperFinance/BS/src/conf"
 	"github.com/PiperFinance/BS/src/core/contracts"
 	"github.com/PiperFinance/BS/src/core/schema"
-	"github.com/charmbracelet/log"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
@@ -19,17 +19,17 @@ var (
 
 func init() {
 	if tmp20, err := abi.JSON(strings.NewReader(contracts.ERC20MetaData.ABI)); err != nil {
-		log.Fatalf("ParseLogs: %s", err)
+		conf.Logger.Fatalf("ParseLogs: %s", err)
 	} else {
 		erc20 = tmp20
 	}
 	if tmp721, err721 := abi.JSON(strings.NewReader(contracts.ERC721MetaData.ABI)); err721 != nil {
-		log.Fatalf("ParseLogs: %s", err721)
+		conf.Logger.Fatalf("ParseLogs: %s", err721)
 	} else {
 		erc721 = tmp721
 	}
 	if tmp1155, err1155 := abi.JSON(strings.NewReader(contracts.ERC1155MetaData.ABI)); err1155 != nil {
-		log.Fatalf("ParseLogs: %s", err1155)
+		conf.Logger.Fatalf("ParseLogs: %s", err1155)
 	} else {
 		erc1155 = tmp1155
 	}

@@ -1,16 +1,13 @@
 package main
 
 import (
-	"github.com/PiperFinance/BS/src/core/conf"
+	"github.com/PiperFinance/BS/src/conf"
 	_ "github.com/joho/godotenv/autoload"
 )
 
-type BlockTask struct {
-	BlockNumber uint64
-}
-
 func init() {
 	conf.LoadConfig()
+	conf.LoadLogger()
 	conf.LoadMongo()
 	conf.LoadRedis()
 	conf.LoadMainNets()
@@ -20,6 +17,7 @@ func init() {
 }
 
 // ONLY FOR TESTING PURPOSES ...
+
 func main() {
 	(&StartConf{}).StartAll()
 	select {}

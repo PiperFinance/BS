@@ -6,7 +6,7 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/PiperFinance/BS/src/core/conf"
+	"github.com/PiperFinance/BS/src/conf"
 	"github.com/PiperFinance/BS/src/core/events"
 	"github.com/PiperFinance/BS/src/core/schema"
 	"github.com/PiperFinance/BS/src/core/tasks"
@@ -16,7 +16,6 @@ import (
 	"github.com/ethereum/go-ethereum"
 	"github.com/hibiken/asynq"
 
-	"github.com/charmbracelet/log"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -28,15 +27,15 @@ func BlockScanTaskHandler(ctx context.Context, task *asynq.Task) error {
 	blockTask := schema.BlockTask{}
 	err := json.Unmarshal(task.Payload(), &blockTask)
 	if err != nil {
-		log.Errorf("Task BlockScan [%+v] : %s ", blockTask, err)
+		conf.Logger.Errorf("Task BlockScan [%+v] : %s ", blockTask, err)
 		return err
 	}
 	err = blockScanTask(ctx, blockTask, *conf.QueueClient)
 	_ = task
 	if err != nil {
-		log.Errorf("Task BlockScan [%+v] : %s ", blockTask, err)
+		conf.Logger.Errorf("Task BlockScan [%+v] : %s ", blockTask, err)
 	} else {
-		log.Infof("Task BlockScan [%+v] ", blockTask)
+		conf.Logger.Infof("Task BlockScan [%+v] ", blockTask)
 	}
 	return err
 }
@@ -47,7 +46,7 @@ func BlockEventsTaskHandler(ctx context.Context, task *asynq.Task) error {
 	blockTask := schema.BlockTask{}
 	err := json.Unmarshal(task.Payload(), &blockTask)
 	if err != nil {
-		log.Errorf("Task BlockEvents [%+v] : %s ", blockTask, err)
+		conf.Logger.Errorf("Task BlockEvents [%+v] : %s ", blockTask, err)
 		return err
 	}
 	err = blockEventsTask(
@@ -57,7 +56,7 @@ func BlockEventsTaskHandler(ctx context.Context, task *asynq.Task) error {
 		*conf.GetMongoCol(blockTask.ChainId, conf.LogColName),
 		blockTask.BlockNumber)
 	if err != nil {
-		log.Errorf("Task BlockEvents [%+v] : %s ", blockTask, err)
+		conf.Logger.Errorf("Task BlockEvents [%+v] : %s ", blockTask, err)
 		return err
 	}
 
@@ -66,15 +65,15 @@ func BlockEventsTaskHandler(ctx context.Context, task *asynq.Task) error {
 	if _, err := conf.GetMongoCol(blockTask.ChainId, conf.BlockColName).ReplaceOne(
 		ctx,
 		bson.M{"no": blockTask.BlockNumber}, &bm); err != nil {
-		log.Errorf("Task BlockEvents [%+v] : %s ", blockTask, err)
+		conf.Logger.Errorf("Task BlockEvents [%+v] : %s ", blockTask, err)
 	} else {
-		// log.Infof("Replace Result : %d modified", res.ModifiedCount)
+		// conf.Logger.Infof("Replace Result : %d modified", res.ModifiedCount)
 	}
 	err = enqueuer.EnqueueParseBlockJob(*conf.QueueClient, blockTask)
 	if err != nil {
-		log.Errorf("Task BlockEvents [%+v] : %s ", blockTask, err)
+		conf.Logger.Errorf("Task BlockEvents [%+v] : %s ", blockTask, err)
 	} else {
-		log.Infof("Task BlockEvents [%+v] ", blockTask)
+		conf.Logger.Infof("Task BlockEvents [%+v] ", blockTask)
 	}
 	return err
 }
@@ -85,7 +84,7 @@ func ParseBlockEventsTaskHandler(ctx context.Context, task *asynq.Task) error {
 	blockTask := schema.BlockTask{}
 	err := json.Unmarshal(task.Payload(), &blockTask)
 	if err != nil {
-		log.Errorf("Task ParseBlockEvents [%+v] %s", blockTask, err)
+		conf.Logger.Errorf("Task ParseBlockEvents [%+v] %s", blockTask, err)
 		return err
 	}
 	ctxFind, cancel := context.WithTimeout(ctx, 5*time.Minute)
@@ -109,17 +108,17 @@ func ParseBlockEventsTaskHandler(ctx context.Context, task *asynq.Task) error {
 	if _, err := conf.GetMongoCol(blockTask.ChainId, conf.BlockColName).ReplaceOne(
 		ctx,
 		bson.M{"no": blockTask.BlockNumber}, &bm); err != nil {
-		log.Errorf("Task ParseBlockEvents [%+v] %s", blockTask, err)
+		conf.Logger.Errorf("Task ParseBlockEvents [%+v] %s", blockTask, err)
 		return err
 	} else {
-		// log.Infof("Replace Result : %d modified", res.ModifiedCount)
+		// conf.Logger.Infof("Replace Result : %d modified", res.ModifiedCount)
 	}
 
 	err = enqueuer.EnqueueUpdateUserBalJob(*conf.QueueClient, blockTask)
 	if err != nil {
-		log.Errorf("Task ParseBlockEvents [%+v] %s", blockTask, err)
+		conf.Logger.Errorf("Task ParseBlockEvents [%+v] %s", blockTask, err)
 	} else {
-		log.Infof("Task ParseBlockEvents [%+v]", blockTask)
+		conf.Logger.Infof("Task ParseBlockEvents [%+v]", blockTask)
 	}
 
 	return err
@@ -136,14 +135,17 @@ func blockScanTask(ctx context.Context, blockTask schema.BlockTask, aqCl asynq.C
 	var lastBlock uint64
 
 	if err != nil {
-		log.Errorf("Task BlockScan [%+v] : %s ", blockTask, err)
+		conf.Logger.Errorf("Task BlockScan [%+v] : %s ", blockTask, err)
 		return err
 	}
 	if lastBlockVal := conf.RedisClient.Get(ctx, tasks.LastScannedBlockKey(chain)); lastBlockVal.Err() == redis.Nil {
 		lastBlock = conf.StartingBlock(ctx, blockTask.ChainId)
+		if status := conf.RedisClient.Set(ctx, tasks.LastScannedBlockKey(chain), lastBlock, 0); status != nil && status.Err() != nil {
+			conf.Logger.Errorf("Task BlockScan [%+v] : %s ", blockTask, err)
+		}
 	} else {
 		if r, parseErr := lastBlockVal.Int(); parseErr != nil {
-			log.Errorf("blockScanTask: %s \nPossible issue is that somethings overwrote %s's value", parseErr, tasks.LastScannedBlockKey(chain))
+			conf.Logger.Errorf("blockScanTask: %s \nPossible issue is that somethings overwrote %s's value", parseErr, tasks.LastScannedBlockKey(chain))
 			return err
 		} else {
 			lastBlock = uint64(r)
@@ -161,7 +163,7 @@ func blockScanTask(ctx context.Context, blockTask schema.BlockTask, aqCl asynq.C
 		}
 		status := conf.RedisClient.Set(ctx, tasks.LastScannedBlockKey(chain), currentBlock, 0)
 		if status != nil && status.Err() != nil {
-			log.Errorf("Task BlockScan [%+v] : %s ", blockTask, err)
+			conf.Logger.Errorf("Task BlockScan [%+v] : %s ", blockTask, err)
 		}
 	}
 	return err

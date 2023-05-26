@@ -2,17 +2,17 @@ package utils
 
 import (
 	"encoding/json"
+	"log"
 	"math/big"
 
 	"github.com/PiperFinance/BS/src/core/schema"
-	"github.com/charmbracelet/log"
 )
 
 func BlockTaskGenUnsafe(chain int64) []byte {
 	x := schema.BlockTask{ChainId: chain}
 	r, err := json.Marshal(x)
 	if err != nil {
-		log.Errorf("BlockTaskGenUnsafe : %+v", err)
+		log.Println(" ERR : BlockTaskGenUnsafe : %+v", err)
 		return nil
 	} else {
 		return r
