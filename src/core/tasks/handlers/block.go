@@ -132,6 +132,7 @@ func blockScanTask(ctx context.Context, blockTask schema.BlockTask, aqCl asynq.C
 	if conf.CallCount != nil {
 		conf.CallCount.Add(blockTask.ChainId)
 	}
+	currentBlock -= conf.Config.BlockHeadDelay
 	var lastBlock uint64
 
 	if err != nil {

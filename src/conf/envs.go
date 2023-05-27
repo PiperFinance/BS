@@ -10,15 +10,17 @@ import (
 )
 
 type config struct {
-	MongoUrl             url.URL       `env:"MONGO_URL"`
-	MongoDBName          string        `env:"MONGO_DBNAME"`
-	RedisUrl             url.URL       `env:"REDIS_URL"`
-	RedisDB              int           `env:"REDIS_DB"`
-	MaxConcurrency       int           `env:"MAX_CONCURRENT_WORKER"`
-	MaxTaskTimeOut       time.Duration `env:"MaxTaskTimeOut" envDefault:"10m"`
-	AsynqMonUrl          string        `env:"ASYNQ_MON_URL" envDefault:":7654"`
-	ApiUrl               string        `env:"API_URL" envDefault:":1300"`
-	StartingBlockNumber  uint64        `env:"STARTING_BLOCK_NUMBER" envDefault:"3"`
+	MongoUrl            url.URL       `env:"MONGO_URL"`
+	MongoDBName         string        `env:"MONGO_DBNAME"`
+	RedisUrl            url.URL       `env:"REDIS_URL"`
+	RedisDB             int           `env:"REDIS_DB"`
+	MaxConcurrency      int           `env:"MAX_CONCURRENT_WORKER"`
+	MaxTaskTimeOut      time.Duration `env:"MaxTaskTimeOut" envDefault:"10m"`
+	AsynqMonUrl         string        `env:"ASYNQ_MON_URL" envDefault:":7654"`
+	ApiUrl              string        `env:"API_URL" envDefault:":1300"`
+	StartingBlockNumber uint64        `env:"STARTING_BLOCK_NUMBER" envDefault:"3"`
+	BlockHeadDelay      uint64        `env:"BLOCK_HEAD_DELAY" envDefault:"20"`
+
 	SupportedChains      []int64       `env:"SUPPORTED_CHAINS" envSeparator:","`
 	ParseBlockTimeout    time.Duration `env:"PARSE_BLOCK_TIMEOUT" envDefault:"2m"`
 	FetchBlockTimeout    time.Duration `env:"FETCH_BLOCK_TIMEOUT" envDefault:"5m"`
