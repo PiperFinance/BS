@@ -39,11 +39,13 @@ func ParseBigIntResult(result []byte) *big.Int {
 	} else {
 		z.SetBytes(result)
 	}
-	if z.Cmp(big.NewInt(100)) <= 0 {
-		return nil
-	} else {
-		return z
-	}
+	return z
+
+	// if z.Cmp(big.NewInt(100)) <= 0 {
+	// 	return z
+	// } else {
+	// 	return z
+	// }
 }
 
 func BalanceOf(call UserToken) Multicall.Multicall3Call3 {
