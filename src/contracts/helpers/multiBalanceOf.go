@@ -77,7 +77,7 @@ func (self *EasyBalanceOf) Execute(ctx context.Context) error {
 
 	ctxWTimeout, cancel := context.WithTimeout(ctx, conf.Config.MultiCallTimeout)
 	defer cancel()
-	DefaultW3CallOpts := bind.CallOpts{Context: ctxWTimeout}
+	DefaultW3CallOpts := bind.CallOpts{Context: ctxWTimeout, BlockNumber: big.NewInt(self.BlockNumber)}
 	for i, _call := range calls {
 		conf.Logger.Infof("[%d][%s][%s]", i, _call.Target, common.Bytes2Hex(_call.CallData))
 	}
