@@ -24,9 +24,9 @@ func init() {
 
 func main() {
 	usersTokens := []contract_helpers.UserToken{
-		{User: common.HexToAddress("0x02631bb2d276af822aee9d02ff5bd5b5edfa4994"), Token: common.HexToAddress("0x049d68029688eabf473097a2fc38ef61633a3c7a")},
+		{User: common.HexToAddress("0xabca9665c76722b0b40643ca38672915bd259476"), Token: common.HexToAddress("0x5f7f94a1dd7b15594d17543beb8b30b111dd464c")},
 	}
-	bal := contract_helpers.EasyBalanceOf{UserTokens: usersTokens, ChainId: 250, BlockNumber: 58545713}
+	bal := contract_helpers.EasyBalanceOf{UserTokens: usersTokens, ChainId: 250, BlockNumber: 63200835}
 	if err := bal.Execute(context.Background()); err != nil {
 		conf.Logger.Fatal(err)
 	} else {

@@ -75,14 +75,19 @@ func (self *EasyBalanceOf) Execute(ctx context.Context) error {
 		calls[i] = userTokens.call
 	}
 
-	ctxWTimeout, cancel := context.WithTimeout(ctx, conf.Config.MultiCallTimeout)
-	defer cancel()
-	DefaultW3CallOpts := bind.CallOpts{Context: ctxWTimeout, BlockNumber: big.NewInt(self.BlockNumber)}
+	ctxWTimeout, _ := context.WithTimeout(ctx, conf.Config.MultiCallTimeout)
+	var cOpts bind.CallOpts
+	if self.BlockNumber > 1 {
+		cOpts = bind.CallOpts{Context: ctxWTimeout, BlockNumber: big.NewInt(self.BlockNumber)}
+	} else {
+		cOpts = bind.CallOpts{Context: ctxWTimeout}
+	}
+
 	for i, _call := range calls {
 		conf.Logger.Infof("[%d][%s][%s]", i, _call.Target, common.Bytes2Hex(_call.CallData))
 	}
 
-	res, err := self.multiCaller().Aggregate3(&DefaultW3CallOpts, calls)
+	res, err := self.multiCaller().Aggregate3(&cOpts, calls)
 
 	if err != nil {
 		return err
