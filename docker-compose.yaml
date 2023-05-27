@@ -34,7 +34,7 @@ services:
     environment:
       ASYNQ_MON_URL: ":7001"
       API_URL: ":6001"
-      MONGO_DBNAME: BS_T4
+      MONGO_DBNAME: BS_T5
       REDIS_DB: 2
       MAX_CONCURRENT_WORKER: 60
       # SUPPORTED_CHAINS: "1,250,56,137,43114"
