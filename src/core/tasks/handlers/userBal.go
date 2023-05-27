@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/PiperFinance/BS/src/conf"
+	contract_helpers "github.com/PiperFinance/BS/src/contracts/helpers"
 	"github.com/PiperFinance/BS/src/core/contracts"
 	"github.com/PiperFinance/BS/src/core/events"
 	"github.com/PiperFinance/BS/src/core/schema"
@@ -17,6 +18,9 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
+
+func lock(key string) {
+}
 
 func userBalanceCol(chain int64) *mongo.Collection {
 	return conf.GetMongoCol(chain, conf.UserBalColName)
@@ -36,18 +40,29 @@ func getBalance(ctx context.Context, block schema.BlockTask, user common.Address
 	}
 }
 
+func ChainMutex(i int64) {
+}
+
 // UpdateUserBalTaskHandler Updates Online User's Balance and then vacuums log record from database to save space
 func UpdateUserBalTaskHandler(ctx context.Context, task *asynq.Task) error {
 	// TODO - Why fixed timeout ?
+
 	ctxFind, cancel := context.WithTimeout(ctx, 5*time.Minute)
 	defer cancel()
-
 	blockTask := schema.BlockTask{}
 	err := json.Unmarshal(task.Payload(), &blockTask)
 	if err != nil {
 		// conf.Logger.Infof("Task ParseBlockEvents [%s] : Finished !", err)
 		return err
 	}
+
+	// mutex := conf.RedisClient.ChainMutex(blockTask.ChainId, conf.UserBalanceRMutex)
+	// defer mutex.Unlock()
+	// if err := mutex.Lock(); err != nil {
+	// 	conf.Logger.Warnf("UserBalHandler is Locked: %+v", blockTask)
+	// 	return err
+	// }
+
 	cursor, err := conf.GetMongoCol(blockTask.ChainId, conf.ParsedLogColName).Find(ctxFind, bson.M{
 		"log.blockNumber": &blockTask.BlockNumber,
 		// TODO - Chain check here ....
@@ -57,19 +72,25 @@ func UpdateUserBalTaskHandler(ctx context.Context, task *asynq.Task) error {
 	if err != nil {
 		return err
 	}
+	transfers := make([]schema.LogTransfer, 0)
 	for cursor.Next(ctx) {
 		transfer := schema.LogTransfer{}
 		if err := cursor.Decode(&transfer); err != nil {
 			conf.Logger.Error(err)
 			continue
 		}
-		processTransferLog(ctx, blockTask, transfer)
-		if _, err := conf.GetMongoCol(blockTask.ChainId, conf.ParsedLogColName).DeleteOne(ctxFind, bson.M{"_id": transfer.ID}); err != nil {
-			conf.Logger.Error(err)
-		} else {
-			// conf.Logger.Info(res)
-		}
+		transfers = append(transfers, transfer)
 	}
+
+	processTransferLogs(ctx, blockTask, transfers)
+
+	// flushTransferLogs(ctx, blockTask, transfers)
+	// if _, err := conf.GetMongoCol(blockTask.ChainId, conf.ParsedLogColName).DeleteOne(ctxFind, bson.M{"_id": transfer.ID}); err != nil {
+	// 	conf.Logger.Error(err)
+	// } else {
+	// 	// conf.Logger.Info(res)
+	// }
+
 	// if res, err := conf.GetMongoCol(blockTask.ChainId, conf.ParsedLogColName).DeleteMany(ctxFind, bson.M{
 	// 	"log.blockNumber": &block.BlockNumber,
 	// 	"log.name":        events.TransferE,
@@ -93,6 +114,83 @@ func UpdateUserBalTaskHandler(ctx context.Context, task *asynq.Task) error {
 		// conf.Logger.Infof("Task UpdateUserBal [%d] : Finished !", block.BlockNumber)
 	}
 	return err
+}
+
+func processTransferLogs(ctx context.Context, block schema.BlockTask, transfers []schema.LogTransfer) error {
+	//// NOTE - Make sure this action blocks the this chain work flow [ No new block event fetch ...]
+	//// STUB - used redis redsync lock
+
+	//// NOTE - Find user's with no previous balance
+	// findNewRecordsUnsafe(ctx,block,transfers)
+	// // NOTE - Update user's old balance
+	// updateUserTokens(findNewRecordsUnsafe(ctx,block,transfers))
+	// // NOTE - Process Transfers as usual
+	//// NOTE - unlock task log
+	//// NOTE - Flush logs
+	if err := updateUserTokens(ctx, block, findNewRecordsUnsafe(ctx, block, transfers)); err != nil {
+		return err
+	}
+	for _, trx := range transfers {
+		if err := processTransferLog(ctx, block, trx); err != nil {
+			conf.Logger.Warn(err)
+		}
+	}
+
+	return nil
+}
+
+func isNew(ctx context.Context, chainId int64, user common.Address, token common.Address) bool {
+	filter := bson.D{{Key: "user", Value: user}, {Key: "token", Value: token}}
+	if res := userBalanceCol(chainId).FindOne(ctx, filter); res.Err() == mongo.ErrNoDocuments {
+		return true
+	} else {
+		if res.Err() == nil {
+			conf.Logger.Infof("NewUserFinder: user=%s ,token=%s , err=%+v", user.String(), token.String())
+		} else {
+			conf.Logger.Warnf("NewUserFinder: user=%s ,token=%s , err=%+v", user.String(), token.String())
+		}
+		return false
+	}
+}
+
+func updateUserTokens(ctx context.Context, blockTask schema.BlockTask, usersTokens []contract_helpers.UserToken) error {
+	if len(usersTokens) < 1 {
+		return nil
+	}
+	bal := contract_helpers.EasyBalanceOf{UserTokens: usersTokens, ChainId: blockTask.ChainId, BlockNumber: int64(blockTask.BlockNumber)}
+	if err := bal.Execute(ctx); err != nil {
+		// conf.Logger.Error(err)
+		return err
+	}
+	col := userBalanceCol(blockTask.ChainId)
+	balances := make([]interface{}, len(bal.UserTokens))
+
+	for i, userToken := range bal.UserTokens {
+		balances[i] = schema.UserBalance{
+			User:      userToken.User,
+			Token:     userToken.Token,
+			ChangedAt: blockTask.BlockNumber,
+			StartedAt: blockTask.BlockNumber,
+			Balance:   userToken.Balance.String(),
+		}
+	}
+	if res, err := col.InsertMany(ctx, balances); err != nil {
+		return err
+	} else {
+		conf.Logger.Info(res)
+	}
+	return nil
+}
+
+func findNewRecordsUnsafe(ctx context.Context, block schema.BlockTask, transfers []schema.LogTransfer) []contract_helpers.UserToken {
+	newUsers := make([]contract_helpers.UserToken, 0)
+	for _, transfer := range transfers {
+		token := transfer.EmitterAddress
+		if isNew(ctx, block.ChainId, transfer.From, token) {
+			newUsers = append(newUsers, contract_helpers.UserToken{User: transfer.From, Token: token})
+		}
+	}
+	return newUsers
 }
 
 func processTransferLog(ctx context.Context, block schema.BlockTask, transfer schema.LogTransfer) error {
@@ -127,21 +225,7 @@ func processUserBal(ctx context.Context, blockTask schema.BlockTask, user common
 	}
 	filter := bson.D{{Key: "user", Value: user}, {Key: "token", Value: token}}
 	if res := userBalanceCol(blockTask.ChainId).FindOne(ctx, filter); res.Err() != nil {
-		if res.Err() == mongo.ErrNoDocuments {
-			// TODO - Get For the first time ...
-			bal, err := getBalance(ctx, blockTask, user, token)
-			if err != nil {
-				return nil, err
-			}
-			if conf.CallCount != nil {
-				conf.CallCount.Add(blockTask.ChainId)
-			}
-			userBal.SetBalance(bal)
-			userBal.StartedAt = blockTask.BlockNumber
-			userBalanceCol(blockTask.ChainId).InsertOne(ctx, &userBal)
-		} else {
-			return nil, res.Err()
-		}
+		return nil, res.Err()
 	} else {
 		if err := res.Decode(&userBal); err != nil {
 			return nil, err
