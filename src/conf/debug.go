@@ -6,15 +6,23 @@ import (
 	"github.com/PiperFinance/BS/src/utils"
 )
 
-var CallCount *utils.CallCounter
+var (
+	CallCount     *utils.DebugCounter
+	NewBlockCount *utils.DebugCounter
+)
 
 func LoadDebugItems() {
-	CallCount = utils.NewCallCounter(
+	CallCount = utils.NewDebugCounter(
 		Config.SupportedChains,
-		1*time.Second,
 		10*time.Second,
 		100*time.Second,
+		1*time.Hour,
+		24*time.Hour,
+	)
+	NewBlockCount = utils.NewDebugCounter(
+		Config.SupportedChains,
 		10*time.Second,
+		100*time.Second,
 		1*time.Hour,
 		24*time.Hour,
 	)

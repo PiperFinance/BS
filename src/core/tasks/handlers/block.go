@@ -157,6 +157,7 @@ func blockScanTask(ctx context.Context, blockTask schema.BlockTask, aqCl asynq.C
 			b := schema.BlockM{BlockNumber: blockNum, ChainId: chain}
 			b.SetScanned()
 			conf.GetMongoCol(blockTask.ChainId, conf.BlockColName).InsertOne(ctx, &b)
+			conf.NewBlockCount.Add(chain)
 			_err := enqueuer.EnqueueFetchBlockJob(aqCl, schema.BlockTask{BlockNumber: b.BlockNumber, ChainId: chain})
 			if _err != nil {
 				return _err

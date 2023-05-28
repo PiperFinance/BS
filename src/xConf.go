@@ -39,6 +39,7 @@ func (r *StartConf) xUrls() []api.Route {
 		{Path: "/bal", Method: api.Get, Handler: views.GetBal},
 		{Path: "/bal/users", Method: api.Get, Handler: views.GetUsers},
 		{Path: "/stats/call", Method: api.Get, Handler: views.CallStatus},
+		{Path: "/stats/block", Method: api.Get, Handler: views.NewBlockStatus},
 	}
 }
 

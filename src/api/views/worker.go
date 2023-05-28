@@ -14,19 +14,34 @@ import (
 func LastScannedBlock(c *fiber.Ctx) error {
 	// TODO - FIX this to be multi chain ...
 	chainQ := c.Query("chain", "")
-	chain, err := strconv.ParseInt(chainQ, 10, 64)
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"err": "chain field should be an int!"})
-	}
-	lastBlock, err := utils.GetLastBlock(chain)
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"err": err.Error(),
-		})
+	if len(chainQ) > 0 {
+		chain, err := strconv.ParseInt(chainQ, 10, 64)
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"err": "chain field should be an int!"})
+		}
+		lastBlock, err := utils.GetLastBlock(chain)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"err": err.Error(),
+			})
+		} else {
+			return c.Status(fiber.StatusOK).JSON(fiber.Map{
+				"res": lastBlock,
+			})
+		}
 	} else {
+		lastBlocks := make(map[int64]uint64, len(conf.SupportedNetworks))
+		for _, chain := range conf.Config.SupportedChains {
+			if lastBlock, err := utils.GetLastBlock(chain); err != nil {
+				lastBlocks[chain] = 0
+			} else {
+				lastBlocks[chain] = lastBlock
+			}
+		}
 		return c.Status(fiber.StatusOK).JSON(fiber.Map{
-			"res": lastBlock,
+			"res": lastBlocks,
 		})
+
 	}
 }
 
@@ -63,6 +78,12 @@ func LastScannedBlocks(c *fiber.Ctx) error {
 func CallStatus(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"msg": conf.CallCount,
+	})
+}
+
+func NewBlockStatus(c *fiber.Ctx) error {
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"msg": conf.NewBlockCount,
 	})
 }
 
