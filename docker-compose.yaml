@@ -19,10 +19,10 @@ x-scanner:
 
 x-db:
   &db
-  REDIS_URL: redis://redis:6379
+  REDIS_URL: redis://bs_redis:6379
   REDIS_PORT: 6379
-  REDIS_HOST: redis
-  MONGO_URL: mongodb://piperFinance:Piper2022@mongo:27017
+  REDIS_HOST: bs_redis
+  MONGO_URL: mongodb://piperFinance:Piper2022@bs_mongo:27017
   TP_SERVER: http://tp:9765
 
 services:
@@ -43,7 +43,7 @@ services:
 
   redis:
     image: redis:latest
-    hostname: redis
+    hostname: bs_redis
     expose:
       - 6379
     restart: always
@@ -72,7 +72,7 @@ services:
 
   mongo:
     image: mongo:latest
-    hostname: mongo
+    hostname: bs_mongo
     environment:
       MONGO_INITDB_ROOT_USERNAME: piperFinance
       MONGO_INITDB_ROOT_PASSWORD: Piper2022
