@@ -10,7 +10,6 @@ COPY ./go.sum .
 RUN go mod download
 
 COPY ./src ./src
-COPY ./data ./data
 RUN go build -o ./app  github.com/PiperFinance/BS/src
 
 FROM alpine:latest
@@ -24,7 +23,6 @@ RUN mkdir -p /api
 WORKDIR /api
 COPY --from=builder /api/app .
 COPY ./data /api/data
-# COPY server-config /api/config
 EXPOSE 7654
 
-ENTRYPOINT env && /api/app
+ENTRYPOINT /api/app
