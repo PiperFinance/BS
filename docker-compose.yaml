@@ -57,7 +57,6 @@ services:
   ## Maybe this bit will be seperated 
   mongo-express:
     image: mongo-express:latest
-    container_name: mongo-express
     restart: always
     environment:
       - ME_CONFIG_BASICAUTH_USERNAME=admin
