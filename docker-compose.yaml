@@ -7,7 +7,6 @@ x-scanner:
     dockerfile: Dockerfile
   networks:
     - bs_default
-    - tp_default
     - bs_redis_db
     - bs_mongo_db
   restart: always
@@ -23,7 +22,6 @@ x-db:
   REDIS_PORT: 6379
   REDIS_HOST: bs_redis
   MONGO_URL: mongodb://piperFinance:Piper2022@bs_mongo:27017
-  TP_SERVER: http://tp:9765
 
 services:
   bs_main:
@@ -97,9 +95,6 @@ services:
           memory: 1024M
 
 networks:
-  tp_default:
-    external:
-      name: tp_default
   bs_redis_db:
     name: redis_db
   bs_mongo_db:
