@@ -22,7 +22,7 @@ RUN apk update \
 RUN mkdir -p /api
 WORKDIR /api
 COPY --from=builder /api/app .
-COPY ./data /api/data
+COPY ./data/mainnets.json /api/data/mainnets.json
 EXPOSE 7654
 
 ENTRYPOINT /api/app
