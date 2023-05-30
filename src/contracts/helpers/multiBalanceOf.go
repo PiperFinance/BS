@@ -90,6 +90,7 @@ func (self *EasyBalanceOf) Execute(ctx context.Context) error {
 	}
 
 	res, err := self.multiCaller().Aggregate3(&cOpts, calls)
+	conf.CallCount.Add(self.ChainId)
 
 	if err != nil {
 		return err

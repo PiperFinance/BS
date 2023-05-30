@@ -149,7 +149,6 @@ func updateUserTokens(ctx context.Context, blockTask schema.BlockTask, usersToke
 	for _, userToken := range bal.UserTokens {
 		if userToken.Balance == nil {
 			conf.Logger.Errorf("token:%s user:%d %+v", userToken.User.String(), userToken.Token.String(), userToken)
-			fmt.Println("token:%s user:%d %+v", userToken.User.String(), userToken.Token.String(), userToken)
 			continue
 		}
 		balances = append(balances, schema.UserBalance{

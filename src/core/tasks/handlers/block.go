@@ -131,7 +131,7 @@ func blockScanTask(ctx context.Context, blockTask schema.BlockTask, aqCl asynq.C
 	var lastBlock uint64
 
 	if err != nil {
-		conf.Logger.Errorf("Task BlockScan [%+v] : %s ", blockTask, err)
+		// conf.Logger.Errorf("Task BlockScan [%+v] : %s ", blockTask, err)
 		return err
 	}
 	if lastBlockVal := conf.RedisClient.Get(ctx, tasks.LastScannedBlockKey(chain)); lastBlockVal.Err() == redis.Nil {
