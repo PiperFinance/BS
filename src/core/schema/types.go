@@ -18,10 +18,10 @@ type (
 )
 
 const (
-	Fetched  ScannerStatus = "Fetched"  // NOTE - Fetched Block from net
-	Scanned  ScannerStatus = "Scanned"  // NOTE - Scanned From Block
-	Parsed   ScannerStatus = "Parsed"   // NOTE - Parsed and is ready for further corresponding action
-	Verified ScannerStatus = "Verified" // NOTE - Parsed and does not need any further action
-	Checked  ScannerStatus = "Checked"  // NOTE - After parsed and ready to check for more
-	Added    ScannerStatus = "Added"    // NOTE - After refreshed user's new status in db
+	Fetched  = "Fetched"  // NOTE - Fetched Block from net
+	Scanned  = "Scanned"  // NOTE - Scanned From Block
+	Parsed   = "Parsed"   // NOTE - Parsed and is ready for further corresponding action
+	Verified = "Verified" // NOTE - Parsed and does not need any further action
+	Checked  = "Checked"  // NOTE - After parsed and ready to check for more
+	Added    = "Added"    // NOTE - After refreshed user's new status in db
 )

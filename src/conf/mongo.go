@@ -3,9 +3,9 @@ package conf
 import (
 	"context"
 	"fmt"
-	"log"
 	"time"
 
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -27,6 +27,9 @@ var (
 	mongoCl *mongo.Client
 	// mongoDB            *mongo.Database
 	MongoDefaultErrCol *mongo.Collection
+	// Compund Index
+	// chainIndexed map[int64]map[string]bool
+
 )
 
 func LoadMongo() {
@@ -37,15 +40,25 @@ func LoadMongo() {
 	var err error
 	mongoCl, err = mongo.Connect(ctx, opts)
 	if err != nil {
-		log.Fatalf("Mongo: %s", err)
+		Logger.Fatalf("Mongo: %s", err)
 	}
 
 	err = mongoCl.Ping(ctx, nil)
 	if err != nil {
-		log.Fatalf("Mongo: %s", err)
+		Logger.Fatalf("Mongo: %s", err)
 	}
 	// mongoDB = mongoCl.Database(Config.MongoDBName)
 	MongoDefaultErrCol = mongoCl.Database(BlockScannerDB).Collection(QueueErrorsColName)
+	// chainIndexed = make(map[int64]map[string]bool)
+	for _, chain := range Config.SupportedChains {
+		// chainIndexed[chain] = make(map[string]bool)
+		GetMongoCol(chain, UserBalColName).Indexes().CreateOne(
+			ctx, mongo.IndexModel{Keys: bson.D{{Key: "user", Value: 1}, {Key: "token", Value: 1}}})
+		GetMongoCol(chain, BlockColName).Indexes().CreateOne(
+			ctx, mongo.IndexModel{Keys: bson.D{{Key: "no", Value: -1}}})
+		GetMongoCol(chain, BlockColName).Indexes().CreateOne(
+			ctx, mongo.IndexModel{Keys: bson.D{{Key: "no", Value: -1}, {Key: "status", Value: 1}}})
+	}
 }
 
 func GetMongoCol(chain int64, colName string) *mongo.Collection {

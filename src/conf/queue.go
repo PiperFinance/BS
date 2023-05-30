@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/charmbracelet/log"
 	"github.com/hibiken/asynq"
 	"github.com/hibiken/asynqmon"
 )
@@ -64,11 +63,11 @@ func LoadQueue() {
 		Concurrency:  int(Config.MaxConcurrency),
 		ErrorHandler: &QueueErrorHandler{},
 		Queues: map[string]int{
-			ProcessQ:     7,
-			FetchQ:       5,
+			ProcessQ:     8,
+			FetchQ:       6,
 			ParseQ:       6,
-			ScanQ:        4,
-			MainQ:        6,
+			ScanQ:        3,
+			MainQ:        4,
 			DefaultQ:     3,
 			UnImportantQ: 1,
 		},
@@ -78,7 +77,7 @@ func LoadQueue() {
 
 	loc, err := time.LoadLocation("America/Los_Angeles")
 	if err != nil {
-		log.Fatal(err)
+		Logger.Fatal(err)
 	}
 	QueueScheduler = asynq.NewScheduler(
 		asyncQRedisClient,
@@ -98,7 +97,7 @@ func RunWorker(muxHandler []MuxHandler) {
 		mux.HandleFunc(mh.Key, mh.Handler)
 	}
 	if err := QueueServer.Run(mux); err != nil {
-		log.Fatal(err)
+		Logger.Fatal(err)
 	}
 }
 
@@ -107,11 +106,11 @@ func RunScheduler(queueSchedules []QueueSchedules) {
 	for _, qs := range queueSchedules {
 		_, err := QueueScheduler.Register(qs.Cron, asynq.NewTask(qs.Key, qs.Payload), qs.Q, asynq.Timeout(qs.Timeout))
 		if err != nil {
-			log.Fatalf("QueueScheduler: %s", err)
+			Logger.Fatalf("QueueScheduler: %s", err)
 		}
 	}
 	if err2 := QueueScheduler.Start(); err2 != nil {
-		log.Fatal(err2)
+		Logger.Fatal(err2)
 	}
 }
 
@@ -121,5 +120,5 @@ func RunMonitor(URL string) {
 		RedisConnOpt: asyncQRedisClient,
 	})
 	http.Handle(h.RootPath()+"/", h)
-	log.Fatal(http.ListenAndServe(URL, nil))
+	Logger.Fatal(http.ListenAndServe(URL, nil))
 }

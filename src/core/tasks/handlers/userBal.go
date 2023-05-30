@@ -16,6 +16,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/hibiken/asynq"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -47,8 +48,10 @@ func ChainMutex(i int64) {
 func UpdateUserBalTaskHandler(ctx context.Context, task *asynq.Task) error {
 	// TODO - Why fixed timeout ?
 
-	ctxFind, cancel := context.WithTimeout(ctx, 5*time.Minute)
-	defer cancel()
+	ctxFind, cancelFind := context.WithTimeout(ctx, 5*time.Minute)
+	ctxDel, cancelDel := context.WithTimeout(ctx, 5*time.Minute)
+	defer cancelFind()
+	defer cancelDel()
 	blockTask := schema.BlockTask{}
 	err := json.Unmarshal(task.Payload(), &blockTask)
 	if err != nil {
@@ -65,68 +68,47 @@ func UpdateUserBalTaskHandler(ctx context.Context, task *asynq.Task) error {
 
 	cursor, err := conf.GetMongoCol(blockTask.ChainId, conf.ParsedLogColName).Find(ctxFind, bson.M{
 		"log.blockNumber": &blockTask.BlockNumber,
-		// TODO - Chain check here ....
-		"log.name": events.TransferE,
+		"log.name":        events.TransferE,
 	})
 	defer cursor.Close(ctxFind)
 	if err != nil {
 		return err
 	}
 	transfers := make([]schema.LogTransfer, 0)
+	transferIDs := make([]primitive.ObjectID, 0)
 	for cursor.Next(ctx) {
 		transfer := schema.LogTransfer{}
 		if err := cursor.Decode(&transfer); err != nil {
 			conf.Logger.Error(err)
 			continue
 		}
-		transfers = append(transfers, transfer)
+		transferIDs = append(transferIDs, transfer.ID)
+		amount, ok := transfer.GetAmount()
+		if ok && amount.Cmp(big.NewInt(0)) >= 1 {
+			transfers = append(transfers, transfer)
+		}
+	}
+	// TODO - Parse if amount > 0
+	if len(transfers) > 0 {
+		processTransferLogs(ctx, blockTask, transfers)
+	}
+	if len(transferIDs) > 0 {
+		if _, err := conf.GetMongoCol(blockTask.ChainId, conf.ParsedLogColName).DeleteMany(ctxDel, bson.M{"_id": bson.M{"$in": transferIDs}}); err != nil {
+			return err
+		}
 	}
 
-	processTransferLogs(ctx, blockTask, transfers)
-
-	// flushTransferLogs(ctx, blockTask, transfers)
-	// if _, err := conf.GetMongoCol(blockTask.ChainId, conf.ParsedLogColName).DeleteOne(ctxFind, bson.M{"_id": transfer.ID}); err != nil {
-	// 	conf.Logger.Error(err)
-	// } else {
-	// 	// conf.Logger.Info(res)
-	// }
-
-	// if res, err := conf.GetMongoCol(blockTask.ChainId, conf.ParsedLogColName).DeleteMany(ctxFind, bson.M{
-	// 	"log.blockNumber": &block.BlockNumber,
-	// 	"log.name":        events.TransferE,
-	// }); err != nil {
-	// 	conf.Logger.Errorf("BlockEventsTaskHandler")
-	// } else {
-	// 	conf.Logger.Infof("Deleted Logs : %s Deleted", res.DeletedCount)
-	// }
-	bm := schema.BlockM{BlockNumber: blockTask.BlockNumber}
-	bm.SetParsed()
+	bm := schema.BlockM{BlockNumber: blockTask.BlockNumber, ChainId: blockTask.ChainId}
+	bm.SetAdded()
 	if _, err := conf.GetMongoCol(blockTask.ChainId, conf.BlockColName).ReplaceOne(
 		ctx,
 		bson.M{"no": blockTask.BlockNumber}, &bm); err != nil {
-		conf.Logger.Errorf("BlockEventsTaskHandler")
-	} else {
-		// conf.Logger.Infof("Replace Result : %s modified", res.ModifiedCount)
-	}
-	if err != nil {
-		conf.Logger.Errorf("Task UpdateUserBal [%d] : Err : %s !", blockTask.BlockNumber, err)
-	} else {
-		// conf.Logger.Infof("Task UpdateUserBal [%d] : Finished !", block.BlockNumber)
+		return err
 	}
 	return err
 }
 
 func processTransferLogs(ctx context.Context, block schema.BlockTask, transfers []schema.LogTransfer) error {
-	//// NOTE - Make sure this action blocks the this chain work flow [ No new block event fetch ...]
-	//// STUB - used redis redsync lock
-
-	//// NOTE - Find user's with no previous balance
-	// findNewRecordsUnsafe(ctx,block,transfers)
-	// // NOTE - Update user's old balance
-	// updateUserTokens(findNewRecordsUnsafe(ctx,block,transfers))
-	// // NOTE - Process Transfers as usual
-	//// NOTE - unlock task log
-	//// NOTE - Flush logs
 	if err := updateUserTokens(ctx, block, findNewRecordsUnsafe(ctx, block, transfers)); err != nil {
 		return err
 	}
@@ -135,7 +117,6 @@ func processTransferLogs(ctx context.Context, block schema.BlockTask, transfers 
 			conf.Logger.Warn(err)
 		}
 	}
-
 	return nil
 }
 
@@ -163,16 +144,21 @@ func updateUserTokens(ctx context.Context, blockTask schema.BlockTask, usersToke
 		return err
 	}
 	col := userBalanceCol(blockTask.ChainId)
-	balances := make([]interface{}, len(bal.UserTokens))
+	balances := make([]interface{}, 0)
 
-	for i, userToken := range bal.UserTokens {
-		balances[i] = schema.UserBalance{
+	for _, userToken := range bal.UserTokens {
+		if userToken.Balance == nil {
+			conf.Logger.Errorf("token:%s user:%d %+v", userToken.User.String(), userToken.Token.String(), userToken)
+			fmt.Println("token:%s user:%d %+v", userToken.User.String(), userToken.Token.String(), userToken)
+			continue
+		}
+		balances = append(balances, schema.UserBalance{
 			User:      userToken.User,
 			Token:     userToken.Token,
 			ChangedAt: blockTask.BlockNumber,
 			StartedAt: blockTask.BlockNumber,
 			Balance:   userToken.Balance.String(),
-		}
+		})
 	}
 	if res, err := col.InsertMany(ctx, balances); err != nil {
 		return err

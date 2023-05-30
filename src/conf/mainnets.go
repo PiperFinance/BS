@@ -8,7 +8,6 @@ import (
 
 	"github.com/PiperFinance/BS/src/core/schema"
 	"github.com/PiperFinance/BS/src/utils"
-	"github.com/charmbracelet/log"
 )
 
 var (
@@ -22,17 +21,22 @@ func LoadMainNets() {
 	jsonFile, err := os.Open("data/mainnets.json")
 	defer jsonFile.Close()
 	if err != nil {
-		log.Fatal(err)
+		Logger.Fatal(err)
 	}
 	byteValue, _ := ioutil.ReadAll(jsonFile)
 	if err := json.Unmarshal(byteValue, &MainNets); err != nil {
-		log.Fatal(err)
+		Logger.Fatal(err)
 	}
 	for _, _net := range MainNets {
 		if utils.Contains(Config.SupportedChains, _net.ChainId) {
-			go utils.NetworkConnectionCheck(_net, Config.TestTimeout)
+			go utils.NetworkConnectionCheck(Logger, _net, Config.TestTimeout)
 			SupportedNetworks[_net.ChainId] = _net
 		}
 	}
 	time.Sleep(Config.TestTimeout)
+	for _, chain := range Config.SupportedChains {
+		if len(SupportedNetworks[chain].GoodRpc) < 1 {
+			Logger.Fatalf("No Good Rpc for chain %d", chain)
+		}
+	}
 }

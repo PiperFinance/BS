@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"fmt"
 	"sync"
 	"time"
 )
@@ -76,7 +77,8 @@ func (cc *DebugCounter) Add(chain int64) {
 	cc.mutex.Unlock()
 }
 
-func (cc *DebugCounter) Status() {
-	// TODO
-	// return cc
+func (cc *DebugCounter) StatusChain(index int, chain int64) string {
+	x := cc.TimeFrames[chain][index]
+	rate := float64(x.Count) / x.Window.Seconds()
+	return fmt.Sprintf("%f/s", rate)
 }

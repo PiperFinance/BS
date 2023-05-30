@@ -81,9 +81,49 @@ func CallStatus(c *fiber.Ctx) error {
 	})
 }
 
+func NewBlockStatusSimple(c *fiber.Ctx) error {
+	r := make(map[int64]string)
+	for _, chain := range conf.Config.SupportedChains {
+		r[chain] = conf.NewBlockCount.StatusChain(3, chain)
+	}
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"msg": r,
+	})
+}
+
 func NewBlockStatus(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"msg": conf.NewBlockCount,
+	})
+}
+
+type Stats struct {
+	Scanned int64 `json:"scanned"`
+	Fetched int64 `json:"fetched"`
+	Added   int64 `json:"added"`
+	Parsed  int64 `json:"parsed"`
+}
+
+func BlockStats(c *fiber.Ctx) error {
+	r := make(map[int64]Stats)
+	for _, chain := range conf.Config.SupportedChains {
+
+		scanned, err := conf.GetMongoCol(chain, conf.BlockColName).CountDocuments(c.Context(), bson.M{"status": schema.Scanned})
+		if err != nil {
+			conf.Logger.Errorf("Scanned Blocks on chain %d : %+v", chain, err)
+		}
+		fetched, _ := conf.GetMongoCol(chain, conf.BlockColName).CountDocuments(c.Context(), bson.M{"status": schema.Fetched})
+		parsed, _ := conf.GetMongoCol(chain, conf.BlockColName).CountDocuments(c.Context(), bson.M{"status": schema.Parsed})
+		added, _ := conf.GetMongoCol(chain, conf.BlockColName).CountDocuments(c.Context(), bson.M{"status": schema.Added})
+		r[chain] = Stats{
+			Scanned: scanned,
+			Fetched: fetched,
+			Added:   added,
+			Parsed:  parsed,
+		}
+	}
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"msg": r,
 	})
 }
 
