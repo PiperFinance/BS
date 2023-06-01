@@ -9,38 +9,34 @@ type BlockTask struct {
 
 // MBlock Block Stored At Mongo
 type BlockM struct {
-	ScannerStatus `bson:"status"`
+	ScannerStatus string    `bson:"status"`
 	BlockNumber   uint64    `bson:"no"`
 	UpdatedAt     time.Time `bson:"c_at"`
 	StartedAt     time.Time `bson:"s_at"`
 	ChainId       int64     `bson:"chain"`
 }
 
-func (bm *BlockM) SetScanned() BlockM {
-	return BlockM{
-		ScannerStatus: Scanned,
-		UpdatedAt:     time.Now(),
-		StartedAt:     time.Now(),
-	}
+func (bm *BlockM) SetScanned() *BlockM {
+	bm.ScannerStatus = Scanned
+	bm.UpdatedAt = time.Now()
+	bm.StartedAt = time.Now()
+	return bm
 }
 
-func (bm *BlockM) SetFetched() BlockM {
-	return BlockM{
-		ScannerStatus: Fetched,
-		UpdatedAt:     time.Now(),
-	}
+func (bm *BlockM) SetFetched() *BlockM {
+	bm.ScannerStatus = Fetched
+	bm.UpdatedAt = time.Now()
+	return bm
 }
 
-func (bm *BlockM) SetParsed() BlockM {
-	return BlockM{
-		ScannerStatus: Scanned,
-		UpdatedAt:     time.Now(),
-	}
+func (bm *BlockM) SetParsed() *BlockM {
+	bm.ScannerStatus = Parsed
+	bm.UpdatedAt = time.Now()
+	return bm
 }
 
-func (bm *BlockM) SetAdded() BlockM {
-	return BlockM{
-		ScannerStatus: Added,
-		UpdatedAt:     time.Now(),
-	}
+func (bm *BlockM) SetAdded() *BlockM {
+	bm.ScannerStatus = Added
+	bm.UpdatedAt = time.Now()
+	return bm
 }

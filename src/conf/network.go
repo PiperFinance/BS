@@ -5,7 +5,6 @@ import (
 	"sync"
 
 	"github.com/PiperFinance/BS/src/utils"
-	"github.com/charmbracelet/log"
 
 	"github.com/ethereum/go-ethereum/ethclient"
 )
@@ -26,15 +25,15 @@ func LoadNetwork() {
 	clientCount = make(map[int64]int, len(Config.SupportedChains))
 	selectorIndex = make(map[int64]int, len(Config.SupportedChains))
 	for _, net := range SupportedNetworks {
-
 		rpcs[net.ChainId] = utils.GetNetworkRpcUrls(net.GoodRpc)
 		clientCount[net.ChainId] = len(net.GoodRpc)
 		selectorIndex[net.ChainId] = 0
 		EthClientS[net.ChainId] = make([]*ethclient.Client, len(net.GoodRpc))
 		for i, _rpc := range net.GoodRpc {
+
 			client, err := ethclient.Dial(_rpc.Url)
 			if err != nil {
-				log.Fatalf("Client Connection %+v Error : %s  ", _rpc, err)
+				Logger.Fatalf("Client Connection %+v Error : %s  ", _rpc, err)
 			}
 			EthClientS[net.ChainId][i] = client
 		}
@@ -69,9 +68,12 @@ func EthClient(chain int64) *ethclient.Client {
 }
 
 func StartingBlock(ctx context.Context, chain int64) uint64 {
+	// TODO add retries here !
 	if b, err := EthClient(chain).BlockNumber(ctx); err != nil {
+		Logger.Fatalf("Bad Network Startup %d : %+v", chain, err)
 		return Config.StartingBlockNumber
 	} else {
+		Logger.Infof("Starting Network %d From [%d]BlockNo.", chain, b-Config.BlockHeadDelay)
 		return b - Config.BlockHeadDelay
 	}
 }

@@ -15,33 +15,34 @@ type Block struct {
 }
 
 type LogColl struct {
-	Address     common.Address     `json:"address" bson:"address" `
-	Topics      []common.Hash      `bson:"topics" json:"topics" `
-	Data        []byte             `bson:"data" json:"data" `
-	BlockNumber uint64             `json:"blockNumber" bson:"blockNumber"`
-	BlockId     primitive.ObjectID `bson:"block_id"`
-	TxHash      common.Hash        `json:"transactionHash" bson:"transactionHash" `
-	TxIndex     uint               `bson:"transactionIndex" json:"transactionIndex"`
-	BlockHash   common.Hash        `json:"blockHash" bson:"blockHash"`
-	Index       uint               `bson:"logIndex" json:"logIndex"`
-	Removed     bool               `json:"removed" bson:"removed"`
-	Parsed      bool               `json:"parsed" bson:"parsed"` // Flag for parsing
+	Address     common.Address `json:"address" bson:"address" `
+	Topics      []common.Hash  `bson:"topics" json:"topics" `
+	Data        []byte         `bson:"data" json:"data" `
+	BlockNumber uint64         `json:"blockNumber" bson:"blockNumber"`
+	// BlockId     primitive.ObjectID `bson:"block_id"`
+	TxHash    common.Hash `json:"transactionHash" bson:"transactionHash" `
+	TxIndex   uint        `bson:"transactionIndex" json:"transactionIndex"`
+	BlockHash common.Hash `json:"blockHash" bson:"blockHash"`
+	Index     uint        `bson:"logIndex" json:"logIndex"`
+	Removed   bool        `json:"removed" bson:"removed"`
+	Parsed    bool        `json:"parsed" bson:"parsed"` // Flag for parsing
 }
 
 type Log struct {
-	ID             primitive.ObjectID `bson:"_id" json:"_id"`
+	ID             primitive.ObjectID `bson:"_id,omitempty" json:"_id,"`
 	Name           string             `bson:"name" json:"name"`
-	Status         ScannerStatus      `bson:"status" json:"status"`
+	Status         string             `bson:"status" json:"status"`
 	EmitterAddress common.Address     `json:"address" bson:"address"` // NOTE - transaction executor
 	BlockNumber    uint64             `json:"blockNumber" bson:"blockNumber"`
 }
 
 type LogTransfer struct {
 	Log
-	From      common.Address `bson:"from" json:"from"`
-	To        common.Address `bson:"to" json:"to"`
-	TokensStr string         `bson:"tokens" json:"tokens"`
-	Tokens    *big.Int       `bson:"-" json:"-"`
+	ID        primitive.ObjectID `bson:"_id,omitempty" json:"_id,omitempty"`
+	From      common.Address     `bson:"from" json:"from"`
+	To        common.Address     `bson:"to" json:"to"`
+	TokensStr string             `bson:"tokens" json:"tokens"`
+	Tokens    *big.Int           `bson:"-" json:"-"`
 }
 
 func (l *LogTransfer) GetAmount() (*big.Int, bool) {

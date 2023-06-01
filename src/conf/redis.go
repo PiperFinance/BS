@@ -7,7 +7,6 @@ import (
 
 	redsyncredis "github.com/go-redsync/redsync/v4/redis"
 
-	"github.com/charmbracelet/log"
 	"github.com/go-redis/redis/v8"
 	"github.com/go-redsync/redsync/v4"
 	"github.com/go-redsync/redsync/v4/redis/goredis/v8"
@@ -44,13 +43,13 @@ func LoadRedis() {
 	}
 
 	if _, err := RedisClient.GetOrSetTTL(context.Background(), "-cconn-", "-ok-", time.Second); err != nil {
-		log.Fatalf("RedisConnectionCheck: %+v", err)
+		Logger.Fatalf("RedisConnectionCheck: %+v", err)
 	}
 	if err := RedisClient.loadPools(); err != nil {
-		log.Fatalf("RedisConnectionCheck: %+v", err)
+		Logger.Fatalf("RedisConnectionCheck: %+v", err)
 	}
 	if err := RedisClient.loadMutexes(); err != nil {
-		log.Fatalf("RedisConnectionCheck: %+v", err)
+		Logger.Fatalf("RedisConnectionCheck: %+v", err)
 	}
 }
 

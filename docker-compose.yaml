@@ -7,23 +7,21 @@ x-scanner:
     dockerfile: Dockerfile
   networks:
     - bs_default
-    - tp_default
     - bs_redis_db
-    - mongo_db
+    - bs_mongo_db
   restart: always
   logging:
     driver: "json-file"
     options:
       max-size: "5M"
-      max-file: "5"
+      max-file: "2"
 
 x-db:
   &db
-  REDIS_URL: redis://redis_host:6379
+  REDIS_URL: redis://bs_redis:6379
   REDIS_PORT: 6379
-  REDIS_HOST: redis_host
-  MONGO_URL: mongodb://piperFinance:Piper2022@mongo:27017
-  TP_SERVER: http://tp:9765
+  REDIS_HOST: bs_redis
+  MONGO_URL: mongodb://piperFinance:Piper2022@bs_mongo:27017
 
 services:
   bs_main:
@@ -34,35 +32,82 @@ services:
     environment:
       ASYNQ_MON_URL: ":7001"
       API_URL: ":6001"
-      MONGO_DBNAME: BS_T5
-      REDIS_DB: 2
-      MAX_CONCURRENT_WORKER: 1500
-      # SUPPORTED_CHAINS: "1,250,56,137,43114"
-      SUPPORTED_CHAINS: "1,250,56,137,43114,12306,42161,100,2021,9001,1284,10,58"
+      MONGO_DBNAME: BS
+      REDIS_DB: 1
+      MAX_CONCURRENT_WORKER: 2000
+      SUPPORTED_CHAINS: "1,250,56,137,43114,12306,42161,100,2021,9001,1284,58"
+      # SUPPORTED_CHAINS: "1,250,56,137,43114,12306,100,10000,52,2021,9001,2000,1284,1285,58,25,8217,42220,32659,128,592"
       <<: *db
-
-  bs_redis:
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 150M
+  redis:
     image: redis:latest
-    hostname: redis_host
-    expose:
-      - 6379
+    hostname: bs_redis
+    ports:
+      - 127.0.0.1:6379:6379
     restart: always
     networks:
       - bs_redis_db
     healthcheck:
       test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
     volumes:
-      - ./data/redis2:/data
+      - ./data/redis:/data
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 900M
+  ## Maybe this bit will be seperated 
+  mongo-express:
+    image: mongo-express:latest
+    restart: always
+    environment:
+      - ME_CONFIG_BASICAUTH_USERNAME=admin
+      - ME_CONFIG_BASICAUTH_PASSWORD=adminadminadminadmin
+      - ME_CONFIG_MONGODB_ADMINUSERNAME=piperFinance
+      - ME_CONFIG_MONGODB_ADMINPASSWORD=Piper2022
+      - ME_CONFIG_MONGODB_SERVER=mongo
+      - ME_CONFIG_MONGODB_PORT="27017"
+    ports:
+      - "5001:8081"
+    networks:
+      - bs_mongo_db
+
+  mongo:
+    # image: mongo:latest
+    image: mongo:4.4.6
+    hostname: bs_mongo
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: piperFinance
+      MONGO_INITDB_ROOT_PASSWORD: Piper2022
+      MONGO_INITDB_DATABASE: piper
+    volumes:
+      - ./data/mongodb:/data/db
+    ports:
+      - 127.0.0.1:27017:27017
+    restart: always
+    healthcheck:
+      test: echo 'db.stats().ok' | mongo localhost:27017/test --quiet
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    networks:
+      - bs_mongo_db
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 900M
 
 networks:
-  tp_default:
-    external:
-      name: tp_default
   bs_redis_db:
     name: redis_db
-  mongo_db:
-    external:
-      name: mongo_db
+  bs_mongo_db:
+    name: bs_mongo_db
   bs_default:
     driver: bridge
     name: bs_default

@@ -1,12 +1,13 @@
 package utils
 
 import (
+	"fmt"
 	"sync"
 	"time"
 )
 
 const (
-	MAX_RESULTS = 100
+	MAX_RESULTS = 200
 )
 
 type TimeFrameCounter struct {
@@ -32,16 +33,16 @@ func (tfc *TimeFrameCounter) NewCall(t time.Time) {
 	tfc.Count++
 }
 
-type CallCounter struct {
+type DebugCounter struct {
 	LastCallTime    map[int64]time.Time
 	TimeFrames      map[int64][]TimeFrameCounter
 	timeFramesCount map[int64]int
 	mutex           sync.Mutex
 }
 
-func NewCallCounter(chains []int64, timeFrames ...time.Duration) *CallCounter {
+func NewDebugCounter(chains []int64, timeFrames ...time.Duration) *DebugCounter {
 	t := time.Now()
-	r := new(CallCounter)
+	r := new(DebugCounter)
 	r.mutex = sync.Mutex{}
 	r.timeFramesCount = make(map[int64]int, len(chains))
 	r.LastCallTime = make(map[int64]time.Time, len(chains))
@@ -64,7 +65,7 @@ func NewCallCounter(chains []int64, timeFrames ...time.Duration) *CallCounter {
 	return r
 }
 
-func (cc *CallCounter) Add(chain int64) {
+func (cc *DebugCounter) Add(chain int64) {
 	i := 0
 	t := time.Now()
 	cc.mutex.Lock()
@@ -76,7 +77,8 @@ func (cc *CallCounter) Add(chain int64) {
 	cc.mutex.Unlock()
 }
 
-func (cc *CallCounter) Status() {
-	// TODO
-	// return cc
+func (cc *DebugCounter) StatusChain(index int, chain int64) string {
+	x := cc.TimeFrames[chain][index]
+	rate := float64(x.Count) / x.Window.Seconds()
+	return fmt.Sprintf("%f", rate)
 }

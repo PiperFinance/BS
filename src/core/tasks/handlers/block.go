@@ -66,14 +66,9 @@ func BlockEventsTaskHandler(ctx context.Context, task *asynq.Task) error {
 		ctx,
 		bson.M{"no": blockTask.BlockNumber}, &bm); err != nil {
 		conf.Logger.Errorf("Task BlockEvents [%+v] : %s ", blockTask, err)
-	} else {
-		// conf.Logger.Infof("Replace Result : %d modified", res.ModifiedCount)
 	}
-	err = enqueuer.EnqueueParseBlockJob(*conf.QueueClient, blockTask)
-	if err != nil {
+	if err := enqueuer.EnqueueParseBlockJob(*conf.QueueClient, blockTask); err != nil {
 		conf.Logger.Errorf("Task BlockEvents [%+v] : %s ", blockTask, err)
-	} else {
-		conf.Logger.Infof("Task BlockEvents [%+v] ", blockTask)
 	}
 	return err
 }
@@ -105,13 +100,13 @@ func ParseBlockEventsTaskHandler(ctx context.Context, task *asynq.Task) error {
 
 	bm := schema.BlockM{BlockNumber: blockTask.BlockNumber, ChainId: blockTask.ChainId}
 	bm.SetParsed()
-	if _, err := conf.GetMongoCol(blockTask.ChainId, conf.BlockColName).ReplaceOne(
+	if res, err := conf.GetMongoCol(blockTask.ChainId, conf.BlockColName).ReplaceOne(
 		ctx,
 		bson.M{"no": blockTask.BlockNumber}, &bm); err != nil {
 		conf.Logger.Errorf("Task ParseBlockEvents [%+v] %s", blockTask, err)
 		return err
 	} else {
-		// conf.Logger.Infof("Replace Result : %d modified", res.ModifiedCount)
+		conf.Logger.Infof("Replace Result : %d modified", res.ModifiedCount)
 	}
 
 	err = enqueuer.EnqueueUpdateUserBalJob(*conf.QueueClient, blockTask)
@@ -136,7 +131,7 @@ func blockScanTask(ctx context.Context, blockTask schema.BlockTask, aqCl asynq.C
 	var lastBlock uint64
 
 	if err != nil {
-		conf.Logger.Errorf("Task BlockScan [%+v] : %s ", blockTask, err)
+		// conf.Logger.Errorf("Task BlockScan [%+v] : %s ", blockTask, err)
 		return err
 	}
 	if lastBlockVal := conf.RedisClient.Get(ctx, tasks.LastScannedBlockKey(chain)); lastBlockVal.Err() == redis.Nil {
@@ -157,6 +152,7 @@ func blockScanTask(ctx context.Context, blockTask schema.BlockTask, aqCl asynq.C
 			b := schema.BlockM{BlockNumber: blockNum, ChainId: chain}
 			b.SetScanned()
 			conf.GetMongoCol(blockTask.ChainId, conf.BlockColName).InsertOne(ctx, &b)
+			conf.NewBlockCount.Add(chain)
 			_err := enqueuer.EnqueueFetchBlockJob(aqCl, schema.BlockTask{BlockNumber: b.BlockNumber, ChainId: chain})
 			if _err != nil {
 				return _err

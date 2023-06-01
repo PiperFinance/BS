@@ -11,6 +11,7 @@ func LoadLogger() {
 	var err error
 	if Config.DEV {
 		zp, err = zap.NewDevelopment(zap.IncreaseLevel(Config.ZapLogLevel))
+		// zp = zap.NewExample(zap.IncreaseLevel(Config.ZapLogLevel))
 	} else {
 		zp, err = zap.NewProduction(zap.IncreaseLevel(Config.ZapLogLevel))
 	}
