@@ -84,23 +84,21 @@ func ParseLog(vLog types.Log) (interface{}, error) {
 func ParseLogs(ctx context.Context, mongoCol *mongo.Collection, logCursor *mongo.Cursor) {
 	nextCtx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
-
+	parsedLogs := make([]interface{}, 0)
 	for logCursor.Next(nextCtx) {
 		var vLog types.Log
 		errDecode := logCursor.Decode(&vLog)
 		if errDecode != nil {
 			conf.Logger.Errorf("ParseLogs: [%T] :%s", errDecode, errDecode)
 		}
-
 		if parsedLog, parseErr := ParseLog(vLog); parseErr != nil {
-			// conf.Logger.Errorf("ParseLogs: [%T] : %s", parseErr, parseErr)
-			// TODO - Suppressing the error
+			conf.Logger.Errorf("ParseLogs: [%T] : %s", parseErr, parseErr)
 		} else {
-			// TODO - Make this insert many
-			_, insertionErr := mongoCol.InsertOne(ctx, parsedLog)
-			if insertionErr != nil {
-				conf.Logger.Errorf("ParseLogs: [%T] : %s", insertionErr, insertionErr)
-			}
+			parsedLogs = append(parsedLogs, parsedLog)
 		}
+	}
+	_, insertionErr := mongoCol.InsertMany(ctx, parsedLogs)
+	if insertionErr != nil {
+		conf.Logger.Errorf("ParseLogs: [%T] : %s", insertionErr, insertionErr)
 	}
 }

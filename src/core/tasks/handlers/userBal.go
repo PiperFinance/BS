@@ -9,10 +9,8 @@ import (
 
 	"github.com/PiperFinance/BS/src/conf"
 	contract_helpers "github.com/PiperFinance/BS/src/contracts/helpers"
-	"github.com/PiperFinance/BS/src/core/contracts"
 	"github.com/PiperFinance/BS/src/core/events"
 	"github.com/PiperFinance/BS/src/core/schema"
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/hibiken/asynq"
 	"go.mongodb.org/mongo-driver/bson"
@@ -29,19 +27,6 @@ func userBalanceCol(chain int64) *mongo.Collection {
 
 func TokenVolumeCol(chain int64) *mongo.Collection {
 	return conf.GetMongoCol(chain, conf.TokenVolumeColName)
-}
-
-func getBalance(ctx context.Context, block schema.BlockTask, user common.Address, token common.Address) (*big.Int, error) {
-	if caller, err := contracts.NewERC20Caller(token, conf.EthClient(block.ChainId)); err != nil {
-		return nil, err
-	} else {
-		return caller.BalanceOf(&bind.CallOpts{
-			Context: ctx, BlockNumber: big.NewInt(int64(block.BlockNumber - 1)),
-		}, user)
-	}
-}
-
-func ChainMutex(i int64) {
 }
 
 // UpdateUserBalTaskHandler Updates Online User's Balance and then vacuums log record from database to save space
@@ -109,28 +94,32 @@ func UpdateUserBalTaskHandler(ctx context.Context, task *asynq.Task) error {
 }
 
 func processTransferLogs(ctx context.Context, block schema.BlockTask, transfers []schema.LogTransfer) error {
-	if err := updateUserTokens(ctx, block, findNewRecordsUnsafe(ctx, block, transfers)); err != nil {
+	err, newUsers := findNewRecords(ctx, block, transfers)
+	if err != nil {
+		return err
+	}
+	if err := updateUserTokens(ctx, block, newUsers); err != nil {
 		return err
 	}
 	for _, trx := range transfers {
 		if err := processTransferLog(ctx, block, trx); err != nil {
-			conf.Logger.Warn(err)
+			conf.Logger.Errorw(err.Error(), "block", block.BlockNumber, "chain", block.ChainId)
 		}
 	}
 	return nil
 }
 
-func isNew(ctx context.Context, chainId int64, user common.Address, token common.Address) bool {
+func isNew(ctx context.Context, chainId int64, user common.Address, token common.Address) (error, bool) {
 	filter := bson.D{{Key: "user", Value: user}, {Key: "token", Value: token}}
 	if res := userBalanceCol(chainId).FindOne(ctx, filter); res.Err() == mongo.ErrNoDocuments {
-		return true
+		return nil, true
 	} else {
 		if res.Err() == nil {
-			conf.Logger.Infof("NewUserFinder: user=%s ,token=%s , err=%+v", user.String(), token.String())
+			conf.Logger.Infow("NewUserFinder", "user", user, "token", token, "err", res.Err())
 		} else {
-			conf.Logger.Warnf("NewUserFinder: user=%s ,token=%s , err=%+v", user.String(), token.String())
+			conf.Logger.Errorw("NewUserFinder", "user", user, "token", token, "err", res.Err())
 		}
-		return false
+		return res.Err(), false
 	}
 }
 
@@ -138,6 +127,8 @@ func updateUserTokens(ctx context.Context, blockTask schema.BlockTask, usersToke
 	if len(usersTokens) < 1 {
 		return nil
 	}
+	conf.NewUsersCount.Add(blockTask.ChainId, len(usersTokens))
+	conf.MultiCallCount.Add(blockTask.ChainId)
 	bal := contract_helpers.EasyBalanceOf{UserTokens: usersTokens, ChainId: blockTask.ChainId, BlockNumber: int64(blockTask.BlockNumber)}
 	if err := bal.Execute(ctx); err != nil {
 		// conf.Logger.Error(err)
@@ -167,15 +158,17 @@ func updateUserTokens(ctx context.Context, blockTask schema.BlockTask, usersToke
 	return nil
 }
 
-func findNewRecordsUnsafe(ctx context.Context, block schema.BlockTask, transfers []schema.LogTransfer) []contract_helpers.UserToken {
+func findNewRecords(ctx context.Context, block schema.BlockTask, transfers []schema.LogTransfer) (error, []contract_helpers.UserToken) {
 	newUsers := make([]contract_helpers.UserToken, 0)
 	for _, transfer := range transfers {
 		token := transfer.EmitterAddress
-		if isNew(ctx, block.ChainId, transfer.From, token) {
+		if err, yes := isNew(ctx, block.ChainId, transfer.From, token); err == nil && yes {
 			newUsers = append(newUsers, contract_helpers.UserToken{User: transfer.From, Token: token})
+		} else if err != nil {
+			return err, nil
 		}
 	}
-	return newUsers
+	return nil, newUsers
 }
 
 func processTransferLog(ctx context.Context, block schema.BlockTask, transfer schema.LogTransfer) error {

@@ -4,7 +4,7 @@ import (
 	"strings"
 
 	"github.com/PiperFinance/BS/src/conf"
-	"github.com/PiperFinance/BS/src/core/contracts"
+	"github.com/PiperFinance/BS/src/contracts"
 	"github.com/PiperFinance/BS/src/core/schema"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"

@@ -11,6 +11,7 @@ import (
 	"github.com/PiperFinance/BS/src/core/schema"
 	"github.com/PiperFinance/BS/src/core/tasks"
 	"github.com/PiperFinance/BS/src/core/tasks/enqueuer"
+	"github.com/PiperFinance/BS/src/utils"
 	"github.com/go-redis/redis/v8"
 
 	"github.com/ethereum/go-ethereum"
@@ -82,8 +83,10 @@ func ParseBlockEventsTaskHandler(ctx context.Context, task *asynq.Task) error {
 		conf.Logger.Errorf("Task ParseBlockEvents [%+v] %s", blockTask, err)
 		return err
 	}
-	ctxFind, cancel := context.WithTimeout(ctx, 5*time.Minute)
-	defer cancel()
+	ctxFind, cancelFind := context.WithTimeout(ctx, 5*time.Minute)
+	defer cancelFind()
+	ctxDel, cancelDel := context.WithTimeout(ctx, 5*time.Minute)
+	defer cancelDel()
 	cursor, err := conf.GetMongoCol(blockTask.ChainId, conf.LogColName).Find(ctxFind, bson.M{"blockNumber": &blockTask.BlockNumber})
 	defer cursor.Close(ctxFind)
 	if err != nil {
@@ -91,8 +94,6 @@ func ParseBlockEventsTaskHandler(ctx context.Context, task *asynq.Task) error {
 	}
 	parsedLogsCol := conf.GetMongoCol(blockTask.ChainId, conf.ParsedLogColName)
 	events.ParseLogs(ctx, parsedLogsCol, cursor)
-	ctxDel, cancel := context.WithTimeout(ctx, 5*time.Minute)
-	defer cancel()
 	_, err = conf.GetMongoCol(blockTask.ChainId, conf.LogColName).DeleteMany(ctxDel, bson.M{"blockNumber": &blockTask.BlockNumber})
 	if err != nil {
 		return err
@@ -108,7 +109,7 @@ func ParseBlockEventsTaskHandler(ctx context.Context, task *asynq.Task) error {
 	} else {
 		conf.Logger.Infof("Replace Result : %d modified", res.ModifiedCount)
 	}
-
+	// TODO - Enqueue Other Tasks !
 	err = enqueuer.EnqueueUpdateUserBalJob(*conf.QueueClient, blockTask)
 	if err != nil {
 		conf.Logger.Errorf("Task ParseBlockEvents [%+v] %s", blockTask, err)
@@ -131,8 +132,7 @@ func blockScanTask(ctx context.Context, blockTask schema.BlockTask, aqCl asynq.C
 	var lastBlock uint64
 
 	if err != nil {
-		// conf.Logger.Errorf("Task BlockScan [%+v] : %s ", blockTask, err)
-		return err
+		return &utils.RpcError{Err: err, ChainId: blockTask.ChainId, BlockNumber: blockTask.BlockNumber, Name: "BlockScan"}
 	}
 	if lastBlockVal := conf.RedisClient.Get(ctx, tasks.LastScannedBlockKey(chain)); lastBlockVal.Err() == redis.Nil {
 		lastBlock = conf.StartingBlock(ctx, blockTask.ChainId)
@@ -182,11 +182,11 @@ func blockEventsTask(
 			ToBlock:   blockNumBigInt,
 		},
 	)
-	if err != nil {
-		return err
-	}
 	if conf.CallCount != nil {
 		conf.CallCount.Add(blockTask.ChainId)
+	}
+	if err != nil {
+		return &utils.RpcError{Err: err, ChainId: blockTask.ChainId, BlockNumber: blockTask.BlockNumber, Name: "BlockFetch"}
 	}
 	if len(logs) < 1 {
 		return nil

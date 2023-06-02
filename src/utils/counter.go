@@ -65,19 +65,30 @@ func NewDebugCounter(chains []int64, timeFrames ...time.Duration) *DebugCounter 
 	return r
 }
 
-func (cc *DebugCounter) Add(chain int64) {
+func (cc *DebugCounter) Add(chain int64, count ...int) {
+	incrCount := 1
+	if len(count) > 1 {
+		incrCount = count[0]
+	}
 	i := 0
 	t := time.Now()
 	cc.mutex.Lock()
 	cc.LastCallTime[chain] = t
 	for i < cc.timeFramesCount[chain] {
 		cc.TimeFrames[chain][i].NewCall(t)
-		i++
+		i += incrCount
 	}
 	cc.mutex.Unlock()
 }
 
-func (cc *DebugCounter) StatusChain(index int, chain int64) string {
+func (cc *DebugCounter) StatusChain(chain int64) string {
+	_x := cc.TimeFrames[chain]
+	x := _x[len(_x)-1]
+	rate := float64(x.Count) / x.Window.Seconds()
+	return fmt.Sprintf("%f", rate)
+}
+
+func (cc *DebugCounter) StatusChainIndexOf(index int, chain int64) string {
 	x := cc.TimeFrames[chain][index]
 	rate := float64(x.Count) / x.Window.Seconds()
 	return fmt.Sprintf("%f", rate)
