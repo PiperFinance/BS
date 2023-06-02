@@ -21,6 +21,7 @@ type config struct {
 	StartingBlockNumber  uint64        `env:"STARTING_BLOCK_NUMBER" envDefault:"3"`
 	BlockHeadDelay       uint64        `env:"BLOCK_HEAD_DELAY" envDefault:"30"`
 	SilenceRRCErrs       bool          `env:"RPC_ERROR_SILENCE" envDefault:"true"`
+	SilenceParseErrs     bool          `env:"PARSE_ERROR_SILENCE" envDefault:"true"`
 	SupportedChains      []int64       `env:"SUPPORTED_CHAINS" envSeparator:","`
 	MultiCallTimeout     time.Duration `env:"PARSE_BLOCK_TIMEOUT" envDefault:"1m"`
 	ParseBlockTimeout    time.Duration `env:"PARSE_BLOCK_TIMEOUT" envDefault:"2m"`
