@@ -80,6 +80,7 @@ func Status(c *fiber.Ctx) error {
 	for _, chain := range conf.Config.SupportedChains {
 		r[chain] = make(map[string]string)
 		r[chain]["Call"] = conf.CallCount.StatusChain(chain)
+		r[chain]["FailedCalls"] = conf.FailedCallCount.StatusChain(chain)
 		r[chain]["MultiCall"] = conf.MultiCallCount.StatusChain(chain)
 		r[chain]["NewUsers"] = conf.NewUsersCount.StatusChain(chain)
 		r[chain]["NewBlock"] = conf.NewBlockCount.StatusChain(chain)

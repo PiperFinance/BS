@@ -1,11 +1,15 @@
 package main
 
 import (
+	"time"
+
 	"github.com/PiperFinance/BS/src/conf"
 	_ "github.com/joho/godotenv/autoload"
 )
 
 func init() {
+	// NOTE - DB Sync !
+	time.Sleep(5 * time.Second)
 	conf.LoadConfig()
 	conf.LoadLogger()
 	conf.LoadMongo()

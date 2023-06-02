@@ -205,9 +205,11 @@ func blockEventsTask(
 			TxHash:      _log.TxHash,
 		}
 	}
-	_, err = monCl.InsertMany(ctx, convLogs)
-	if err != nil {
-		return err
+	if len(convLogs) > 0 {
+		_, err = monCl.InsertMany(ctx, convLogs)
+		if err != nil {
+			return err
+		}
 	}
 	_ = aqCl
 	return err

@@ -62,7 +62,7 @@ services:
       resources:
         limits:
           cpus: "1"
-          memory: 1024M
+          memory: 950M
   ## Maybe this bit will be seperated 
   mongo-express:
     image: mongo-express:latest
@@ -104,7 +104,7 @@ services:
       resources:
         limits:
           cpus: "1"
-          memory: 750M
+          memory: 850M
 
 networks:
   bs_redis_db:

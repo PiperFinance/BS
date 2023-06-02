@@ -100,8 +100,10 @@ func ParseLogs(ctx context.Context, mongoCol *mongo.Collection, logCursor *mongo
 			parsedLogs = append(parsedLogs, parsedLog)
 		}
 	}
-	_, insertionErr := mongoCol.InsertMany(ctx, parsedLogs)
-	if insertionErr != nil {
-		conf.Logger.Errorf("ParseLogs: [%T] : %s", insertionErr, insertionErr)
+	if len(parsedLogs) > 0 {
+		_, insertionErr := mongoCol.InsertMany(ctx, parsedLogs)
+		if insertionErr != nil {
+			conf.Logger.Errorf("ParseLogs: [%T] : %s", insertionErr, insertionErr)
+		}
 	}
 }

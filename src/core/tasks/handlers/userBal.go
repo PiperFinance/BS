@@ -127,7 +127,7 @@ func updateUserTokens(ctx context.Context, blockTask schema.BlockTask, usersToke
 	if len(usersTokens) < 1 {
 		return nil
 	}
-	conf.NewUsersCount.Add(blockTask.ChainId, len(usersTokens))
+	conf.NewUsersCount.Add(blockTask.ChainId, uint64(len(usersTokens)))
 	conf.MultiCallCount.Add(blockTask.ChainId)
 	bal := contract_helpers.EasyBalanceOf{UserTokens: usersTokens, ChainId: blockTask.ChainId, BlockNumber: int64(blockTask.BlockNumber)}
 	if err := bal.Execute(ctx); err != nil {
@@ -150,10 +150,12 @@ func updateUserTokens(ctx context.Context, blockTask schema.BlockTask, usersToke
 			Balance:   userToken.Balance.String(),
 		})
 	}
-	if res, err := col.InsertMany(ctx, balances); err != nil {
-		return err
-	} else {
-		conf.Logger.Info(res)
+	if len(balances) > 0 {
+		if res, err := col.InsertMany(ctx, balances); err != nil {
+			return err
+		} else {
+			conf.Logger.Info(res)
+		}
 	}
 	return nil
 }

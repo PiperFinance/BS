@@ -11,15 +11,16 @@ import (
 
 type QueueErrorHandler struct{}
 
-func errType(v interface{}) interface{} {
+func errType(ChainId int64, v interface{}) interface{} {
 	switch v.(type) {
 	case error:
 		return v
 	case utils.RpcError:
+		FailedCallCount.Add(ChainId)
 		if Config.SilenceRRCErrs {
-			return v
-		} else {
 			return nil
+		} else {
+			return v
 		}
 	default:
 		return "unknown"
@@ -27,12 +28,12 @@ func errType(v interface{}) interface{} {
 }
 
 func (er *QueueErrorHandler) HandleError(ctx context.Context, task *asynq.Task, err error) {
-	if errType(err) == nil {
-		return
-	}
 	retried, _ := asynq.GetRetryCount(ctx)
 	blockTask := schema.BlockTask{}
 	if errJson := json.Unmarshal(task.Payload(), &blockTask); errJson == nil && blockTask.ChainId > 0 {
+		if errType(blockTask.ChainId, err) == nil {
+			return
+		}
 		Logger.Errorf("Retries:%d [%d] @ %d : %+v", retried, blockTask.ChainId, blockTask.BlockNumber, err)
 	} else {
 		Logger.Errorf("Retries:%d : %+v", retried, err)
