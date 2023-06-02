@@ -95,9 +95,12 @@ func ParseLogs(ctx context.Context, mongoCol *mongo.Collection, logCursor *mongo
 				if !conf.Config.SilenceParseErrs {
 					conf.Logger.Errorf("ParseLogs: [%T] : %s", parseErr, parseErr)
 				}
+				continue
 			}
 		} else {
-			parsedLogs = append(parsedLogs, parsedLog)
+			if parsedLog != nil {
+				parsedLogs = append(parsedLogs, parsedLog)
+			}
 		}
 	}
 	if len(parsedLogs) > 0 {
