@@ -185,7 +185,8 @@ func updateUserTokens(ctx context.Context, blockTask schema.BlockTask, usersToke
 	}
 	conf.NewUsersCount.AddFor(blockTask.ChainId, uint64(len(usersTokens)))
 	conf.MultiCallCount.Add(blockTask.ChainId)
-	bal := contract_helpers.EasyBalanceOf{UserTokens: usersTokens, ChainId: blockTask.ChainId, BlockNumber: int64(blockTask.BlockNumber)}
+	// bal := contract_helpers.EasyBalanceOf{UserTokens: usersTokens, ChainId: blockTask.ChainId, BlockNumber: int64(blockTask.BlockNumber)}
+	bal := contract_helpers.EasyBalanceOf{UserTokens: usersTokens, ChainId: blockTask.ChainId, BlockNumber: int64(blockTask.BlockNumber) - 1}
 	if err := bal.Execute(ctx); err != nil {
 		// conf.Logger.Error(err)
 		return err
@@ -239,9 +240,10 @@ func processTransferLog(ctx context.Context, block schema.BlockTask, transfer sc
 	} else {
 		return fmt.Errorf("transfer log get amount failure, transfer=%+v", transfer)
 	}
+
 	if _, err := processUserBal(
 		ctx, block,
-		transfer.From, transfer.EmitterAddress,
+		transfer.To, transfer.EmitterAddress,
 		amount); err != nil {
 		return err
 	}
@@ -252,7 +254,6 @@ func processTransferLog(ctx context.Context, block schema.BlockTask, transfer sc
 		amount.Neg(amount)); err != nil {
 		return err
 	}
-
 	return nil
 }
 

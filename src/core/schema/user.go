@@ -47,7 +47,8 @@ func (ub *UserBalance) AddBal(b *big.Int) error {
 	if !ok {
 		return fmt.Errorf("failed to cast %s to big.Int", ub.Balance)
 	}
-	ub.SetBalance(a.Add(a, b))
+	nb := a.Add(a, b)
+	ub.SetBalance(nb)
 	return nil
 }
 
