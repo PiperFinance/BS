@@ -7,7 +7,7 @@ WORKDIR /api
 ENV PORT=8000
 COPY  ./go.mod .
 COPY ./go.sum .
-ENV GOPROXY=https://proxy.golang.org
+ENV GOPROXY=https://goproxy.cn,direct
 
 RUN go mod download
 COPY ./src ./src
