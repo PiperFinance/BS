@@ -14,8 +14,10 @@ const (
 	// LogColName Collection name for transfers events
 	LogColName          = "Logs"
 	BlockColName        = "Blocks"
+	TokenColName        = "Tokens"
 	ParsedLogColName    = "ParsedLogs"
 	UserBalColName      = "UsersBalance"
+	BannedUsersColName  = "BannedUsers"
 	TokenVolumeColName  = "TokenVolume"
 	TokenUserMapColName = "TokenUserMap"
 	UserTokenMapColName = "UserTokenMap"
@@ -33,6 +35,7 @@ var (
 )
 
 func LoadMongo() {
+	time.Sleep(Config.MongoSlowLoading)
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 	opts := options.Client().ApplyURI(Config.MongoUrl.String())
@@ -58,6 +61,8 @@ func LoadMongo() {
 			ctx, mongo.IndexModel{Keys: bson.D{{Key: "no", Value: -1}}})
 		GetMongoCol(chain, BlockColName).Indexes().CreateOne(
 			ctx, mongo.IndexModel{Keys: bson.D{{Key: "no", Value: -1}, {Key: "status", Value: 1}}})
+		GetMongoCol(chain, TokenColName).Indexes().CreateOne(
+			ctx, mongo.IndexModel{Keys: bson.D{{Key: "address", Value: 1}}})
 	}
 }
 

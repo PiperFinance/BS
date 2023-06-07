@@ -64,7 +64,7 @@ func UpdateUserBalTaskHandler(ctx context.Context, task *asynq.Task) error {
 	for cursor.Next(ctx) {
 		transfer := schema.LogTransfer{}
 		if err := cursor.Decode(&transfer); err != nil {
-			conf.Logger.Error(err)
+			conf.Logger.Errorw("UserBal", "err", err, "block", blockTask)
 			continue
 		}
 		transferIDs = append(transferIDs, transfer.ID)
@@ -73,7 +73,6 @@ func UpdateUserBalTaskHandler(ctx context.Context, task *asynq.Task) error {
 			transfers = append(transfers, transfer)
 		}
 	}
-	// TODO - Parse if amount > 0
 	if len(transfers) > 0 {
 		processTransferLogs(ctx, blockTask, transfers)
 	}
@@ -94,6 +93,9 @@ func UpdateUserBalTaskHandler(ctx context.Context, task *asynq.Task) error {
 }
 
 func processTransferLogs(ctx context.Context, block schema.BlockTask, transfers []schema.LogTransfer) error {
+	if err := updateTokens(ctx, block, transfers); err != nil {
+		return err
+	}
 	err, newUsers := findNewRecords(ctx, block, transfers)
 	if err != nil {
 		return err
@@ -109,11 +111,35 @@ func processTransferLogs(ctx context.Context, block schema.BlockTask, transfers 
 	return nil
 }
 
+func updateTokens(ctx context.Context, block schema.BlockTask, transfers []schema.LogTransfer) error {
+	col := conf.GetMongoCol(block.ChainId, conf.TokenColName)
+	tokens := make([]interface{}, 0)
+	for _, transfer := range transfers {
+		if res := col.FindOne(ctx, bson.D{{Key: "_id", Value: transfer.EmitterAddress}}); res.Err() == mongo.ErrNoDocuments {
+			tokens = append(tokens, bson.D{{Key: "_id", Value: transfer.EmitterAddress}})
+		} else if res.Err() != nil {
+			return res.Err()
+		}
+	}
+	if len(tokens) > 1 {
+		if _, err := col.InsertMany(ctx, tokens); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func isNew(ctx context.Context, chainId int64, user common.Address, token common.Address) (error, bool) {
+	// TODO - Add user Limit here
+	// FIXME - For Request CountReduction contracts contract and zero address is not included
+	if isLimited(ctx, chainId, user) {
+		return nil, false
+	}
 	filter := bson.D{{Key: "user", Value: user}, {Key: "token", Value: token}}
 	if res := userBalanceCol(chainId).FindOne(ctx, filter); res.Err() == mongo.ErrNoDocuments {
 		return nil, true
 	} else {
+
 		if res.Err() == nil {
 			conf.Logger.Infow("NewUserFinder", "user", user, "token", token, "err", res.Err())
 		} else {
@@ -123,11 +149,41 @@ func isNew(ctx context.Context, chainId int64, user common.Address, token common
 	}
 }
 
+func isLimited(ctx context.Context, chainId int64, user common.Address) bool {
+	return isAddressNull(ctx, chainId, user) || isAddressToken(ctx, chainId, user) || isUserBanned(ctx, chainId, user)
+}
+
+func isUserBanned(ctx context.Context, chainId int64, user common.Address) bool {
+	if res := conf.GetMongoCol(chainId, conf.UserBalColName).FindOne(ctx, bson.D{{Key: "_id", Value: user.String()}}); res.Err() == mongo.ErrNoDocuments {
+		return false
+	} else if res.Err() == nil {
+		return true
+	} else {
+		conf.Logger.Errorw("BannedUsers", "err", res.Err(), "user", user, "chain", chainId)
+		return false
+	}
+}
+
+func isAddressNull(ctx context.Context, chainId int64, user common.Address) bool {
+	return user.Big().Cmp(big.NewInt(0)) < 1
+}
+
+func isAddressToken(ctx context.Context, chainId int64, user common.Address) bool {
+	if res := conf.GetMongoCol(chainId, conf.TokenColName).FindOne(ctx, bson.D{{Key: "_id", Value: user}}); res.Err() == mongo.ErrNoDocuments {
+		return false
+	} else if res.Err() == nil {
+		return true
+	} else {
+		conf.Logger.Errorw("IsAddressAToken", "err", res.Err(), "user", user, "chain", chainId)
+		return false
+	}
+}
+
 func updateUserTokens(ctx context.Context, blockTask schema.BlockTask, usersTokens []contract_helpers.UserToken) error {
 	if len(usersTokens) < 1 {
 		return nil
 	}
-	conf.NewUsersCount.Add(blockTask.ChainId, uint64(len(usersTokens)))
+	conf.NewUsersCount.AddFor(blockTask.ChainId, uint64(len(usersTokens)))
 	conf.MultiCallCount.Add(blockTask.ChainId)
 	bal := contract_helpers.EasyBalanceOf{UserTokens: usersTokens, ChainId: blockTask.ChainId, BlockNumber: int64(blockTask.BlockNumber)}
 	if err := bal.Execute(ctx); err != nil {
@@ -145,6 +201,9 @@ func updateUserTokens(ctx context.Context, blockTask schema.BlockTask, usersToke
 		balances = append(balances, schema.UserBalance{
 			User:      userToken.User,
 			Token:     userToken.Token,
+			UserStr:   userToken.User.String(),
+			TokenStr:  userToken.Token.String(),
+			TrxCount:  0,
 			ChangedAt: blockTask.BlockNumber,
 			StartedAt: blockTask.BlockNumber,
 			Balance:   userToken.Balance.String(),
@@ -204,7 +263,10 @@ func processUserBal(ctx context.Context, blockTask schema.BlockTask, user common
 		ChangedAt: blockTask.BlockNumber,
 	}
 	filter := bson.D{{Key: "user", Value: user}, {Key: "token", Value: token}}
-	if res := userBalanceCol(blockTask.ChainId).FindOne(ctx, filter); res.Err() != nil {
+	if res := userBalanceCol(blockTask.ChainId).FindOne(ctx, filter); res.Err() == mongo.ErrNoDocuments {
+		// NOTE - Record might have been ignored
+		return nil, nil
+	} else if res.Err() != nil {
 		return nil, res.Err()
 	} else {
 		if err := res.Decode(&userBal); err != nil {
@@ -214,11 +276,10 @@ func processUserBal(ctx context.Context, blockTask schema.BlockTask, user common
 	if err := userBal.AddBal(amount); err != nil {
 		return nil, err
 	}
-	update := bson.D{{Key: "$set", Value: bson.D{{Key: "bal", Value: userBal.GetBalanceStr()}, {Key: "c_t", Value: blockTask.BlockNumber}}}}
+	update := bson.D{{Key: "$set", Value: bson.D{{Key: "bal", Value: userBal.GetBalanceStr()}, {Key: "c_t", Value: blockTask.BlockNumber}, {Key: "count", Value: userBal.TrxCount + 1}}}}
 	_, err := userBalanceCol(blockTask.ChainId).UpdateOne(ctx, filter, update)
 	if err != nil {
 		return nil, err
 	}
-	// conf.Logger.Infof("Modified: %d , MatchedCount: %d ", res.ModifiedCount, res.MatchedCount)
 	return &userBal, nil
 }

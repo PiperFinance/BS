@@ -47,7 +47,7 @@ func BlockEventsTaskHandler(ctx context.Context, task *asynq.Task) error {
 	blockTask := schema.BlockTask{}
 	err := json.Unmarshal(task.Payload(), &blockTask)
 	if err != nil {
-		conf.Logger.Errorf("Task BlockEvents [%+v] : %s ", blockTask, err)
+		// conf.Logger.Errorf("Task BlockEvents [%+v] : %s ", blockTask, err)
 		return err
 	}
 	err = blockEventsTask(
@@ -57,7 +57,7 @@ func BlockEventsTaskHandler(ctx context.Context, task *asynq.Task) error {
 		*conf.GetMongoCol(blockTask.ChainId, conf.LogColName),
 		blockTask.BlockNumber)
 	if err != nil {
-		conf.Logger.Errorf("Task BlockEvents [%+v] : %s ", blockTask, err)
+		// conf.Logger.Errorf("Task BlockEvents [%+v] : %s ", blockTask, err)
 		return err
 	}
 
@@ -69,7 +69,8 @@ func BlockEventsTaskHandler(ctx context.Context, task *asynq.Task) error {
 		conf.Logger.Errorf("Task BlockEvents [%+v] : %s ", blockTask, err)
 	}
 	if err := enqueuer.EnqueueParseBlockJob(*conf.QueueClient, blockTask); err != nil {
-		conf.Logger.Errorf("Task BlockEvents [%+v] : %s ", blockTask, err)
+		// conf.Logger.Errorf("Task BlockEvents [%+v] : %s ", blockTask, err)
+		return err
 	}
 	return err
 }

@@ -34,7 +34,7 @@ func (er *QueueErrorHandler) HandleError(ctx context.Context, task *asynq.Task, 
 		if errType(blockTask.ChainId, err) == nil {
 			return
 		}
-		Logger.Errorf("Retries:%d [%d] @ %d : %+v", retried, blockTask.ChainId, blockTask.BlockNumber, err)
+		Logger.Errorw("QErr", "Retires", retried, "block", blockTask, "err", err)
 	} else {
 		Logger.Errorf("Retries:%d : %+v", retried, err)
 	}

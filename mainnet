@@ -26,36 +26,6 @@
         "url": "https://eth-mainnet.nodereal.io/v1/1659dfb40aa24bbb8153a677b98064d7",
         "tracking": "yes"
       },
-      {
-        "url": "https://mainnet.infura.io/v3/15db6d9447694750a24c5e5d68fe5146"
-      },
-      {
-        "url": "https://mainnet.infura.io/v3/4fcbd0ddf76a480d832f7aed0299dffa"
-      },
-      {
-        "url": "https://mainnet.infura.io/v3/36d17e6c1e7249b78c5017c04cc52b01"
-      },
-      {
-        "url": "https://mainnet.infura.io/v3/ea88abe8252f4342b9520c72f84e570a"
-      },
-      {
-        "url": "https://mainnet.infura.io/v3/82f215e046b54b59821000b6036f1a60"
-      },
-      {
-        "url": "https://mainnet.infura.io/v3/271c5143fb834330a952f00e696c73f5"
-      },
-      {
-        "url": "https://mainnet.infura.io/v3/3a961d6501e54add9a41aa53f15de99b"
-      },
-      {
-        "url": "https://mainnet.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161"
-      },
-      {
-        "url": "https://mainnet.infura.io/v3/bb055071bba745488eda95512a6d0035"
-      },
-      {
-        "url": "https://mainnet.infura.io/v3/31d72a42f19f4a39a6d831f8b331f875"
-      },
       { "url": "https://ethereum.publicnode.com", "tracking": "none" },
       { "url": "https://1rpc.io/eth", "tracking": "none" },
       { "url": "https://rpc.builder0x69.io", "tracking": "none" },
@@ -100,38 +70,7 @@
         "tracking": "yes"
       },
       { "url": "https://eth.meowrpc.com", "tracking": "none" },
-      { "url": "https://api.mycryptoapi.com/eth" },
-      { "url": "https://1rpc.io/5imYyj3xK2WYW2EMR/eth" },
-      { "url": "https://1rpc.io/3MnN8qiTcyw8y3Uak/eth" },
-      { "url": "https://1rpc.io/2JkmomgGmKyHD4veu/eth" },
-      { "url": "https://1rpc.io/3czJW6t3yJsgGikfF/eth" },
-      { "url": "https://1rpc.io/Cr3VZ9Qtu3A49mF7/eth" },
-      { "url": "https://1rpc.io/4TtE9kJWKXVSVFjW8/eth" },
-      { "url": "https://1rpc.io/4BJarJohXhj1JUbaA/eth" },
-      {
-        "url": "https://rpc.ankr.com/eth/2d57529a7a93cd76e7ae037c074aefba9928105fcd544bcc7cac9abe7f1bc71f"
-      },
-      {
-        "url": "https://rpc.ankr.com/eth/140338ac8e2c79b28bd7a9f07f50111e4efa24240dad6e9785556ae0d89bd5f1"
-      },
-      {
-        "url": "https://rpc.ankr.com/eth/e6635c18dabc07d23e6e8d6df1b27ca79c3feffe10b551fbec3769778bcecabc"
-      },
-      {
-        "url": "https://rpc.ankr.com/eth/bbd4782985e2d5e5445e844e2c552578ccd128a39be9950738aec8dad85aeaab"
-      },
-      {
-        "url": "https://rpc.ankr.com/eth/f3b40bc900526f6bc919da7f5a9601c611e8e1d4495b3d9adc067b03d4c5d37d"
-      },
-      {
-        "url": "https://rpc.ankr.com/eth/515e4dc5696bcff11a366be0bb5dce43d113b9c436e6448f6f28f95eec27966b"
-      },
-      {
-        "url": "https://rpc.ankr.com/eth/92c815747e7debe1402eed15af488de88f850ac94a146c20622c5794780c295e"
-      },
-      {
-        "url": "https://rpc.ankr.com/eth/c208cc771a24a99442708b8042fbb6f8d8b201148c88856b1c7033f3f6991e10"
-      }
+      { "url": "https://api.mycryptoapi.com/eth" }
     ],
     "features": [{ "name": "EIP155" }, { "name": "EIP1559" }],
     "faucets": [],
@@ -204,38 +143,7 @@
         "tracking": "limited"
       },
       { "url": "https://bsc.meowrpc.com", "tracking": "none" },
-      { "url": "wss://bsc-ws-node.nariox.org" },
-      { "url": "https://1rpc.io/5imYyj3xK2WYW2EMR/bnb" },
-      { "url": "https://1rpc.io/3MnN8qiTcyw8y3Uak/bnb" },
-      { "url": "https://1rpc.io/2JkmomgGmKyHD4veu/bnb" },
-      { "url": "https://1rpc.io/3czJW6t3yJsgGikfF/bnb" },
-      { "url": "https://1rpc.io/Cr3VZ9Qtu3A49mF7/bnb" },
-      { "url": "https://1rpc.io/4TtE9kJWKXVSVFjW8/bnb" },
-      { "url": "https://1rpc.io/4BJarJohXhj1JUbaA/bnb" },
-      {
-        "url": "https://rpc.ankr.com/bsc/2d57529a7a93cd76e7ae037c074aefba9928105fcd544bcc7cac9abe7f1bc71f"
-      },
-      {
-        "url": "https://rpc.ankr.com/bsc/140338ac8e2c79b28bd7a9f07f50111e4efa24240dad6e9785556ae0d89bd5f1"
-      },
-      {
-        "url": "https://rpc.ankr.com/bsc/e6635c18dabc07d23e6e8d6df1b27ca79c3feffe10b551fbec3769778bcecabc"
-      },
-      {
-        "url": "https://rpc.ankr.com/bsc/bbd4782985e2d5e5445e844e2c552578ccd128a39be9950738aec8dad85aeaab"
-      },
-      {
-        "url": "https://rpc.ankr.com/bsc/f3b40bc900526f6bc919da7f5a9601c611e8e1d4495b3d9adc067b03d4c5d37d"
-      },
-      {
-        "url": "https://rpc.ankr.com/bsc/515e4dc5696bcff11a366be0bb5dce43d113b9c436e6448f6f28f95eec27966b"
-      },
-      {
-        "url": "https://rpc.ankr.com/bsc/92c815747e7debe1402eed15af488de88f850ac94a146c20622c5794780c295e"
-      },
-      {
-        "url": "https://rpc.ankr.com/bsc/c208cc771a24a99442708b8042fbb6f8d8b201148c88856b1c7033f3f6991e10"
-      }
+      { "url": "wss://bsc-ws-node.nariox.org" }
     ],
     "faucets": ["https://free-online-app.com/faucet-for-eth-evm-chains/"],
     "nativeCurrency": {
@@ -304,38 +212,7 @@
         "url": "https://polygon.api.onfinality.io/public",
         "tracking": "limited"
       },
-      { "url": "https://polygon.rpc.blxrbdn.com", "tracking": "yes" },
-      { "url": "https://1rpc.io/5imYyj3xK2WYW2EMR/matic" },
-      { "url": "https://1rpc.io/3MnN8qiTcyw8y3Uak/matic" },
-      { "url": "https://1rpc.io/2JkmomgGmKyHD4veu/matic" },
-      { "url": "https://1rpc.io/3czJW6t3yJsgGikfF/matic" },
-      { "url": "https://1rpc.io/Cr3VZ9Qtu3A49mF7/matic" },
-      { "url": "https://1rpc.io/4TtE9kJWKXVSVFjW8/matic" },
-      { "url": "https://1rpc.io/4BJarJohXhj1JUbaA/matic" },
-      {
-        "url": "https://rpc.ankr.com/polygon/2d57529a7a93cd76e7ae037c074aefba9928105fcd544bcc7cac9abe7f1bc71f"
-      },
-      {
-        "url": "https://rpc.ankr.com/polygon/140338ac8e2c79b28bd7a9f07f50111e4efa24240dad6e9785556ae0d89bd5f1"
-      },
-      {
-        "url": "https://rpc.ankr.com/polygon/e6635c18dabc07d23e6e8d6df1b27ca79c3feffe10b551fbec3769778bcecabc"
-      },
-      {
-        "url": "https://rpc.ankr.com/polygon/bbd4782985e2d5e5445e844e2c552578ccd128a39be9950738aec8dad85aeaab"
-      },
-      {
-        "url": "https://rpc.ankr.com/polygon/f3b40bc900526f6bc919da7f5a9601c611e8e1d4495b3d9adc067b03d4c5d37d"
-      },
-      {
-        "url": "https://rpc.ankr.com/polygon/515e4dc5696bcff11a366be0bb5dce43d113b9c436e6448f6f28f95eec27966b"
-      },
-      {
-        "url": "https://rpc.ankr.com/polygon/92c815747e7debe1402eed15af488de88f850ac94a146c20622c5794780c295e"
-      },
-      {
-        "url": "https://rpc.ankr.com/polygon/c208cc771a24a99442708b8042fbb6f8d8b201148c88856b1c7033f3f6991e10"
-      }
+      { "url": "https://polygon.rpc.blxrbdn.com", "tracking": "yes" }
     ],
     "faucets": [],
     "nativeCurrency": { "name": "MATIC", "symbol": "MATIC", "decimals": 18 },
@@ -379,6 +256,10 @@
         "tracking": "limited"
       },
       {
+        "url": "https://avalanche-mainnet.infura.io/v3/${INFURA_API_KEY}",
+        "tracking": "limited"
+      },
+      {
         "url": "https://avax-mainnet.gateway.pokt.network/v1/lb/605238bf6b986eea7cf36d5e/ext/bc/C/rpc",
         "tracking": "none"
       },
@@ -390,38 +271,7 @@
         "url": "https://endpoints.omniatech.io/v1/avax/mainnet/public",
         "tracking": "none"
       },
-      { "url": "https://avax.meowrpc.com", "tracking": "none" },
-      { "url": "https://1rpc.io/5imYyj3xK2WYW2EMR/avax/c" },
-      { "url": "https://1rpc.io/3MnN8qiTcyw8y3Uak/avax/c" },
-      { "url": "https://1rpc.io/2JkmomgGmKyHD4veu/avax/c" },
-      { "url": "https://1rpc.io/3czJW6t3yJsgGikfF/avax/c" },
-      { "url": "https://1rpc.io/Cr3VZ9Qtu3A49mF7/avax/c" },
-      { "url": "https://1rpc.io/4TtE9kJWKXVSVFjW8/avax/c" },
-      { "url": "https://1rpc.io/4BJarJohXhj1JUbaA/avax/c" },
-      {
-        "url": "https://rpc.ankr.com/avalanche/2d57529a7a93cd76e7ae037c074aefba9928105fcd544bcc7cac9abe7f1bc71f"
-      },
-      {
-        "url": "https://rpc.ankr.com/avalanche/140338ac8e2c79b28bd7a9f07f50111e4efa24240dad6e9785556ae0d89bd5f1"
-      },
-      {
-        "url": "https://rpc.ankr.com/avalanche/e6635c18dabc07d23e6e8d6df1b27ca79c3feffe10b551fbec3769778bcecabc"
-      },
-      {
-        "url": "https://rpc.ankr.com/avalanche/bbd4782985e2d5e5445e844e2c552578ccd128a39be9950738aec8dad85aeaab"
-      },
-      {
-        "url": "https://rpc.ankr.com/avalanche/f3b40bc900526f6bc919da7f5a9601c611e8e1d4495b3d9adc067b03d4c5d37d"
-      },
-      {
-        "url": "https://rpc.ankr.com/avalanche/515e4dc5696bcff11a366be0bb5dce43d113b9c436e6448f6f28f95eec27966b"
-      },
-      {
-        "url": "https://rpc.ankr.com/avalanche/92c815747e7debe1402eed15af488de88f850ac94a146c20622c5794780c295e"
-      },
-      {
-        "url": "https://rpc.ankr.com/avalanche/c208cc771a24a99442708b8042fbb6f8d8b201148c88856b1c7033f3f6991e10"
-      }
+      { "url": "https://avax.meowrpc.com", "tracking": "none" }
     ],
     "features": [{ "name": "EIP1559" }],
     "faucets": ["https://free-online-app.com/faucet-for-eth-evm-chains/"],
@@ -472,38 +322,7 @@
         "url": "https://fantom.api.onfinality.io/public",
         "tracking": "limited"
       },
-      { "url": "https://rpc.fantom.gateway.fm", "tracking": "yes" },
-      { "url": "https://1rpc.io/5imYyj3xK2WYW2EMR/ftm" },
-      { "url": "https://1rpc.io/3MnN8qiTcyw8y3Uak/ftm" },
-      { "url": "https://1rpc.io/2JkmomgGmKyHD4veu/ftm" },
-      { "url": "https://1rpc.io/3czJW6t3yJsgGikfF/ftm" },
-      { "url": "https://1rpc.io/Cr3VZ9Qtu3A49mF7/ftm" },
-      { "url": "https://1rpc.io/4TtE9kJWKXVSVFjW8/ftm" },
-      { "url": "https://1rpc.io/4BJarJohXhj1JUbaA/ftm" },
-      {
-        "url": "https://rpc.ankr.com/fantom/2d57529a7a93cd76e7ae037c074aefba9928105fcd544bcc7cac9abe7f1bc71f"
-      },
-      {
-        "url": "https://rpc.ankr.com/fantom/140338ac8e2c79b28bd7a9f07f50111e4efa24240dad6e9785556ae0d89bd5f1"
-      },
-      {
-        "url": "https://rpc.ankr.com/fantom/e6635c18dabc07d23e6e8d6df1b27ca79c3feffe10b551fbec3769778bcecabc"
-      },
-      {
-        "url": "https://rpc.ankr.com/fantom/bbd4782985e2d5e5445e844e2c552578ccd128a39be9950738aec8dad85aeaab"
-      },
-      {
-        "url": "https://rpc.ankr.com/fantom/f3b40bc900526f6bc919da7f5a9601c611e8e1d4495b3d9adc067b03d4c5d37d"
-      },
-      {
-        "url": "https://rpc.ankr.com/fantom/515e4dc5696bcff11a366be0bb5dce43d113b9c436e6448f6f28f95eec27966b"
-      },
-      {
-        "url": "https://rpc.ankr.com/fantom/92c815747e7debe1402eed15af488de88f850ac94a146c20622c5794780c295e"
-      },
-      {
-        "url": "https://rpc.ankr.com/fantom/c208cc771a24a99442708b8042fbb6f8d8b201148c88856b1c7033f3f6991e10"
-      }
+      { "url": "https://rpc.fantom.gateway.fm", "tracking": "yes" }
     ],
     "faucets": ["https://free-online-app.com/faucet-for-eth-evm-chains/"],
     "nativeCurrency": { "name": "Fantom", "symbol": "FTM", "decimals": 18 },
@@ -539,6 +358,10 @@
         "url": "https://arbitrum.getblock.io/api_key/mainnet",
         "tracking": "none"
       },
+      {
+        "url": "https://arbitrum-mainnet.infura.io/v3/${INFURA_API_KEY}",
+        "tracking": "limited"
+      },
       { "url": "https://arb-mainnet.g.alchemy.com/v2/demo", "tracking": "yes" },
       {
         "url": "https://arbitrum.blockpi.network/v1/rpc/public",
@@ -557,70 +380,7 @@
         "url": "https://arbitrum.api.onfinality.io/public",
         "tracking": "limited"
       },
-      {
-        "url": "https://arbitrum-mainnet.infura.io/v3/15db6d9447694750a24c5e5d68fe5146"
-      },
-      {
-        "url": "https://arbitrum-mainnet.infura.io/v3/4fcbd0ddf76a480d832f7aed0299dffa"
-      },
-      {
-        "url": "https://arbitrum-mainnet.infura.io/v3/36d17e6c1e7249b78c5017c04cc52b01"
-      },
-      {
-        "url": "https://arbitrum-mainnet.infura.io/v3/ea88abe8252f4342b9520c72f84e570a"
-      },
-      {
-        "url": "https://arbitrum-mainnet.infura.io/v3/82f215e046b54b59821000b6036f1a60"
-      },
-      {
-        "url": "https://arbitrum-mainnet.infura.io/v3/271c5143fb834330a952f00e696c73f5"
-      },
-      {
-        "url": "https://arbitrum-mainnet.infura.io/v3/3a961d6501e54add9a41aa53f15de99b"
-      },
-      {
-        "url": "https://arbitrum-mainnet.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161"
-      },
-      {
-        "url": "https://arbitrum-mainnet.infura.io/v3/bb055071bba745488eda95512a6d0035"
-      },
-      {
-        "url": "https://arbitrum-mainnet.infura.io/v3/31d72a42f19f4a39a6d831f8b331f875"
-      },
-      { "url": "https://1rpc.io/5imYyj3xK2WYW2EMRarb" },
-      { "url": "https://1rpc.io/3MnN8qiTcyw8y3Uakarb" },
-      { "url": "https://1rpc.io/2JkmomgGmKyHD4veuarb" },
-      { "url": "https://1rpc.io/3czJW6t3yJsgGikfFarb" },
-      { "url": "https://1rpc.io/Cr3VZ9Qtu3A49mF7arb" },
-      { "url": "https://1rpc.io/4TtE9kJWKXVSVFjW8arb" },
-      { "url": "https://1rpc.io/4BJarJohXhj1JUbaAarb" },
-      {
-        "url": "https://rpc.ankr.com/arbitrum/2d57529a7a93cd76e7ae037c074aefba9928105fcd544bcc7cac9abe7f1bc71f"
-      },
-      {
-        "url": "https://rpc.ankr.com/arbitrum/140338ac8e2c79b28bd7a9f07f50111e4efa24240dad6e9785556ae0d89bd5f1"
-      },
-      {
-        "url": "https://rpc.ankr.com/arbitrum/e6635c18dabc07d23e6e8d6df1b27ca79c3feffe10b551fbec3769778bcecabc"
-      },
-      {
-        "url": "https://rpc.ankr.com/arbitrum/bbd4782985e2d5e5445e844e2c552578ccd128a39be9950738aec8dad85aeaab"
-      },
-      {
-        "url": "https://rpc.ankr.com/arbitrum/f3b40bc900526f6bc919da7f5a9601c611e8e1d4495b3d9adc067b03d4c5d37d"
-      },
-      {
-        "url": "https://rpc.ankr.com/arbitrum/515e4dc5696bcff11a366be0bb5dce43d113b9c436e6448f6f28f95eec27966b"
-      },
-      {
-        "url": "https://rpc.ankr.com/arbitrum/92c815747e7debe1402eed15af488de88f850ac94a146c20622c5794780c295e"
-      },
-      {
-        "url": "https://rpc.ankr.com/arbitrum/c208cc771a24a99442708b8042fbb6f8d8b201148c88856b1c7033f3f6991e10"
-      },
-      {
-        "url": "https://arb-mainnet.g.alchemy.com/v2/COfNiADuSYhZ5vWPzFsm4dMCYMMSpwwQ"
-      }
+      { "url": "https://arb-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}" }
     ],
     "faucets": [],
     "explorers": [
@@ -710,31 +470,7 @@
         "tracking": "limited"
       },
       { "url": "https://gnosischain-rpc.gateway.pokt.network" },
-      { "url": "wss://rpc.gnosischain.com/wss" },
-      {
-        "url": "https://rpc.ankr.com/gnosis/2d57529a7a93cd76e7ae037c074aefba9928105fcd544bcc7cac9abe7f1bc71f"
-      },
-      {
-        "url": "https://rpc.ankr.com/gnosis/140338ac8e2c79b28bd7a9f07f50111e4efa24240dad6e9785556ae0d89bd5f1"
-      },
-      {
-        "url": "https://rpc.ankr.com/gnosis/e6635c18dabc07d23e6e8d6df1b27ca79c3feffe10b551fbec3769778bcecabc"
-      },
-      {
-        "url": "https://rpc.ankr.com/gnosis/bbd4782985e2d5e5445e844e2c552578ccd128a39be9950738aec8dad85aeaab"
-      },
-      {
-        "url": "https://rpc.ankr.com/gnosis/f3b40bc900526f6bc919da7f5a9601c611e8e1d4495b3d9adc067b03d4c5d37d"
-      },
-      {
-        "url": "https://rpc.ankr.com/gnosis/515e4dc5696bcff11a366be0bb5dce43d113b9c436e6448f6f28f95eec27966b"
-      },
-      {
-        "url": "https://rpc.ankr.com/gnosis/92c815747e7debe1402eed15af488de88f850ac94a146c20622c5794780c295e"
-      },
-      {
-        "url": "https://rpc.ankr.com/gnosis/c208cc771a24a99442708b8042fbb6f8d8b201148c88856b1c7033f3f6991e10"
-      }
+      { "url": "wss://rpc.gnosischain.com/wss" }
     ],
     "faucets": [
       "https://gnosisfaucet.com",
@@ -998,38 +734,7 @@
       { "url": "https://moonbeam.public.blastapi.io", "tracking": "limited" },
       { "url": "https://rpc.ankr.com/moonbeam", "tracking": "limited" },
       { "url": "https://1rpc.io/glmr", "tracking": "none" },
-      { "url": "wss://wss.api.moonbeam.network" },
-      { "url": "https://1rpc.io/5imYyj3xK2WYW2EMR/glmr" },
-      { "url": "https://1rpc.io/3MnN8qiTcyw8y3Uak/glmr" },
-      { "url": "https://1rpc.io/2JkmomgGmKyHD4veu/glmr" },
-      { "url": "https://1rpc.io/3czJW6t3yJsgGikfF/glmr" },
-      { "url": "https://1rpc.io/Cr3VZ9Qtu3A49mF7/glmr" },
-      { "url": "https://1rpc.io/4TtE9kJWKXVSVFjW8/glmr" },
-      { "url": "https://1rpc.io/4BJarJohXhj1JUbaA/glmr" },
-      {
-        "url": "https://rpc.ankr.com/moonbeam/2d57529a7a93cd76e7ae037c074aefba9928105fcd544bcc7cac9abe7f1bc71f"
-      },
-      {
-        "url": "https://rpc.ankr.com/moonbeam/140338ac8e2c79b28bd7a9f07f50111e4efa24240dad6e9785556ae0d89bd5f1"
-      },
-      {
-        "url": "https://rpc.ankr.com/moonbeam/e6635c18dabc07d23e6e8d6df1b27ca79c3feffe10b551fbec3769778bcecabc"
-      },
-      {
-        "url": "https://rpc.ankr.com/moonbeam/bbd4782985e2d5e5445e844e2c552578ccd128a39be9950738aec8dad85aeaab"
-      },
-      {
-        "url": "https://rpc.ankr.com/moonbeam/f3b40bc900526f6bc919da7f5a9601c611e8e1d4495b3d9adc067b03d4c5d37d"
-      },
-      {
-        "url": "https://rpc.ankr.com/moonbeam/515e4dc5696bcff11a366be0bb5dce43d113b9c436e6448f6f28f95eec27966b"
-      },
-      {
-        "url": "https://rpc.ankr.com/moonbeam/92c815747e7debe1402eed15af488de88f850ac94a146c20622c5794780c295e"
-      },
-      {
-        "url": "https://rpc.ankr.com/moonbeam/c208cc771a24a99442708b8042fbb6f8d8b201148c88856b1c7033f3f6991e10"
-      }
+      { "url": "wss://wss.api.moonbeam.network" }
     ],
     "faucets": [],
     "nativeCurrency": { "name": "Glimmer", "symbol": "GLMR", "decimals": 18 },
@@ -1074,37 +779,6 @@
       {
         "url": "https://optimism.api.onfinality.io/public",
         "tracking": "limited"
-      },
-      { "url": "https://1rpc.io/5imYyj3xK2WYW2EMR/op" },
-      { "url": "https://1rpc.io/3MnN8qiTcyw8y3Uak/op" },
-      { "url": "https://1rpc.io/2JkmomgGmKyHD4veu/op" },
-      { "url": "https://1rpc.io/3czJW6t3yJsgGikfF/op" },
-      { "url": "https://1rpc.io/Cr3VZ9Qtu3A49mF7/op" },
-      { "url": "https://1rpc.io/4TtE9kJWKXVSVFjW8/op" },
-      { "url": "https://1rpc.io/4BJarJohXhj1JUbaA/op" },
-      {
-        "url": "https://rpc.ankr.com/optimism/2d57529a7a93cd76e7ae037c074aefba9928105fcd544bcc7cac9abe7f1bc71f"
-      },
-      {
-        "url": "https://rpc.ankr.com/optimism/140338ac8e2c79b28bd7a9f07f50111e4efa24240dad6e9785556ae0d89bd5f1"
-      },
-      {
-        "url": "https://rpc.ankr.com/optimism/e6635c18dabc07d23e6e8d6df1b27ca79c3feffe10b551fbec3769778bcecabc"
-      },
-      {
-        "url": "https://rpc.ankr.com/optimism/bbd4782985e2d5e5445e844e2c552578ccd128a39be9950738aec8dad85aeaab"
-      },
-      {
-        "url": "https://rpc.ankr.com/optimism/f3b40bc900526f6bc919da7f5a9601c611e8e1d4495b3d9adc067b03d4c5d37d"
-      },
-      {
-        "url": "https://rpc.ankr.com/optimism/515e4dc5696bcff11a366be0bb5dce43d113b9c436e6448f6f28f95eec27966b"
-      },
-      {
-        "url": "https://rpc.ankr.com/optimism/92c815747e7debe1402eed15af488de88f850ac94a146c20622c5794780c295e"
-      },
-      {
-        "url": "https://rpc.ankr.com/optimism/c208cc771a24a99442708b8042fbb6f8d8b201148c88856b1c7033f3f6991e10"
       }
     ],
     "faucets": [],
@@ -1198,14 +872,7 @@
       {
         "url": "wss://astar.api.onfinality.io/public-ws",
         "tracking": "limited"
-      },
-      { "url": "https://1rpc.io/5imYyj3xK2WYW2EMR/astr" },
-      { "url": "https://1rpc.io/3MnN8qiTcyw8y3Uak/astr" },
-      { "url": "https://1rpc.io/2JkmomgGmKyHD4veu/astr" },
-      { "url": "https://1rpc.io/3czJW6t3yJsgGikfF/astr" },
-      { "url": "https://1rpc.io/Cr3VZ9Qtu3A49mF7/astr" },
-      { "url": "https://1rpc.io/4TtE9kJWKXVSVFjW8/astr" },
-      { "url": "https://1rpc.io/4BJarJohXhj1JUbaA/astr" }
+      }
     ],
     "faucets": [],
     "nativeCurrency": { "name": "Astar", "symbol": "ASTR", "decimals": 18 },
@@ -1624,30 +1291,6 @@
       {
         "url": "https://harmony.api.onfinality.io/public",
         "tracking": "limited"
-      },
-      {
-        "url": "https://rpc.ankr.com/harmony/2d57529a7a93cd76e7ae037c074aefba9928105fcd544bcc7cac9abe7f1bc71f"
-      },
-      {
-        "url": "https://rpc.ankr.com/harmony/140338ac8e2c79b28bd7a9f07f50111e4efa24240dad6e9785556ae0d89bd5f1"
-      },
-      {
-        "url": "https://rpc.ankr.com/harmony/e6635c18dabc07d23e6e8d6df1b27ca79c3feffe10b551fbec3769778bcecabc"
-      },
-      {
-        "url": "https://rpc.ankr.com/harmony/bbd4782985e2d5e5445e844e2c552578ccd128a39be9950738aec8dad85aeaab"
-      },
-      {
-        "url": "https://rpc.ankr.com/harmony/f3b40bc900526f6bc919da7f5a9601c611e8e1d4495b3d9adc067b03d4c5d37d"
-      },
-      {
-        "url": "https://rpc.ankr.com/harmony/515e4dc5696bcff11a366be0bb5dce43d113b9c436e6448f6f28f95eec27966b"
-      },
-      {
-        "url": "https://rpc.ankr.com/harmony/92c815747e7debe1402eed15af488de88f850ac94a146c20622c5794780c295e"
-      },
-      {
-        "url": "https://rpc.ankr.com/harmony/c208cc771a24a99442708b8042fbb6f8d8b201148c88856b1c7033f3f6991e10"
       }
     ],
     "faucets": ["https://free-online-app.com/faucet-for-eth-evm-chains/"],
@@ -1817,68 +1460,11 @@
       { "url": "https://forno.celo.org" },
       { "url": "https://rpc.ankr.com/celo", "tracking": "limited" },
       { "url": "https://1rpc.io/celo", "tracking": "none" },
-      { "url": "wss://forno.celo.org/ws" },
       {
-        "url": "https://celo-mainnet.infura.io/v3/15db6d9447694750a24c5e5d68fe5146"
+        "url": "https://celo-mainnet.infura.io/v3/${INFURA_API_KEY}",
+        "tracking": "none"
       },
-      {
-        "url": "https://celo-mainnet.infura.io/v3/4fcbd0ddf76a480d832f7aed0299dffa"
-      },
-      {
-        "url": "https://celo-mainnet.infura.io/v3/36d17e6c1e7249b78c5017c04cc52b01"
-      },
-      {
-        "url": "https://celo-mainnet.infura.io/v3/ea88abe8252f4342b9520c72f84e570a"
-      },
-      {
-        "url": "https://celo-mainnet.infura.io/v3/82f215e046b54b59821000b6036f1a60"
-      },
-      {
-        "url": "https://celo-mainnet.infura.io/v3/271c5143fb834330a952f00e696c73f5"
-      },
-      {
-        "url": "https://celo-mainnet.infura.io/v3/3a961d6501e54add9a41aa53f15de99b"
-      },
-      {
-        "url": "https://celo-mainnet.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161"
-      },
-      {
-        "url": "https://celo-mainnet.infura.io/v3/bb055071bba745488eda95512a6d0035"
-      },
-      {
-        "url": "https://celo-mainnet.infura.io/v3/31d72a42f19f4a39a6d831f8b331f875"
-      },
-      { "url": "https://1rpc.io/5imYyj3xK2WYW2EMR/celo" },
-      { "url": "https://1rpc.io/3MnN8qiTcyw8y3Uak/celo" },
-      { "url": "https://1rpc.io/2JkmomgGmKyHD4veu/celo" },
-      { "url": "https://1rpc.io/3czJW6t3yJsgGikfF/celo" },
-      { "url": "https://1rpc.io/Cr3VZ9Qtu3A49mF7/celo" },
-      { "url": "https://1rpc.io/4TtE9kJWKXVSVFjW8/celo" },
-      { "url": "https://1rpc.io/4BJarJohXhj1JUbaA/celo" },
-      {
-        "url": "https://rpc.ankr.com/celo/2d57529a7a93cd76e7ae037c074aefba9928105fcd544bcc7cac9abe7f1bc71f"
-      },
-      {
-        "url": "https://rpc.ankr.com/celo/140338ac8e2c79b28bd7a9f07f50111e4efa24240dad6e9785556ae0d89bd5f1"
-      },
-      {
-        "url": "https://rpc.ankr.com/celo/e6635c18dabc07d23e6e8d6df1b27ca79c3feffe10b551fbec3769778bcecabc"
-      },
-      {
-        "url": "https://rpc.ankr.com/celo/bbd4782985e2d5e5445e844e2c552578ccd128a39be9950738aec8dad85aeaab"
-      },
-      {
-        "url": "https://rpc.ankr.com/celo/f3b40bc900526f6bc919da7f5a9601c611e8e1d4495b3d9adc067b03d4c5d37d"
-      },
-      {
-        "url": "https://rpc.ankr.com/celo/515e4dc5696bcff11a366be0bb5dce43d113b9c436e6448f6f28f95eec27966b"
-      },
-      {
-        "url": "https://rpc.ankr.com/celo/92c815747e7debe1402eed15af488de88f850ac94a146c20622c5794780c295e"
-      },
-      {
-        "url": "https://rpc.ankr.com/celo/c208cc771a24a99442708b8042fbb6f8d8b201148c88856b1c7033f3f6991e10"
-      }
+      { "url": "wss://forno.celo.org/ws" }
     ],
     "faucets": ["https://free-online-app.com/faucet-for-eth-evm-chains/"],
     "infoURL": "https://docs.celo.org/",
@@ -3172,42 +2758,9 @@
         "tracking": "none"
       },
       {
-        "url": "https://aurora-mainnet.infura.io/v3/15db6d9447694750a24c5e5d68fe5146"
-      },
-      {
-        "url": "https://aurora-mainnet.infura.io/v3/4fcbd0ddf76a480d832f7aed0299dffa"
-      },
-      {
-        "url": "https://aurora-mainnet.infura.io/v3/36d17e6c1e7249b78c5017c04cc52b01"
-      },
-      {
-        "url": "https://aurora-mainnet.infura.io/v3/ea88abe8252f4342b9520c72f84e570a"
-      },
-      {
-        "url": "https://aurora-mainnet.infura.io/v3/82f215e046b54b59821000b6036f1a60"
-      },
-      {
-        "url": "https://aurora-mainnet.infura.io/v3/271c5143fb834330a952f00e696c73f5"
-      },
-      {
-        "url": "https://aurora-mainnet.infura.io/v3/3a961d6501e54add9a41aa53f15de99b"
-      },
-      {
-        "url": "https://aurora-mainnet.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161"
-      },
-      {
-        "url": "https://aurora-mainnet.infura.io/v3/bb055071bba745488eda95512a6d0035"
-      },
-      {
-        "url": "https://aurora-mainnet.infura.io/v3/31d72a42f19f4a39a6d831f8b331f875"
-      },
-      { "url": "https://1rpc.io/5imYyj3xK2WYW2EMR/aurora" },
-      { "url": "https://1rpc.io/3MnN8qiTcyw8y3Uak/aurora" },
-      { "url": "https://1rpc.io/2JkmomgGmKyHD4veu/aurora" },
-      { "url": "https://1rpc.io/3czJW6t3yJsgGikfF/aurora" },
-      { "url": "https://1rpc.io/Cr3VZ9Qtu3A49mF7/aurora" },
-      { "url": "https://1rpc.io/4TtE9kJWKXVSVFjW8/aurora" },
-      { "url": "https://1rpc.io/4BJarJohXhj1JUbaA/aurora" }
+        "url": "https://aurora-mainnet.infura.io/v3/${INFURA_API_KEY}",
+        "tracking": "none"
+      }
     ],
     "faucets": [],
     "nativeCurrency": { "name": "Ether", "symbol": "ETH", "decimals": 18 },
@@ -3418,38 +2971,12 @@
     "icon": "palm",
     "rpc": [
       {
-        "url": "https://palm-mainnet.public.blastapi.io",
+        "url": "https://palm-mainnet.infura.io/v3/${INFURA_API_KEY}",
         "tracking": "limited"
       },
       {
-        "url": "https://palm-mainnet.infura.io/v3/15db6d9447694750a24c5e5d68fe5146"
-      },
-      {
-        "url": "https://palm-mainnet.infura.io/v3/4fcbd0ddf76a480d832f7aed0299dffa"
-      },
-      {
-        "url": "https://palm-mainnet.infura.io/v3/36d17e6c1e7249b78c5017c04cc52b01"
-      },
-      {
-        "url": "https://palm-mainnet.infura.io/v3/ea88abe8252f4342b9520c72f84e570a"
-      },
-      {
-        "url": "https://palm-mainnet.infura.io/v3/82f215e046b54b59821000b6036f1a60"
-      },
-      {
-        "url": "https://palm-mainnet.infura.io/v3/271c5143fb834330a952f00e696c73f5"
-      },
-      {
-        "url": "https://palm-mainnet.infura.io/v3/3a961d6501e54add9a41aa53f15de99b"
-      },
-      {
-        "url": "https://palm-mainnet.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161"
-      },
-      {
-        "url": "https://palm-mainnet.infura.io/v3/bb055071bba745488eda95512a6d0035"
-      },
-      {
-        "url": "https://palm-mainnet.infura.io/v3/31d72a42f19f4a39a6d831f8b331f875"
+        "url": "https://palm-mainnet.public.blastapi.io",
+        "tracking": "limited"
       }
     ],
     "faucets": [],
@@ -3798,6 +3325,24 @@
         "standard": "none"
       }
     ]
+  },
+  {
+    "name": "Freight Trust Network",
+    "chain": "EDI",
+    "rpc": [
+      { "url": "http://13.57.207.168:3435" },
+      { "url": "https://app.freighttrust.net/ftn/${API_KEY}" }
+    ],
+    "faucets": ["http://faucet.freight.sh"],
+    "nativeCurrency": {
+      "name": "Freight Trust Native",
+      "symbol": "0xF",
+      "decimals": 18
+    },
+    "infoURL": "https://freighttrust.com",
+    "shortName": "EDI",
+    "chainId": 211,
+    "networkId": 0
   },
   {
     "name": "SwapDEX",
