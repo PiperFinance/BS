@@ -35,8 +35,11 @@ func LoadMainNets() {
 	}
 	time.Sleep(Config.TestTimeout)
 	for _, chain := range Config.SupportedChains {
-		if len(SupportedNetworks[chain].GoodRpc) < 1 {
+		sn, ok := SupportedNetworks[chain]
+		if ok && len(sn.GoodRpc) < 1 {
 			Logger.Fatalf("No Good Rpc for chain %d", chain)
+		} else if !ok {
+			Logger.Fatalf("Where is Rpc for chain %d", chain)
 		}
 	}
 }
