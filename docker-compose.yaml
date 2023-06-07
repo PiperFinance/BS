@@ -35,6 +35,8 @@ services:
       MONGO_DBNAME: BS
       REDIS_DB: 1
       MAX_CONCURRENT_WORKER: 2000
+      TEST_RPC_CONNECTION_TIMEOUT: 8s
+      SCAN_TASK_TIMEOUT: 10s
       SUPPORTED_CHAINS: "1,250,56,137,43114,12306"
       RPC_ERROR_SILENCE: true
       PARSE_ERROR_SILENCE: true
@@ -44,7 +46,7 @@ services:
       resources:
         limits:
           cpus: "1"
-          memory: 250M
+          memory: 350M
 
   redis:
     image: redis:latest
