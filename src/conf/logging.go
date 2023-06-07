@@ -20,11 +20,11 @@ func LoadLogger() {
 		return lvl < zapcore.ErrorLevel
 	})
 
-	errLog, _, err := zap.Open("/home/nfel/Projects/Startup/piper/BS/log/err.log")
+	errLog, _, err := zap.Open("/var/BS/log/err.log")
 	if err != nil {
 		panic(err)
 	}
-	debugLog, _, err := zap.Open("/home/nfel/Projects/Startup/piper/BS/log/debug.log")
+	debugLog, _, err := zap.Open("/var/BS/log/debug.log")
 	if err != nil {
 		panic(err)
 	}

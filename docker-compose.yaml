@@ -58,6 +58,7 @@ services:
       test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
     volumes:
       - ./data/redis:/data
+      - ./logs/:/var/BS/log/
     deploy:
       resources:
         limits:
