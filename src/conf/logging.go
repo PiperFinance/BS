@@ -1,6 +1,7 @@
 package conf
 
 import (
+	"fmt"
 	"os"
 
 	"go.uber.org/zap"
@@ -20,11 +21,11 @@ func LoadLogger() {
 		return lvl < zapcore.ErrorLevel
 	})
 
-	errLog, _, err := zap.Open("/var/BS/log/err.log")
+	errLog, _, err := zap.Open(fmt.Sprintf("%s%s", Config.LogDir, "/err.log"))
 	if err != nil {
 		panic(err)
 	}
-	debugLog, _, err := zap.Open("/var/BS/log/debug.log")
+	debugLog, _, err := zap.Open(fmt.Sprintf("%s%s", Config.LogDir, "/debug.log"))
 	if err != nil {
 		panic(err)
 	}

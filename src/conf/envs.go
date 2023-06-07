@@ -32,6 +32,7 @@ type config struct {
 	TestTimeout           time.Duration `env:"TEST_RPC_CONNECTION_TIMEOUT" envDefault:"15s"`
 	ScanTaskTimeout       time.Duration `env:"SCAN_TASK_TIMEOUT" envDefault:"25s"`
 	LogLevel              string        `env:"LOG_LEVEL" envDefault:"warn"`
+	LogDir                string        `env:"LOG_DIR" envDefault:"/var/bs/log"`
 	DEV                   bool          `env:"DEV_DEBUG" envDefault:"false"`
 	ZapLogLevel           zapcore.Level
 }
