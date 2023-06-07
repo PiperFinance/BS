@@ -7,8 +7,9 @@ WORKDIR /api
 ENV PORT=8000
 COPY  ./go.mod .
 COPY ./go.sum .
-RUN go mod download
+ENV GOPROXY=https://goproxy.io,direct
 
+RUN go mod download
 COPY ./src ./src
 RUN go build -o ./app  github.com/PiperFinance/BS/src
 
@@ -17,7 +18,7 @@ FROM alpine:latest
 RUN apk update \
     && apk add ca-certificates  \
     && apk add --no-cache tzdata \
-    && rm -rf /var/cache/apk/* 
+    && rm -rf /var/cache/apk/*
 
 RUN mkdir -p /api
 WORKDIR /api
