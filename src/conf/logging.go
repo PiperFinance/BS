@@ -2,13 +2,23 @@ package conf
 
 import (
 	"fmt"
+	"net/url"
 	"os"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	lumberjack "gopkg.in/natefinch/lumberjack.v2"
 )
 
 var Logger *zap.SugaredLogger
+
+type lumberjackSink struct {
+	*lumberjack.Logger
+}
+
+func (lumberjackSink) Sync() error {
+	return nil
+}
 
 func LoadLogger() {
 	var zp *zap.Logger
@@ -20,12 +30,13 @@ func LoadLogger() {
 	lowPriority := zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
 		return lvl < zapcore.ErrorLevel
 	})
-
-	errLog, _, err := zap.Open(fmt.Sprintf("%s%s", Config.LogDir, "/err.log"))
+	errFile := fmt.Sprintf("%s%s", Config.LogDir, "/err.log")
+	debugFile := fmt.Sprintf("%s%s", Config.LogDir, "/debug.log")
+	errLog, _, err := zap.Open(errFile)
 	if err != nil {
 		panic(err)
 	}
-	debugLog, _, err := zap.Open(fmt.Sprintf("%s%s", Config.LogDir, "/debug.log"))
+	debugLog, _, err := zap.Open(debugFile)
 	if err != nil {
 		panic(err)
 	}
@@ -48,6 +59,30 @@ func LoadLogger() {
 	zp = zap.New(core, zap.Development(), zap.AddStacktrace(zap.WarnLevel))
 	defer zp.Sync()
 	zp.Info("constructed a logger")
+	errLJ := lumberjack.Logger{
+		Filename:   errFile,
+		MaxSize:    10, // MB
+		MaxBackups: 1,
+		MaxAge:     3, // days
+		Compress:   true,
+	}
+	debugLJ := lumberjack.Logger{
+		Filename:   debugFile,
+		MaxSize:    50, // MB
+		MaxBackups: 1,
+		MaxAge:     3, // days
+		Compress:   true,
+	}
+	zap.RegisterSink("ErrLumberjack", func(*url.URL) (zap.Sink, error) {
+		return lumberjackSink{
+			Logger: &errLJ,
+		}, nil
+	})
+	zap.RegisterSink("DebugLumberjack", func(*url.URL) (zap.Sink, error) {
+		return lumberjackSink{
+			Logger: &debugLJ,
+		}, nil
+	})
 
 	// if Config.DEV {
 	// 	zp, err = zap.NewDevelopment(zap.IncreaseLevel(Config.ZapLogLevel), zap.WrapCore())

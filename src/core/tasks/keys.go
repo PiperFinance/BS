@@ -13,6 +13,7 @@ const (
 	ParseBlockEventsKey  = "block:parse_events"
 	UpdateUserBalanceKey = "user:update_bal"
 	UpdateUserApproveKey = "user:update_aprv"
+	UpdateOnlineUsersKey = "user:online_user"
 	VacuumLogsKey        = "chore:vacuum"
 	VacuumLogsLockKey    = "chore:vacuum-lock"
 	VacuumLogsHeight     = 100

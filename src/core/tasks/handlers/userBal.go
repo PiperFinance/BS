@@ -132,9 +132,13 @@ func updateTokens(ctx context.Context, block schema.BlockTask, transfers []schem
 func isNew(ctx context.Context, chainId int64, user common.Address, token common.Address) (error, bool) {
 	// TODO - Add user Limit here
 	// FIXME - For Request CountReduction contracts contract and zero address is not included
-	if isLimited(ctx, chainId, user) {
+	// if isLimited(ctx, chainId, user) {
+	// 	return nil, false
+	// }
+	if !conf.OnlineUsers.IsAddressOnline(user) {
 		return nil, false
 	}
+
 	filter := bson.D{{Key: "user", Value: user}, {Key: "token", Value: token}}
 	if res := userBalanceCol(chainId).FindOne(ctx, filter); res.Err() == mongo.ErrNoDocuments {
 		return nil, true

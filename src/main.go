@@ -9,6 +9,7 @@ func init() {
 	// NOTE - DB Sync !
 	conf.LoadConfig()
 	conf.LoadLogger()
+	conf.LoadLocalCache()
 	conf.LoadMongo()
 	conf.LoadRedis()
 	conf.LoadMainNets()
