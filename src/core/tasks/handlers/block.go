@@ -28,16 +28,16 @@ func BlockScanTaskHandler(ctx context.Context, task *asynq.Task) error {
 	blockTask := schema.BlockTask{}
 	err := json.Unmarshal(task.Payload(), &blockTask)
 	if err != nil {
-		conf.Logger.Errorf("Task BlockScan [%+v] : %s ", blockTask, err)
+		// conf.Logger.Errorf("Task BlockScan [%+v] : %s ", blockTask, err)
 		return err
 	}
 	err = blockScanTask(ctx, blockTask, *conf.QueueClient)
 	_ = task
-	if err != nil {
-		conf.Logger.Errorf("Task BlockScan [%+v] : %s ", blockTask, err)
-	} else {
-		conf.Logger.Infof("Task BlockScan [%+v] ", blockTask)
-	}
+	// if err != nil {
+	// 	conf.Logger.Errorf("Task BlockScan [%+v] : %s ", blockTask, err)
+	// } else {
+	// 	conf.Logger.Infof("Task BlockScan [%+v] ", blockTask)
+	// }
 	return err
 }
 
@@ -139,7 +139,8 @@ func blockScanTask(ctx context.Context, blockTask schema.BlockTask, aqCl asynq.C
 	if lastBlockVal := conf.RedisClient.Get(ctx, tasks.LastScannedBlockKey(chain)); lastBlockVal.Err() == redis.Nil {
 		lastBlock = conf.StartingBlock(ctx, blockTask.ChainId)
 		if status := conf.RedisClient.Set(ctx, tasks.LastScannedBlockKey(chain), lastBlock, 0); status != nil && status.Err() != nil {
-			conf.Logger.Errorf("Task BlockScan [%+v] : %s ", blockTask, err)
+			// conf.Logger.Errorf("Task BlockScan [%+v] : %s ", blockTask, err)
+			return status.Err()
 		}
 	} else {
 		if r, parseErr := lastBlockVal.Int(); parseErr != nil {
@@ -162,7 +163,8 @@ func blockScanTask(ctx context.Context, blockTask schema.BlockTask, aqCl asynq.C
 		}
 		status := conf.RedisClient.Set(ctx, tasks.LastScannedBlockKey(chain), currentBlock, 0)
 		if status != nil && status.Err() != nil {
-			conf.Logger.Errorf("Task BlockScan [%+v] : %s ", blockTask, err)
+			// conf.Logger.Errorf("Task BlockScan [%+v] : %s ", blockTask, err)
+			return status.Err()
 		}
 	}
 	return err

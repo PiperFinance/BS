@@ -8,6 +8,7 @@ import (
 func init() {
 	// NOTE - DB Sync !
 	conf.LoadConfig()
+	conf.LoadDebugItems()
 	conf.LoadLogger()
 	conf.LoadLocalCache()
 	conf.LoadMongo()
@@ -15,7 +16,6 @@ func init() {
 	conf.LoadMainNets()
 	conf.LoadNetwork()
 	conf.LoadQueue()
-	conf.LoadDebugItems()
 }
 
 // ONLY FOR TESTING PURPOSES ...

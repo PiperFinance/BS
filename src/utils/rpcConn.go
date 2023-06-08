@@ -16,11 +16,11 @@ func logErr(Logger *zap.SugaredLogger, s time.Time, rpc string, err error) {
 	if len(eStr) > 15 {
 		eStr = eStr[:15]
 	}
-	Logger.Debugf("[%d]ms\t\t%s\t@t%s", time.Now().Sub(s).Milliseconds(), eStr, rpc)
+	Logger.Debugf("[%d]ms  %s %s", time.Since(s).Milliseconds(), eStr, rpc)
 }
 
 func logOk(Logger *zap.SugaredLogger, s time.Time, rpc string, block int) {
-	Logger.Infof("[%d]ms\t\t%d\t@t%s", time.Now().Sub(s).Milliseconds(), block, rpc)
+	Logger.Infof("[%d]ms  %d %s", time.Since(s).Milliseconds(), block, rpc)
 }
 
 func GetNetworkRpcUrls(rpcs []*schema.RPC) []string {
@@ -32,7 +32,7 @@ func GetNetworkRpcUrls(rpcs []*schema.RPC) []string {
 }
 
 // NetworkConnectionCheck check if rpc is connected + does have getLogs method !
-func NetworkConnectionCheck(Logger *zap.SugaredLogger, network *schema.Network, timeout time.Duration) {
+func NetworkConnectionCheck(CallCount *DebugCounter, FailedCallCount *DebugCounter, Logger *zap.SugaredLogger, network *schema.Network, timeout time.Duration) {
 	// TODO - Add test opts !
 	Logger.Infof("---------------------------> %s\n", network.Name)
 	c, cancel := context.WithTimeout(context.Background(), timeout)
@@ -44,15 +44,19 @@ func NetworkConnectionCheck(Logger *zap.SugaredLogger, network *schema.Network, 
 			}
 			s := time.Now()
 			if cl, err := ethclient.Dial(_rpcUrl); err == nil {
+				CallCount.Add(network.ChainId)
 				if block, err := cl.BlockNumber(c); err != nil {
+					FailedCallCount.Add(network.ChainId)
 					logErr(Logger, s, _rpcUrl, err)
 				} else {
 					blockNumBigInt := big.NewInt(int64(block))
+					CallCount.Add(network.ChainId)
 					if logs, err := cl.FilterLogs(c,
 						ethereum.FilterQuery{
 							FromBlock: blockNumBigInt,
 							ToBlock:   blockNumBigInt,
 						}); err != nil {
+						FailedCallCount.Add(network.ChainId)
 						logErr(Logger, s, _rpcUrl, err)
 					} else {
 						logOk(Logger, s, _rpcUrl, len(logs))
@@ -62,14 +66,15 @@ func NetworkConnectionCheck(Logger *zap.SugaredLogger, network *schema.Network, 
 				}
 			} else {
 				logErr(Logger, s, _rpcUrl, err)
+				FailedCallCount.Add(network.ChainId)
 			}
 			network.BadRpc = append(network.BadRpc, &rpc)
 		}(rpc)
 	}
 	time.Sleep(timeout)
 	cancel()
-	Logger.Infof("bad [%d/%d] ", len(network.BadRpc), len(network.Rpc))
-	Logger.Infof("good [%d/%d]", len(network.GoodRpc), len(network.Rpc))
+	time.Sleep(10 * time.Millisecond)
+	Logger.Infow("NetworkTestResult", "network", network.ChainId, "bad", len(network.BadRpc), "good", len(network.GoodRpc), "total", len(network.Rpc))
 }
 
 // func NetworkConnectionCheckGoodRPCsOnly(network *schema.Network) {
