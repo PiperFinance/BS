@@ -132,10 +132,10 @@ func updateTokens(ctx context.Context, block schema.BlockTask, transfers []schem
 func isNew(ctx context.Context, chainId int64, user common.Address, token common.Address) (error, bool) {
 	// TODO - Add user Limit here
 	// FIXME - For Request CountReduction contracts contract and zero address is not included
-	// if isLimited(ctx, chainId, user) {
-	// 	return nil, false
-	// }
-	if !conf.OnlineUsers.IsAddressOnline(user) {
+	if conf.Config.LimitUsers && !conf.OnlineUsers.IsAddressOnline(user) {
+		return nil, false
+	}
+	if isLimited(ctx, chainId, user) {
 		return nil, false
 	}
 

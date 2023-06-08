@@ -35,6 +35,7 @@ type config struct {
 	LogLevel                     string        `env:"LOG_LEVEL" envDefault:"warn"`
 	LogDir                       string        `env:"LOG_DIR" envDefault:"/var/bs/log"`
 	DEV                          bool          `env:"DEV_DEBUG" envDefault:"false"`
+	LimitUsers                   bool          `env:"LIMIT_USERS" envDefault:"false"`
 	UserAppUrl                   url.URL       `env:"USER_APP_URL" envDefault:"https://ua.piper.finance"`
 	ZapLogLevel                  zapcore.Level
 }

@@ -102,14 +102,15 @@ func ParseBlockEventsTaskHandler(ctx context.Context, task *asynq.Task) error {
 
 	bm := schema.BlockM{BlockNumber: blockTask.BlockNumber, ChainId: blockTask.ChainId}
 	bm.SetParsed()
-	if res, err := conf.GetMongoCol(blockTask.ChainId, conf.BlockColName).ReplaceOne(
+	if _, err := conf.GetMongoCol(blockTask.ChainId, conf.BlockColName).ReplaceOne(
 		ctx,
 		bson.M{"no": blockTask.BlockNumber}, &bm); err != nil {
 		conf.Logger.Errorf("Task ParseBlockEvents [%+v] %s", blockTask, err)
 		return err
-	} else {
-		conf.Logger.Infof("Replace Result : %d modified", res.ModifiedCount)
 	}
+	// else {
+	// 	conf.Logger.Infof("Replace Result : %d modified", res.ModifiedCount)
+	// }
 	// TODO - Enqueue Other Tasks !
 	err = enqueuer.EnqueueUpdateUserBalJob(*conf.QueueClient, blockTask)
 	if err != nil {
