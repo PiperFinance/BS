@@ -32,6 +32,7 @@ type RedisClientExtended struct {
 }
 
 func LoadRedis() {
+	time.Sleep(Config.RedisMongoSlowLoading)
 	cl := redis.NewClient(&redis.Options{
 		Addr: fmt.Sprintf("%s:%s", Config.RedisUrl.Hostname(), Config.RedisUrl.Port()),
 		DB:   Config.RedisDB,

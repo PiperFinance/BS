@@ -7,6 +7,7 @@ import (
 
 	"github.com/PiperFinance/BS/src/conf"
 	Multicall "github.com/PiperFinance/BS/src/contracts/MulticallContract"
+	"github.com/PiperFinance/BS/src/utils"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 )
@@ -62,25 +63,25 @@ func (bal *EasyBalanceOf) populateTokenBalanceCalls() {
 	}
 }
 
-func (self *EasyBalanceOf) multiCaller() *Multicall.MulticallCaller {
-	contractInstance, err := Multicall.NewMulticallCaller(MULTICALL_V3_ADDRESS, conf.EthClient(self.ChainId))
+func (easBal *EasyBalanceOf) multiCaller() *Multicall.MulticallCaller {
+	contractInstance, err := Multicall.NewMulticallCaller(MULTICALL_V3_ADDRESS, conf.EthClient(easBal.ChainId))
 	if err != nil {
 		conf.Logger.Fatalf("Multicall Contract Gen : %+v", err)
 	}
 	return contractInstance
 }
 
-func (self *EasyBalanceOf) Execute(ctx context.Context) error {
-	self.populateTokenBalanceCalls()
-	calls := make([]Multicall.Multicall3Call3, len(self.UserTokens))
-	for i, userTokens := range self.UserTokens {
+func (easBal *EasyBalanceOf) Execute(ctx context.Context) error {
+	easBal.populateTokenBalanceCalls()
+	calls := make([]Multicall.Multicall3Call3, len(easBal.UserTokens))
+	for i, userTokens := range easBal.UserTokens {
 		calls[i] = userTokens.call
 	}
 
 	ctxWTimeout, _ := context.WithTimeout(ctx, conf.Config.MultiCallTimeout)
 	var cOpts bind.CallOpts
-	if self.BlockNumber > 1 {
-		cOpts = bind.CallOpts{Context: ctxWTimeout, BlockNumber: big.NewInt(self.BlockNumber)}
+	if easBal.BlockNumber > 1 {
+		cOpts = bind.CallOpts{Context: ctxWTimeout, BlockNumber: big.NewInt(easBal.BlockNumber)}
 	} else {
 		cOpts = bind.CallOpts{Context: ctxWTimeout}
 	}
@@ -89,15 +90,19 @@ func (self *EasyBalanceOf) Execute(ctx context.Context) error {
 		conf.Logger.Infof("[%d][%s][%s]", i, _call.Target, common.Bytes2Hex(_call.CallData))
 	}
 
-	res, err := self.multiCaller().Aggregate3(&cOpts, calls)
-	conf.CallCount.Add(self.ChainId)
-
+	res, err := easBal.multiCaller().Aggregate3(&cOpts, calls)
+	if conf.CallCount != nil {
+		conf.CallCount.Add(easBal.ChainId)
+	}
 	if err != nil {
-		return err
+		return &utils.RpcError{Err: err, ChainId: easBal.ChainId, BlockNumber: uint64(easBal.BlockNumber), Name: "MultiCall"}
 	} else {
 		for i, _res := range res {
 			if _res.Success {
-				self.UserTokens[i].Balance = ParseBigIntResult(_res.ReturnData)
+				easBal.UserTokens[i].Balance = ParseBigIntResult(_res.ReturnData)
+			} else {
+				conf.Logger.Errorw("Multicall", "res", _res.ReturnData, "chain", easBal.ChainId, "block", easBal.BlockNumber, "user", easBal.UserTokens[i].User.String(), "token", easBal.UserTokens[i].Token.String())
+				easBal.UserTokens[i].Balance = big.NewInt(0)
 			}
 		}
 	}

@@ -19,7 +19,7 @@ type TimeFrameCounter struct {
 	LastResults []uint64
 }
 
-func (tfc *TimeFrameCounter) NewCall(t time.Time) {
+func (tfc *TimeFrameCounter) NewCall(t time.Time, incrCount uint64) {
 	if t.Local().After(tfc.EndsAt) {
 		// Window is finished !
 		tfc.LastResults = append(tfc.LastResults, tfc.Count)
@@ -30,7 +30,7 @@ func (tfc *TimeFrameCounter) NewCall(t time.Time) {
 		}
 		tfc.Count = 0
 	}
-	tfc.Count++
+	tfc.Count += incrCount
 }
 
 type DebugCounter struct {
@@ -66,18 +66,28 @@ func NewDebugCounter(chains []int64, timeFrames ...time.Duration) *DebugCounter 
 }
 
 func (cc *DebugCounter) Add(chain int64) {
+	cc.AddFor(chain, 1)
+}
+
+func (cc *DebugCounter) AddFor(chain int64, incrCount uint64) {
 	i := 0
 	t := time.Now()
 	cc.mutex.Lock()
 	cc.LastCallTime[chain] = t
 	for i < cc.timeFramesCount[chain] {
-		cc.TimeFrames[chain][i].NewCall(t)
+		cc.TimeFrames[chain][i].NewCall(t, incrCount)
 		i++
 	}
 	cc.mutex.Unlock()
 }
 
-func (cc *DebugCounter) StatusChain(index int, chain int64) string {
+func (cc *DebugCounter) StatusChain(chain int64) string {
+	_x := cc.TimeFrames[chain]
+	x := _x[len(_x)-1]
+	return fmt.Sprintf("count=%d range=(%s,%s)", x.Count, x.StartedAt.UTC().String(), x.EndsAt.UTC().String())
+}
+
+func (cc *DebugCounter) StatusChainIndexOf(index int, chain int64) string {
 	x := cc.TimeFrames[chain][index]
 	rate := float64(x.Count) / x.Window.Seconds()
 	return fmt.Sprintf("%f", rate)

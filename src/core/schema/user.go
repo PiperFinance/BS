@@ -12,8 +12,11 @@ type User struct {
 }
 
 type UserBalance struct {
+	TokenStr  string         `bson:"tokenStr" json:"tokenStr"`
+	UserStr   string         `bson:"userStr" json:"userStr"`
 	User      common.Address `bson:"user" json:"user"`
 	Token     common.Address `bson:"token" json:"token"`
+	TrxCount  uint64         `bson:"count" json:"count"`
 	ChangedAt uint64         `bson:"c_t" json:"c_t"`
 	StartedAt uint64         `bson:"s_t" json:"s_t"`
 	Balance   string         `bson:"bal" json:"bal"`
@@ -44,7 +47,8 @@ func (ub *UserBalance) AddBal(b *big.Int) error {
 	if !ok {
 		return fmt.Errorf("failed to cast %s to big.Int", ub.Balance)
 	}
-	ub.SetBalance(a.Add(a, b))
+	nb := a.Add(a, b)
+	ub.SetBalance(nb)
 	return nil
 }
 

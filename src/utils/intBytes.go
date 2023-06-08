@@ -8,11 +8,11 @@ import (
 	"github.com/PiperFinance/BS/src/core/schema"
 )
 
-func BlockTaskGenUnsafe(chain int64) []byte {
+func MustBlockTaskGen(chain int64) []byte {
 	x := schema.BlockTask{ChainId: chain}
 	r, err := json.Marshal(x)
 	if err != nil {
-		log.Println(" ERR : BlockTaskGenUnsafe : %+v", err)
+		log.Println(" ERR : BlockTaskGenUnsafe : %+s", err.Error())
 		return nil
 	} else {
 		return r

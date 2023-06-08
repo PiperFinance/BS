@@ -19,8 +19,10 @@ func (r *StartConf) xChainSchedule() []conf.QueueSchedules {
 	// NOTE - Enqueuing Jobs via scheduler... Use only supported Chains !
 	sq := make([]conf.QueueSchedules, 0)
 	for chainId := range conf.SupportedNetworks {
-		sq = append(sq, conf.QueueSchedules{Cron: fmt.Sprintf("@every %ds", (3 + rand.Intn(20))), Payload: utils.BlockTaskGenUnsafe(chainId), Q: asynq.Queue(conf.ScanQ), Timeout: conf.Config.ScanTaskTimeout, Key: tasks.BlockScanKey})
+		sq = append(sq, conf.QueueSchedules{Cron: fmt.Sprintf("@every %ds", (2 + rand.Intn(15))), Payload: utils.MustBlockTaskGen(chainId), Q: asynq.Queue(conf.ScanQ), Timeout: conf.Config.ScanTaskTimeout, Key: tasks.BlockScanKey})
 	}
+	// Check online users
+	sq = append(sq, conf.QueueSchedules{Cron: fmt.Sprintf("@every %ds", (2 + rand.Intn(5))), Q: asynq.Queue(conf.ScanQ), Timeout: conf.Config.UpdateOnlineUsersTaskTimeout, Key: tasks.UpdateOnlineUsersKey})
 	return sq
 }
 
@@ -31,6 +33,7 @@ func (r *StartConf) xHandlers() []conf.MuxHandler {
 		{Key: tasks.ParseBlockEventsKey, Handler: handlers.ParseBlockEventsTaskHandler, Q: asynq.Queue(conf.ParseQ)},     // 3
 		{Key: tasks.UpdateUserBalanceKey, Handler: handlers.UpdateUserBalTaskHandler, Q: asynq.Queue(conf.ProcessQ)},     // 4
 		{Key: tasks.UpdateUserApproveKey, Handler: handlers.UpdateUserApproveTaskHandler, Q: asynq.Queue(conf.ProcessQ)}, // 4
+		{Key: tasks.UpdateOnlineUsersKey, Handler: handlers.OnlineUsersHandler, Q: asynq.Queue(conf.UsersQ)},             //~TBD
 		{Key: tasks.VacuumLogsKey, Handler: handlers.VacuumLogHandler, Q: asynq.Queue(conf.UnImportantQ)},                //~TBD
 	}
 }
@@ -41,6 +44,8 @@ func (r *StartConf) xUrls() []api.Route {
 		{Path: "/lsb/100", Method: api.Get, Handler: views.LastScannedBlocks},
 		{Path: "/bal", Method: api.Get, Handler: views.GetBal},
 		{Path: "/bal/users", Method: api.Get, Handler: views.GetUsers},
+
+		{Path: "/stats/", Method: api.Get, Handler: views.Status},
 		{Path: "/stats/call", Method: api.Get, Handler: views.CallStatus},
 		{Path: "/stats/block", Method: api.Get, Handler: views.NewBlockStatus},
 		{Path: "/stats/block/simple", Method: api.Get, Handler: views.NewBlockStatusSimple},

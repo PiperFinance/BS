@@ -11,6 +11,7 @@ import (
 	"github.com/PiperFinance/BS/src/core/schema"
 	"github.com/PiperFinance/BS/src/core/tasks"
 	"github.com/PiperFinance/BS/src/core/tasks/enqueuer"
+	"github.com/PiperFinance/BS/src/utils"
 	"github.com/go-redis/redis/v8"
 
 	"github.com/ethereum/go-ethereum"
@@ -46,7 +47,7 @@ func BlockEventsTaskHandler(ctx context.Context, task *asynq.Task) error {
 	blockTask := schema.BlockTask{}
 	err := json.Unmarshal(task.Payload(), &blockTask)
 	if err != nil {
-		conf.Logger.Errorf("Task BlockEvents [%+v] : %s ", blockTask, err)
+		// conf.Logger.Errorf("Task BlockEvents [%+v] : %s ", blockTask, err)
 		return err
 	}
 	err = blockEventsTask(
@@ -56,7 +57,7 @@ func BlockEventsTaskHandler(ctx context.Context, task *asynq.Task) error {
 		*conf.GetMongoCol(blockTask.ChainId, conf.LogColName),
 		blockTask.BlockNumber)
 	if err != nil {
-		conf.Logger.Errorf("Task BlockEvents [%+v] : %s ", blockTask, err)
+		// conf.Logger.Errorf("Task BlockEvents [%+v] : %s ", blockTask, err)
 		return err
 	}
 
@@ -68,7 +69,8 @@ func BlockEventsTaskHandler(ctx context.Context, task *asynq.Task) error {
 		conf.Logger.Errorf("Task BlockEvents [%+v] : %s ", blockTask, err)
 	}
 	if err := enqueuer.EnqueueParseBlockJob(*conf.QueueClient, blockTask); err != nil {
-		conf.Logger.Errorf("Task BlockEvents [%+v] : %s ", blockTask, err)
+		// conf.Logger.Errorf("Task BlockEvents [%+v] : %s ", blockTask, err)
+		return err
 	}
 	return err
 }
@@ -82,8 +84,10 @@ func ParseBlockEventsTaskHandler(ctx context.Context, task *asynq.Task) error {
 		conf.Logger.Errorf("Task ParseBlockEvents [%+v] %s", blockTask, err)
 		return err
 	}
-	ctxFind, cancel := context.WithTimeout(ctx, 5*time.Minute)
-	defer cancel()
+	ctxFind, cancelFind := context.WithTimeout(ctx, 5*time.Minute)
+	defer cancelFind()
+	ctxDel, cancelDel := context.WithTimeout(ctx, 5*time.Minute)
+	defer cancelDel()
 	cursor, err := conf.GetMongoCol(blockTask.ChainId, conf.LogColName).Find(ctxFind, bson.M{"blockNumber": &blockTask.BlockNumber})
 	defer cursor.Close(ctxFind)
 	if err != nil {
@@ -91,8 +95,6 @@ func ParseBlockEventsTaskHandler(ctx context.Context, task *asynq.Task) error {
 	}
 	parsedLogsCol := conf.GetMongoCol(blockTask.ChainId, conf.ParsedLogColName)
 	events.ParseLogs(ctx, parsedLogsCol, cursor)
-	ctxDel, cancel := context.WithTimeout(ctx, 5*time.Minute)
-	defer cancel()
 	_, err = conf.GetMongoCol(blockTask.ChainId, conf.LogColName).DeleteMany(ctxDel, bson.M{"blockNumber": &blockTask.BlockNumber})
 	if err != nil {
 		return err
@@ -100,15 +102,16 @@ func ParseBlockEventsTaskHandler(ctx context.Context, task *asynq.Task) error {
 
 	bm := schema.BlockM{BlockNumber: blockTask.BlockNumber, ChainId: blockTask.ChainId}
 	bm.SetParsed()
-	if res, err := conf.GetMongoCol(blockTask.ChainId, conf.BlockColName).ReplaceOne(
+	if _, err := conf.GetMongoCol(blockTask.ChainId, conf.BlockColName).ReplaceOne(
 		ctx,
 		bson.M{"no": blockTask.BlockNumber}, &bm); err != nil {
 		conf.Logger.Errorf("Task ParseBlockEvents [%+v] %s", blockTask, err)
 		return err
-	} else {
-		conf.Logger.Infof("Replace Result : %d modified", res.ModifiedCount)
 	}
-
+	// else {
+	// 	conf.Logger.Infof("Replace Result : %d modified", res.ModifiedCount)
+	// }
+	// TODO - Enqueue Other Tasks !
 	err = enqueuer.EnqueueUpdateUserBalJob(*conf.QueueClient, blockTask)
 	if err != nil {
 		conf.Logger.Errorf("Task ParseBlockEvents [%+v] %s", blockTask, err)
@@ -131,8 +134,7 @@ func blockScanTask(ctx context.Context, blockTask schema.BlockTask, aqCl asynq.C
 	var lastBlock uint64
 
 	if err != nil {
-		// conf.Logger.Errorf("Task BlockScan [%+v] : %s ", blockTask, err)
-		return err
+		return &utils.RpcError{Err: err, ChainId: blockTask.ChainId, BlockNumber: blockTask.BlockNumber, Name: "BlockScan"}
 	}
 	if lastBlockVal := conf.RedisClient.Get(ctx, tasks.LastScannedBlockKey(chain)); lastBlockVal.Err() == redis.Nil {
 		lastBlock = conf.StartingBlock(ctx, blockTask.ChainId)
@@ -182,11 +184,11 @@ func blockEventsTask(
 			ToBlock:   blockNumBigInt,
 		},
 	)
-	if err != nil {
-		return err
-	}
 	if conf.CallCount != nil {
 		conf.CallCount.Add(blockTask.ChainId)
+	}
+	if err != nil {
+		return &utils.RpcError{Err: err, ChainId: blockTask.ChainId, BlockNumber: blockTask.BlockNumber, Name: "BlockFetch"}
 	}
 	if len(logs) < 1 {
 		return nil
@@ -205,9 +207,11 @@ func blockEventsTask(
 			TxHash:      _log.TxHash,
 		}
 	}
-	_, err = monCl.InsertMany(ctx, convLogs)
-	if err != nil {
-		return err
+	if len(convLogs) > 0 {
+		_, err = monCl.InsertMany(ctx, convLogs)
+		if err != nil {
+			return err
+		}
 	}
 	_ = aqCl
 	return err

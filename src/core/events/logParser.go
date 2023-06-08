@@ -2,10 +2,10 @@ package events
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/PiperFinance/BS/src/conf"
+	"github.com/PiperFinance/BS/src/utils"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -52,10 +52,6 @@ func init() {
 	transferSingleESigHash = crypto.Keccak256Hash([]byte(TransferSingleESig))
 }
 
-func ErrEventParserNotFound(event string) error {
-	return fmt.Errorf("EventParserNotFound: event-hash=%s ", event)
-}
-
 // ParseLog Select Appropriate EventParser For found event !
 func ParseLog(vLog types.Log) (interface{}, error) {
 	if len(vLog.Topics) > 1 {
@@ -74,33 +70,43 @@ func ParseLog(vLog types.Log) (interface{}, error) {
 		case transferSingleESigHash.Hex():
 			return TransferSingleEventParser(vLog)
 		default:
-			return nil, ErrEventParserNotFound(event)
+			return nil, &utils.ErrEventParserNotFound{Event: event, BlockNumber: vLog.BlockNumber, TrxIndex: vLog.TxIndex}
 		}
 	}
-	return nil, ErrEventParserNotFound("No Event")
+	// TODO - No data
+	return nil, nil
 }
 
 // ParseLogs Parsers different types of log event and store them to database
 func ParseLogs(ctx context.Context, mongoCol *mongo.Collection, logCursor *mongo.Cursor) {
 	nextCtx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
-
+	parsedLogs := make([]interface{}, 0)
 	for logCursor.Next(nextCtx) {
 		var vLog types.Log
 		errDecode := logCursor.Decode(&vLog)
 		if errDecode != nil {
 			conf.Logger.Errorf("ParseLogs: [%T] :%s", errDecode, errDecode)
+			continue
 		}
-
 		if parsedLog, parseErr := ParseLog(vLog); parseErr != nil {
-			// conf.Logger.Errorf("ParseLogs: [%T] : %s", parseErr, parseErr)
-			// TODO - Suppressing the error
-		} else {
-			// TODO - Make this insert many
-			_, insertionErr := mongoCol.InsertOne(ctx, parsedLog)
-			if insertionErr != nil {
-				conf.Logger.Errorf("ParseLogs: [%T] : %s", insertionErr, insertionErr)
+			switch parseErr.(type) {
+			case *utils.ErrEventParserNotFound:
+				if !conf.Config.SilenceParseErrs {
+					conf.Logger.Errorf("ParseLogs: [%T] : %s", parseErr, parseErr)
+				}
+				continue
 			}
+		} else {
+			if parsedLog != nil {
+				parsedLogs = append(parsedLogs, parsedLog)
+			}
+		}
+	}
+	if len(parsedLogs) > 0 {
+		_, insertionErr := mongoCol.InsertMany(ctx, parsedLogs)
+		if insertionErr != nil {
+			conf.Logger.Errorf("ParseLogs: [%T] : %s", insertionErr, insertionErr)
 		}
 	}
 }

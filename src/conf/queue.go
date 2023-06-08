@@ -41,6 +41,7 @@ type MuxHandler struct {
 }
 
 const (
+	UsersQ       = "users"
 	ScanQ        = "scan"
 	FetchQ       = "fetch"
 	ParseQ       = "Parse"

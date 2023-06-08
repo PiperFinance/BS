@@ -75,6 +75,21 @@ func LastScannedBlocks(c *fiber.Ctx) error {
 	}
 }
 
+func Status(c *fiber.Ctx) error {
+	r := make(map[int64]map[string]string)
+	for _, chain := range conf.Config.SupportedChains {
+		r[chain] = make(map[string]string)
+		r[chain]["Call"] = conf.CallCount.StatusChain(chain)
+		r[chain]["FailedCalls"] = conf.FailedCallCount.StatusChain(chain)
+		r[chain]["MultiCall"] = conf.MultiCallCount.StatusChain(chain)
+		r[chain]["NewUsers"] = conf.NewUsersCount.StatusChain(chain)
+		r[chain]["NewBlock"] = conf.NewBlockCount.StatusChain(chain)
+	}
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"msg": r,
+	})
+}
+
 func CallStatus(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"msg": conf.CallCount,
@@ -84,7 +99,7 @@ func CallStatus(c *fiber.Ctx) error {
 func NewBlockStatusSimple(c *fiber.Ctx) error {
 	r := make(map[int64]string)
 	for _, chain := range conf.Config.SupportedChains {
-		r[chain] = conf.NewBlockCount.StatusChain(3, chain)
+		r[chain] = conf.NewBlockCount.StatusChain(chain)
 	}
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"msg": r,

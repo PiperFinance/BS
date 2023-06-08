@@ -1,6 +1,14 @@
 package conf
 
-func init() {
+import (
+	"github.com/PiperFinance/BS/src/core/schema"
+	"github.com/ethereum/go-ethereum/common"
+)
+
+var OnlineUsers schema.OnlineUsers
+
+func LoadLocalCache() {
+	OnlineUsers = schema.OnlineUsers{AllAdd: make(map[common.Address]bool)}
 	// TODO ...
 	//redisStore := redis_store.NewRedis(redis.NewClient(&redis.Options{
 	//	Addr: "127.0.0.1:6379",
