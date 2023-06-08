@@ -14,6 +14,7 @@ type config struct {
 	MongoDBName                  string        `env:"MONGO_DBNAME"`
 	RedisUrl                     url.URL       `env:"REDIS_URL"`
 	MongoSlowLoading             time.Duration `env:"MONGO_SLOW_LOAD" envDefault:"25s"`
+	MongoMaxPoolSize             uint64        `env:"MONGO_MAX_POOL_SIZE" envDefault:"340"`
 	RedisDB                      int           `env:"REDIS_DB"`
 	RedisMongoSlowLoading        time.Duration `env:"REDIS_SLOW_LOAD" envDefault:"10s"`
 	MaxConcurrency               int           `env:"MAX_CONCURRENT_WORKER"`

@@ -41,3 +41,16 @@ func GetUsers(c *fiber.Ctx) error {
 		"res": r,
 	})
 }
+
+func GetUser(c *fiber.Ctx) error {
+	token := c.Query("token", "")
+	if !common.IsHexAddress(token) {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"err": "user field in required and should be in formate of 0x...!"})
+	}
+	return nil
+	// chainQ := c.Query("chain", "")
+	// chain, err := strconv.ParseInt(chainQ, 10, 64)
+	// if err != nil {
+	// 	return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"err": "chain field should be an int!"})
+	// }
+}

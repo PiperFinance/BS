@@ -36,9 +36,9 @@ services:
       REDIS_DB: 1
       MAX_CONCURRENT_WORKER: 10000
       TEST_RPC_CONNECTION_TIMEOUT: 8s
-      LIMIT_USERS: true
+      LIMIT_USERS: false
       SCAN_TASK_TIMEOUT: 10s
-      SUPPORTED_CHAINS: "1,250,56,137,43114,42161,1284,592,42220"
+      SUPPORTED_CHAINS: "1,250,56,137,43114,1284,592,42220"
       RPC_ERROR_SILENCE: true
       PARSE_ERROR_SILENCE: true
       # SUPPORTED_CHAINS: "1,250,56,137,43114,12306,100,10000,52,2021,9001,2000,1284,1285,58,25,8217,42220,32659,128,592"
@@ -49,7 +49,7 @@ services:
       resources:
         limits:
           cpus: "1"
-          memory: 350M
+          memory: 450M
 
   redis:
     image: redis:latest
@@ -67,7 +67,7 @@ services:
       resources:
         limits:
           cpus: "1"
-          memory: 1024M
+          memory: 890M
   ## Maybe this bit will be seperated 
   mongo-express:
     image: mongo-express:latest
@@ -109,7 +109,7 @@ services:
       resources:
         limits:
           cpus: "1"
-          memory: 850M
+          memory: 1024M
 
 networks:
   bs_redis_db:

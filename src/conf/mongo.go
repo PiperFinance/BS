@@ -23,6 +23,7 @@ const (
 	UserTokenMapColName = "UserTokenMap"
 	QueueErrorsColName  = "QErr"
 	BlockScannerDB      = "BS_Main"
+	AggregatedUsers     = "Users"
 )
 
 var (
@@ -39,7 +40,7 @@ func LoadMongo() {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 	opts := options.Client().ApplyURI(Config.MongoUrl.String())
-
+	opts.MaxPoolSize = &Config.MongoMaxPoolSize
 	var err error
 	mongoCl, err = mongo.Connect(ctx, opts)
 	if err != nil {
