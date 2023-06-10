@@ -19,14 +19,22 @@ func LoadMainNets() {
 	MainNets = make([]*schema.Network, 0)
 	SupportedNetworks = make(map[int64]*schema.Network, len(Config.SupportedChains))
 	jsonFile, err := os.Open("data/mainnets.json")
+
 	defer jsonFile.Close()
+
+	if err != nil {
+		Logger.Fatalf("%+v", err)
+	}
+
+	byteValue, err := ioutil.ReadAll(jsonFile)
 	if err != nil {
 		Logger.Fatal(err)
 	}
-	byteValue, _ := ioutil.ReadAll(jsonFile)
+
 	if err := json.Unmarshal(byteValue, &MainNets); err != nil {
 		Logger.Fatal(err)
 	}
+
 	for _, _net := range MainNets {
 		if utils.Contains(Config.SupportedChains, _net.ChainId) {
 			go utils.NetworkConnectionCheck(CallCount, FailedCallCount, Logger, _net, Config.TestTimeout)

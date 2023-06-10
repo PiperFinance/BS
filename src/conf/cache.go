@@ -14,6 +14,7 @@ func LoadLocalCache() {
 		OnlineUserMutex: sync.Mutex{},
 		AllAdd:          make(map[common.Address]bool),
 	}
+
 	// TODO ...
 	//redisStore := redis_store.NewRedis(redis.NewClient(&redis.Options{
 	//	Addr: "127.0.0.1:6379",
