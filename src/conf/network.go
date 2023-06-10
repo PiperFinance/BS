@@ -41,6 +41,11 @@ func LoadNetwork() {
 }
 
 func EthClient(chain int64) *ethclient.Client {
+	cl, _ := EthClientDebug(chain)
+	return cl
+}
+
+func EthClientDebug(chain int64) (*ethclient.Client, string) {
 	defer func() {
 		selectorMutex.Lock()
 		selectorIndex[chain]++
@@ -49,41 +54,48 @@ func EthClient(chain int64) *ethclient.Client {
 		}
 		selectorMutex.Unlock()
 	}()
-	// defer func() {
-	// 	if r := recover(); r != nil {
-	// 		fmt.Println("Recovered in f", r)
-	// 	}
-	// }()
 	// TODO - Try to recover panic here !
 	if clients, ok := EthClientS[chain]; ok {
 		if index, ok := selectorIndex[chain]; ok {
 			if len(clients) == 0 {
 				Logger.Errorf("EthCLient Selector : No RPCs found for chain %d", chain)
 			} else {
-				return clients[index]
+				return clients[index], rpcs[chain][index]
 			}
 		}
 	}
-	return nil
+	return nil, ""
 }
 
-func StartingBlock(ctx context.Context, chain int64) uint64 {
-	// TODO add retries here !
-	if b, err := EthClient(chain).BlockNumber(ctx); err != nil {
-		Logger.Fatalf("Bad Network Startup %d : %+v", chain, err)
-		return Config.StartingBlockNumber
+// BatchLogMaxHeight staticky returns block height set in mainnet.json !
+func BatchLogMaxHeight(chain int64) uint64 {
+	r := uint64(SupportedNetworks[chain].BatchLogMaxHeight)
+	if r == 0 {
+		// TODO make this dynamic
+		return 1
 	} else {
-		Logger.Infof("Starting Network %d From [%d]BlockNo.", chain, b-Config.BlockHeadDelay)
-		return b - Config.BlockHeadDelay
+		return r
 	}
 }
 
-// func EthClientDebug() (*ethclient.Client, string) {
-// 	defer func() {
-// 		selectorIndex++
-// 		if selectorIndex >= clientCount {
-// 			selectorIndex = 0
-// 		}
-// 	}()
-// 	return EthClientS[selectorIndex], rpcs[selectorIndex]
-// }
+// BatchLogMaxHeight staticky returns block height set in mainnet.json !
+func MulticallMaxSize(chain int64) uint64 {
+	r := uint64(SupportedNetworks[chain].MulticallMaxSize)
+	if r == 0 {
+		// TODO make this dynamic
+		return 1
+	} else {
+		return r
+	}
+}
+
+// LatestBlock Last block mines head delay for safe data aggregation (uncle blocks!)
+func LatestBlock(ctx context.Context, chain int64) (uint64, error) {
+	CallCount.Add(chain)
+	if b, err := EthClient(chain).BlockNumber(ctx); err != nil {
+		FailedCallCount.Add(chain)
+		return Config.StartingBlockNumber, err
+	} else {
+		return b - Config.BlockHeadDelay, nil
+	}
+}

@@ -9,7 +9,7 @@ import (
 	"github.com/hibiken/asynq"
 )
 
-func EnqueueUpdateUserBalJob(aqCl asynq.Client, blockTask schema.BlockTask) error {
+func EnqueueUpdateUserBalJob(aqCl asynq.Client, blockTask schema.BatchBlockTask) error {
 	payload, err := json.Marshal(blockTask)
 	if err != nil {
 		return err

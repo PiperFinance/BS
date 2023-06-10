@@ -1,6 +1,8 @@
 package conf
 
 import (
+	"sync"
+
 	"github.com/PiperFinance/BS/src/core/schema"
 	"github.com/ethereum/go-ethereum/common"
 )
@@ -8,7 +10,10 @@ import (
 var OnlineUsers schema.OnlineUsers
 
 func LoadLocalCache() {
-	OnlineUsers = schema.OnlineUsers{AllAdd: make(map[common.Address]bool)}
+	OnlineUsers = schema.OnlineUsers{
+		OnlineUserMutex: sync.Mutex{},
+		AllAdd:          make(map[common.Address]bool),
+	}
 	// TODO ...
 	//redisStore := redis_store.NewRedis(redis.NewClient(&redis.Options{
 	//	Addr: "127.0.0.1:6379",

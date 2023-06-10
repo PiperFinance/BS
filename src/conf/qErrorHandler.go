@@ -12,11 +12,13 @@ import (
 type QueueErrorHandler struct{}
 
 func errType(ChainId int64, v interface{}) interface{} {
+	_ = ChainId
 	switch v.(type) {
 	case error:
 		return v
 	case utils.RpcError:
-		FailedCallCount.Add(ChainId)
+		// NOTE - results are in consistent !
+		// FailedCallCount.Add(ChainId)
 		if Config.SilenceRRCErrs {
 			return nil
 		} else {
@@ -29,7 +31,7 @@ func errType(ChainId int64, v interface{}) interface{} {
 
 func (er *QueueErrorHandler) HandleError(ctx context.Context, task *asynq.Task, err error) {
 	retried, _ := asynq.GetRetryCount(ctx)
-	blockTask := schema.BlockTask{}
+	blockTask := schema.BatchBlockTask{}
 	if errJson := json.Unmarshal(task.Payload(), &blockTask); errJson == nil && blockTask.ChainId > 0 {
 		if errType(blockTask.ChainId, err) == nil {
 			return

@@ -12,7 +12,6 @@ import (
 )
 
 func LastScannedBlock(c *fiber.Ctx) error {
-	// TODO - FIX this to be multi chain ...
 	chainQ := c.Query("chain", "")
 	if len(chainQ) > 0 {
 		chain, err := strconv.ParseInt(chainQ, 10, 64)
