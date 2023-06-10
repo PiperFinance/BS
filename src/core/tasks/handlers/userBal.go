@@ -139,7 +139,7 @@ func processTransferLogs(ctx context.Context, block schema.BatchBlockTask, trans
 
 func updateTokens(ctx context.Context, block schema.BatchBlockTask, transfers []schema.LogTransfer) error {
 	col := conf.GetMongoCol(block.ChainId, conf.TokenColName)
-	tokens := make([]interface{}, 0)
+	// tokens := make([]interface{}, 0)
 	uniqueTokens := make([]common.Address, 0)
 	var tokenExists bool
 	for _, transfer := range transfers {
