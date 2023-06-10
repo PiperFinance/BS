@@ -24,6 +24,7 @@ RUN mkdir -p /api
 WORKDIR /api
 COPY --from=builder /api/app .
 COPY ./src/data/mainnets.json /api/data/mainnets.json
+COPY ./src/data/mainnets.json /data/mainnets.json
 
 RUN rm -rf /var/bs/log/ | true \ 
     && mkdir -p /var/bs/log/ \ 

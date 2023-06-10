@@ -2,6 +2,7 @@ package conf
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"time"
@@ -18,20 +19,23 @@ var (
 func LoadMainNets() {
 	MainNets = make([]*schema.Network, 0)
 	SupportedNetworks = make(map[int64]*schema.Network, len(Config.SupportedChains))
-	jsonFile, err := os.Open("data/mainnets.json")
+	jsonFile, err := os.Open("/data/mainnets.json")
 
 	defer jsonFile.Close()
 
 	if err != nil {
+		fmt.Println(err)
 		Logger.Fatalf("%+v", err)
 	}
 
 	byteValue, err := ioutil.ReadAll(jsonFile)
 	if err != nil {
+		fmt.Println(err)
 		Logger.Fatal(err)
 	}
 
 	if err := json.Unmarshal(byteValue, &MainNets); err != nil {
+		fmt.Println(err)
 		Logger.Fatal(err)
 	}
 
