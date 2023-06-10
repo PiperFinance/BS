@@ -12,7 +12,7 @@ func MustBlockTaskGen(chain int64) []byte {
 	x := schema.BlockTask{ChainId: chain}
 	r, err := json.Marshal(x)
 	if err != nil {
-		log.Println(" ERR : BlockTaskGenUnsafe : %+s", err.Error())
+		log.Printf(" ERR : BlockTaskGenUnsafe : %s \n", err.Error())
 		return nil
 	} else {
 		return r

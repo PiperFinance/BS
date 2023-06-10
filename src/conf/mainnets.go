@@ -29,7 +29,7 @@ func LoadMainNets() {
 	}
 	for _, _net := range MainNets {
 		if utils.Contains(Config.SupportedChains, _net.ChainId) {
-			go utils.NetworkConnectionCheck(Logger, _net, Config.TestTimeout)
+			go utils.NetworkConnectionCheck(CallCount, FailedCallCount, Logger, _net, Config.TestTimeout)
 			SupportedNetworks[_net.ChainId] = _net
 		}
 	}

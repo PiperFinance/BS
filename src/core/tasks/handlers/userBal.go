@@ -18,8 +18,8 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func lock(key string) {
-}
+// func lock(key string) {
+// }
 
 func userBalanceCol(chain int64) *mongo.Collection {
 	return conf.GetMongoCol(chain, conf.UserBalColName)
@@ -37,7 +37,7 @@ func UpdateUserBalTaskHandler(ctx context.Context, task *asynq.Task) error {
 	ctxDel, cancelDel := context.WithTimeout(ctx, 5*time.Minute)
 	defer cancelFind()
 	defer cancelDel()
-	blockTask := schema.BlockTask{}
+	blockTask := schema.BatchBlockTask{}
 	err := json.Unmarshal(task.Payload(), &blockTask)
 	if err != nil {
 		// conf.Logger.Infof("Task ParseBlockEvents [%s] : Finished !", err)
@@ -51,11 +51,17 @@ func UpdateUserBalTaskHandler(ctx context.Context, task *asynq.Task) error {
 	// 	return err
 	// }
 
-	cursor, err := conf.GetMongoCol(blockTask.ChainId, conf.ParsedLogColName).Find(ctxFind, bson.M{
-		"log.blockNumber": &blockTask.BlockNumber,
+	filter := bson.M{
+		"log.blockNumber": bson.D{{Key: "$gte", Value: &blockTask.FromBlockNumber}, {Key: "$lt", Value: &blockTask.ToBlockNumber}},
 		"log.name":        events.TransferE,
-	})
-	defer cursor.Close(ctxFind)
+	}
+
+	cursor, err := conf.GetMongoCol(blockTask.ChainId, conf.ParsedLogColName).Find(ctxFind, filter)
+	defer func() {
+		if err := cursor.Close(ctxFind); err != nil {
+			conf.Logger.Error(err)
+		}
+	}()
 	if err != nil {
 		return err
 	}
@@ -74,49 +80,84 @@ func UpdateUserBalTaskHandler(ctx context.Context, task *asynq.Task) error {
 		}
 	}
 	if len(transfers) > 0 {
-		processTransferLogs(ctx, blockTask, transfers)
+		if err := processTransferLogs(ctx, blockTask, transfers); err != nil {
+			return err
+		}
 	}
 	if len(transferIDs) > 0 {
 		if _, err := conf.GetMongoCol(blockTask.ChainId, conf.ParsedLogColName).DeleteMany(ctxDel, bson.M{"_id": bson.M{"$in": transferIDs}}); err != nil {
 			return err
 		}
 	}
-
-	bm := schema.BlockM{BlockNumber: blockTask.BlockNumber, ChainId: blockTask.ChainId}
-	bm.SetAdded()
-	if _, err := conf.GetMongoCol(blockTask.ChainId, conf.BlockColName).ReplaceOne(
-		ctx,
-		bson.M{"no": blockTask.BlockNumber}, &bm); err != nil {
-		return err
+	for i := blockTask.FromBlockNumber; i < blockTask.ToBlockNumber; i++ {
+		bm := schema.BlockM{BlockNumber: i, ChainId: blockTask.ChainId}
+		bm.SetAdded()
+		if _, err := conf.GetMongoCol(blockTask.ChainId, conf.BlockColName).ReplaceOne(
+			ctx,
+			bson.M{"no": i}, &bm); err != nil {
+			return err
+		}
 	}
 	return err
 }
 
-func processTransferLogs(ctx context.Context, block schema.BlockTask, transfers []schema.LogTransfer) error {
+func chunkNewUserCalls(chain int64, users []contract_helpers.UserToken) [][]contract_helpers.UserToken {
+	batchSize := int(conf.MulticallMaxSize(chain))
+	chunkCount := (len(users) / batchSize) + 1
+	r := make([][]contract_helpers.UserToken, chunkCount)
+	for i := 0; i < chunkCount; i++ {
+		startingIndex := i * batchSize
+		endingIndex := (i + 1) * batchSize
+		if endingIndex > len(users) {
+			endingIndex = len(users)
+		}
+		r[i] = users[startingIndex:endingIndex]
+	}
+	return r
+}
+
+func processTransferLogs(ctx context.Context, block schema.BatchBlockTask, transfers []schema.LogTransfer) error {
 	if err := updateTokens(ctx, block, transfers); err != nil {
 		return err
 	}
-	err, newUsers := findNewRecords(ctx, block, transfers)
+	newUsers, err := findNewRecords(ctx, block, transfers)
 	if err != nil {
 		return err
 	}
-	if err := updateUserTokens(ctx, block, newUsers); err != nil {
-		return err
+	for _, chunk := range chunkNewUserCalls(block.ChainId, newUsers) {
+		if err := updateUserTokens(ctx, block, chunk); err != nil {
+			return err
+		}
 	}
 	for _, trx := range transfers {
 		if err := processTransferLog(ctx, block, trx); err != nil {
-			conf.Logger.Errorw(err.Error(), "block", block.BlockNumber, "chain", block.ChainId)
+			conf.Logger.Errorw(err.Error(), "from", block.FromBlockNumber, "to", block.ToBlockNumber, "chain", block.ChainId)
 		}
 	}
 	return nil
 }
 
-func updateTokens(ctx context.Context, block schema.BlockTask, transfers []schema.LogTransfer) error {
+func updateTokens(ctx context.Context, block schema.BatchBlockTask, transfers []schema.LogTransfer) error {
 	col := conf.GetMongoCol(block.ChainId, conf.TokenColName)
 	tokens := make([]interface{}, 0)
+	uniqueTokens := make([]common.Address, 0)
+	var tokenExists bool
 	for _, transfer := range transfers {
-		if res := col.FindOne(ctx, bson.D{{Key: "_id", Value: transfer.EmitterAddress}}); res.Err() == mongo.ErrNoDocuments {
-			tokens = append(tokens, bson.D{{Key: "_id", Value: transfer.EmitterAddress}})
+		_token := transfer.EmitterAddress
+		tokenExists = true
+		for _, token := range uniqueTokens {
+			if token == _token {
+				tokenExists = false
+				break
+			}
+		}
+		if tokenExists {
+			uniqueTokens = append(uniqueTokens, _token)
+		}
+	}
+	for _, token := range uniqueTokens {
+		if res := col.FindOne(ctx, bson.D{{Key: "_id", Value: token}}); res.Err() == mongo.ErrNoDocuments {
+			tokens = append(tokens, bson.D{{Key: "_id", Value: token}})
 		} else if res.Err() != nil {
 			return res.Err()
 		}
@@ -140,16 +181,15 @@ func isNew(ctx context.Context, chainId int64, user common.Address, token common
 	}
 
 	filter := bson.D{{Key: "user", Value: user}, {Key: "token", Value: token}}
-	if res := userBalanceCol(chainId).FindOne(ctx, filter); res.Err() == mongo.ErrNoDocuments {
+	if count, err := userBalanceCol(chainId).CountDocuments(ctx, filter); count == 0 || err == mongo.ErrNoDocuments {
 		return nil, true
 	} else {
-
-		if res.Err() == nil {
-			conf.Logger.Infow("NewUserFinder", "user", user, "token", token, "err", res.Err())
+		if err == nil {
+			conf.Logger.Infow("NewUserFinder", "user", user, "token", token, "err", err)
 		} else {
-			conf.Logger.Errorw("NewUserFinder", "user", user, "token", token, "err", res.Err())
+			conf.Logger.Errorw("NewUserFinder", "user", user, "token", token, "err", err)
 		}
-		return res.Err(), false
+		return err, false
 	}
 }
 
@@ -183,14 +223,14 @@ func isAddressToken(ctx context.Context, chainId int64, user common.Address) boo
 	}
 }
 
-func updateUserTokens(ctx context.Context, blockTask schema.BlockTask, usersTokens []contract_helpers.UserToken) error {
+func updateUserTokens(ctx context.Context, blockTask schema.BatchBlockTask, usersTokens []contract_helpers.UserToken) error {
 	if len(usersTokens) < 1 {
 		return nil
 	}
 	conf.NewUsersCount.AddFor(blockTask.ChainId, uint64(len(usersTokens)))
 	conf.MultiCallCount.Add(blockTask.ChainId)
-	// bal := contract_helpers.EasyBalanceOf{UserTokens: usersTokens, ChainId: blockTask.ChainId, BlockNumber: int64(blockTask.BlockNumber)}
-	bal := contract_helpers.EasyBalanceOf{UserTokens: usersTokens, ChainId: blockTask.ChainId, BlockNumber: int64(blockTask.BlockNumber) - 1}
+	// TODO - chunk batch calls !
+	bal := contract_helpers.EasyBalanceOf{UserTokens: usersTokens, ChainId: blockTask.ChainId, BlockNumber: int64(blockTask.FromBlockNumber) - 1}
 	if err := bal.Execute(ctx); err != nil {
 		// conf.Logger.Error(err)
 		return err
@@ -209,8 +249,8 @@ func updateUserTokens(ctx context.Context, blockTask schema.BlockTask, usersToke
 			UserStr:   userToken.User.String(),
 			TokenStr:  userToken.Token.String(),
 			TrxCount:  0,
-			ChangedAt: blockTask.BlockNumber,
-			StartedAt: blockTask.BlockNumber,
+			ChangedAt: blockTask.FromBlockNumber, // TODO - this is not exact due to batch block task !
+			StartedAt: blockTask.FromBlockNumber,
 			Balance:   userToken.Balance.String(),
 		})
 	}
@@ -224,20 +264,20 @@ func updateUserTokens(ctx context.Context, blockTask schema.BlockTask, usersToke
 	return nil
 }
 
-func findNewRecords(ctx context.Context, block schema.BlockTask, transfers []schema.LogTransfer) (error, []contract_helpers.UserToken) {
+func findNewRecords(ctx context.Context, block schema.BatchBlockTask, transfers []schema.LogTransfer) ([]contract_helpers.UserToken, error) {
 	newUsers := make([]contract_helpers.UserToken, 0)
 	for _, transfer := range transfers {
 		token := transfer.EmitterAddress
 		if err, yes := isNew(ctx, block.ChainId, transfer.From, token); err == nil && yes {
 			newUsers = append(newUsers, contract_helpers.UserToken{User: transfer.From, Token: token})
 		} else if err != nil {
-			return err, nil
+			return nil, err
 		}
 	}
-	return nil, newUsers
+	return newUsers, nil
 }
 
-func processTransferLog(ctx context.Context, block schema.BlockTask, transfer schema.LogTransfer) error {
+func processTransferLog(ctx context.Context, block schema.BatchBlockTask, transfer schema.LogTransfer) error {
 	var amount *big.Int
 	if b, ok := transfer.GetAmount(); ok {
 		amount = b
@@ -261,11 +301,11 @@ func processTransferLog(ctx context.Context, block schema.BlockTask, transfer sc
 	return nil
 }
 
-func processUserBal(ctx context.Context, blockTask schema.BlockTask, user common.Address, token common.Address, amount *big.Int) (*schema.UserBalance, error) {
+func processUserBal(ctx context.Context, blockTask schema.BatchBlockTask, user common.Address, token common.Address, amount *big.Int) (*schema.UserBalance, error) {
 	userBal := schema.UserBalance{
 		User:      user,
 		Token:     token,
-		ChangedAt: blockTask.BlockNumber,
+		ChangedAt: blockTask.ToBlockNumber,
 	}
 	filter := bson.D{{Key: "user", Value: user}, {Key: "token", Value: token}}
 	if res := userBalanceCol(blockTask.ChainId).FindOne(ctx, filter); res.Err() == mongo.ErrNoDocuments {
@@ -281,7 +321,7 @@ func processUserBal(ctx context.Context, blockTask schema.BlockTask, user common
 	if err := userBal.AddBal(amount); err != nil {
 		return nil, err
 	}
-	update := bson.D{{Key: "$set", Value: bson.D{{Key: "bal", Value: userBal.GetBalanceStr()}, {Key: "c_t", Value: blockTask.BlockNumber}, {Key: "count", Value: userBal.TrxCount + 1}}}}
+	update := bson.D{{Key: "$set", Value: bson.D{{Key: "bal", Value: userBal.GetBalanceStr()}, {Key: "c_t", Value: blockTask.ToBlockNumber}, {Key: "count", Value: userBal.TrxCount + 1}}}}
 	_, err := userBalanceCol(blockTask.ChainId).UpdateOne(ctx, filter, update)
 	if err != nil {
 		return nil, err

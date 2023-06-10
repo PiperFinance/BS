@@ -48,6 +48,8 @@ type Network struct {
 	Status   string   `json:"status,omitempty"`
 	RedFlags []string `json:"redFlags,omitempty"`
 	// NOTE - is calculated after running connection check
-	GoodRpc []*RPC
-	BadRpc  []*RPC
+	GoodRpc           []*RPC
+	BadRpc            []*RPC
+	BatchLogMaxHeight int64 `json:"maxGetLogHeight"`  // GetLogs Filter max length can be updated but initial value is set in the mainnet.json
+	MulticallMaxSize  int64 `json:"maxMulticallSize"` // It's kinda obvious :)
 }

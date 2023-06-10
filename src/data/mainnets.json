@@ -3,6 +3,7 @@
     "name": "Ethereum Mainnet",
     "chain": "ETH",
     "icon": "ethereum",
+    "maxGetLogHeight": 1,
     "rpc": [
       {
         "url": "https://eth.llamarpc.com",
@@ -246,6 +247,8 @@
     "infoURL": "https://www.binance.org",
     "shortName": "bnb",
     "chainId": 56,
+    "maxGetLogHeight": 10,
+    "maxMulticallSize": 500,
     "networkId": 56,
     "slip44": 714,
     "explorers": [
@@ -342,7 +345,11 @@
     "infoURL": "https://polygon.technology/",
     "shortName": "matic",
     "chainId": 137,
+    "maxGetLogHeight": 10,
+    "maxMulticallSize": 500,
+
     "networkId": 137,
+
     "slip44": 966,
     "explorers": [
       {
@@ -429,6 +436,8 @@
     "infoURL": "https://www.avax.network/",
     "shortName": "avax",
     "chainId": 43114,
+    "maxGetLogHeight": 50,
+    "maxMulticallSize": 500,
     "networkId": 43114,
     "slip44": 9005,
     "explorers": [
@@ -510,6 +519,8 @@
     "infoURL": "https://fantom.foundation",
     "shortName": "ftm",
     "chainId": 250,
+    "maxGetLogHeight": 50,
+    "maxMulticallSize": 500,
     "networkId": 250,
     "icon": "fantom",
     "explorers": [
@@ -526,6 +537,8 @@
   {
     "name": "Arbitrum One",
     "chainId": 42161,
+    "maxGetLogHeight": 280,
+    "maxMulticallSize": 600,
     "shortName": "arb1",
     "chain": "ETH",
     "networkId": 42161,
@@ -746,6 +759,8 @@
     "infoURL": "https://docs.gnosischain.com",
     "shortName": "gno",
     "chainId": 100,
+    "maxGetLogHeight": 200,
+    "maxMulticallSize": 500,
     "networkId": 100,
     "slip44": 700,
     "explorers": [
@@ -827,6 +842,8 @@
     "infoURL": "https://edgeware.io",
     "shortName": "edg",
     "chainId": 2021,
+    "maxGetLogHeight": 1,
+    "maxMulticallSize": 300,
     "networkId": 2021,
     "slip44": 523,
     "explorers": [
@@ -931,6 +948,8 @@
     "infoURL": "https://evmos.org",
     "shortName": "evmos",
     "chainId": 9001,
+    "maxGetLogHeight": 60,
+    "maxMulticallSize": 500,
     "networkId": 9001,
     "icon": "evmos",
     "explorers": [
@@ -1036,6 +1055,8 @@
     "infoURL": "https://moonbeam.network/networks/moonbeam/",
     "shortName": "mbeam",
     "chainId": 1284,
+    "maxGetLogHeight": 45,
+    "maxMulticallSize": 500,
     "networkId": 1284,
     "explorers": [
       {
@@ -1142,6 +1163,8 @@
     "infoURL": "https://ont.io/",
     "shortName": "OntologyMainnet",
     "chainId": 58,
+    "maxGetLogHeight": 2500,
+    "maxMulticallSize": 500,
     "networkId": 58,
     "explorers": [
       {

@@ -91,10 +91,9 @@ func (easBal *EasyBalanceOf) Execute(ctx context.Context) error {
 	}
 
 	res, err := easBal.multiCaller().Aggregate3(&cOpts, calls)
-	if conf.CallCount != nil {
-		conf.CallCount.Add(easBal.ChainId)
-	}
+	conf.CallCount.Add(easBal.ChainId)
 	if err != nil {
+		conf.FailedCallCount.Add(easBal.ChainId)
 		return &utils.RpcError{Err: err, ChainId: easBal.ChainId, BlockNumber: uint64(easBal.BlockNumber), Name: "MultiCall"}
 	} else {
 		for i, _res := range res {

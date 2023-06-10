@@ -34,12 +34,13 @@ services:
       API_URL: ":6001"
       MONGO_DBNAME: BS
       REDIS_DB: 1
-      MAX_CONCURRENT_WORKER: 4000
-      MONGO_MAX_POOL_SIZE: 1000
-      TEST_RPC_CONNECTION_TIMEOUT: 8s
+      MAX_CONCURRENT_WORKER: 500
+      MONGO_MAX_POOL_SIZE: 600
+      BLOCK_HEAD_DELAY: 45
       LIMIT_USERS: false
-      SCAN_TASK_TIMEOUT: 10s
-      SUPPORTED_CHAINS: "1,250,56,137,43114,1284,592,42220"
+      SCAN_TASK_TIMEOUT: 20s
+      TEST_RPC_CONNECTION_TIMEOUT: 12s
+      SUPPORTED_CHAINS: "1,250,56,137,43114,42161,9001,85,100,2021,1284,1284"
       RPC_ERROR_SILENCE: true
       PARSE_ERROR_SILENCE: true
       # SUPPORTED_CHAINS: "1,250,56,137,43114,12306,100,10000,52,2021,9001,2000,1284,1285,58,25,8217,42220,32659,128,592"
@@ -64,11 +65,13 @@ services:
       test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
     volumes:
       - ./data/redis:/data
+    command: >
+      --port 6379  --maxmemory 1048576 --maxclients 10000  --tcp-keepalive 300  --databases 1  --save 300 50000  --rdbcompression yes --rdbchecksum no   
     deploy:
       resources:
         limits:
           cpus: "1"
-          memory: 890M
+          memory: 1200M
   ## Maybe this bit will be seperated 
   mongo-express:
     image: mongo-express:latest
