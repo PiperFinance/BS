@@ -78,7 +78,7 @@ func LoadQueue() {
 
 	loc, err := time.LoadLocation("America/Los_Angeles")
 	if err != nil {
-		Logger.Fatal(err)
+		Logger.Panic(err)
 	}
 	QueueScheduler = asynq.NewScheduler(
 		asyncQRedisClient,
@@ -98,7 +98,7 @@ func RunWorker(muxHandler []MuxHandler) {
 		mux.HandleFunc(mh.Key, mh.Handler)
 	}
 	if err := QueueServer.Run(mux); err != nil {
-		Logger.Fatal(err)
+		Logger.Panic(err)
 	}
 }
 
@@ -107,11 +107,11 @@ func RunScheduler(queueSchedules []QueueSchedules) {
 	for _, qs := range queueSchedules {
 		_, err := QueueScheduler.Register(qs.Cron, asynq.NewTask(qs.Key, qs.Payload), qs.Q, asynq.Timeout(qs.Timeout))
 		if err != nil {
-			Logger.Fatalf("QueueScheduler: %s", err)
+			Logger.Panicf("QueueScheduler: %s", err)
 		}
 	}
 	if err2 := QueueScheduler.Start(); err2 != nil {
-		Logger.Fatal(err2)
+		Logger.Panic(err2)
 	}
 }
 
@@ -121,5 +121,5 @@ func RunMonitor(URL string) {
 		RedisConnOpt: asyncQRedisClient,
 	})
 	http.Handle(h.RootPath()+"/", h)
-	Logger.Fatal(http.ListenAndServe(URL, nil))
+	Logger.Panic(http.ListenAndServe(URL, nil))
 }

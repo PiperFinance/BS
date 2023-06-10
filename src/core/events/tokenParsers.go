@@ -19,17 +19,17 @@ var (
 
 func init() {
 	if tmp20, err := abi.JSON(strings.NewReader(contracts.ERC20MetaData.ABI)); err != nil {
-		conf.Logger.Fatalf("ParseLogs: %s", err)
+		conf.Logger.Panicf("ParseLogs: %s", err)
 	} else {
 		erc20 = tmp20
 	}
 	if tmp721, err721 := abi.JSON(strings.NewReader(contracts.ERC721MetaData.ABI)); err721 != nil {
-		conf.Logger.Fatalf("ParseLogs: %s", err721)
+		conf.Logger.Panicf("ParseLogs: %s", err721)
 	} else {
 		erc721 = tmp721
 	}
 	if tmp1155, err1155 := abi.JSON(strings.NewReader(contracts.ERC1155MetaData.ABI)); err1155 != nil {
-		conf.Logger.Fatalf("ParseLogs: %s", err1155)
+		conf.Logger.Panicf("ParseLogs: %s", err1155)
 	} else {
 		erc1155 = tmp1155
 	}

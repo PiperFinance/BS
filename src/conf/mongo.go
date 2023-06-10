@@ -44,12 +44,12 @@ func LoadMongo() {
 	var err error
 	mongoCl, err = mongo.Connect(ctx, opts)
 	if err != nil {
-		Logger.Fatalf("Mongo: %s", err)
+		Logger.Panicf("Mongo: %s", err)
 	}
 
 	err = mongoCl.Ping(ctx, nil)
 	if err != nil {
-		Logger.Fatalf("Mongo: %s", err)
+		Logger.Panicf("Mongo: %s", err)
 	}
 	// mongoDB = mongoCl.Database(Config.MongoDBName)
 	MongoDefaultErrCol = mongoCl.Database(BlockScannerDB).Collection(QueueErrorsColName)

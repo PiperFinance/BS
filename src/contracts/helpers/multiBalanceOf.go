@@ -66,7 +66,7 @@ func (bal *EasyBalanceOf) populateTokenBalanceCalls() {
 func (easBal *EasyBalanceOf) multiCaller() *Multicall.MulticallCaller {
 	contractInstance, err := Multicall.NewMulticallCaller(MULTICALL_V3_ADDRESS, conf.EthClient(easBal.ChainId))
 	if err != nil {
-		conf.Logger.Fatalf("Multicall Contract Gen : %+v", err)
+		conf.Logger.Panicf("Multicall Contract Gen : %+v", err)
 	}
 	return contractInstance
 }

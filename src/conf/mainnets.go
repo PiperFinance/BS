@@ -25,18 +25,18 @@ func LoadMainNets() {
 
 	if err != nil {
 		fmt.Println(err)
-		Logger.Fatalf("%+v", err)
+		Logger.Panicf("%+v", err)
 	}
 
 	byteValue, err := ioutil.ReadAll(jsonFile)
 	if err != nil {
 		fmt.Println(err)
-		Logger.Fatal(err)
+		Logger.Panic(err)
 	}
 
 	if err := json.Unmarshal(byteValue, &MainNets); err != nil {
 		fmt.Println(err)
-		Logger.Fatal(err)
+		Logger.Panic(err)
 	}
 
 	for _, _net := range MainNets {
@@ -50,10 +50,10 @@ func LoadMainNets() {
 		sn, ok := SupportedNetworks[chain]
 		if ok && len(sn.GoodRpc) < 1 {
 			fmt.Printf("No Good Rpc for chain %d\n", chain)
-			Logger.Fatalf("No Good Rpc for chain %d", chain)
+			Logger.Panicf("No Good Rpc for chain %d", chain)
 		} else if !ok {
 			fmt.Printf("Where is Rpc for chain %d\n", chain)
-			Logger.Fatalf("Where is Rpc for chain %d", chain)
+			Logger.Panicf("Where is Rpc for chain %d", chain)
 		}
 	}
 }

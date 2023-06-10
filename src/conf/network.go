@@ -33,7 +33,7 @@ func LoadNetwork() {
 
 			client, err := ethclient.Dial(_rpc.Url)
 			if err != nil {
-				Logger.Fatalf("Client Connection %+v Error : %s  ", _rpc, err)
+				Logger.Panicf("Client Connection %+v Error : %s  ", _rpc, err)
 			}
 			EthClientS[net.ChainId][i] = client
 		}
