@@ -66,8 +66,8 @@ services:
       test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
     volumes:
       - ./data/redis:/data
-    # command: >
-    #   --port 6379  --maxmemory 1048576 --maxclients 10000  --tcp-keepalive 300  --databases 16  --save 300 50000  --rdbcompression yes --rdbchecksum no
+    command: >
+      --port 6379 --maxclients 10000  --tcp-keepalive 300  --databases 16  --save 3000 500000  --rdbcompression yes --rdbchecksum no
     deploy:
       resources:
         limits:
