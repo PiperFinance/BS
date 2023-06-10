@@ -156,10 +156,10 @@ func updateTokens(ctx context.Context, block schema.BatchBlockTask, transfers []
 		}
 	}
 	for _, token := range uniqueTokens {
-		if res := col.FindOne(ctx, bson.D{{Key: "_id", Value: token}}); res.Err() == mongo.ErrNoDocuments {
+		if count, err := col.CountDocuments(ctx, bson.D{{Key: "_id", Value: token}}); count == 0 || err == mongo.ErrNoDocuments {
 			tokens = append(tokens, bson.D{{Key: "_id", Value: token}})
-		} else if res.Err() != nil {
-			return res.Err()
+		} else if err != nil {
+			return err
 		}
 	}
 	if len(tokens) > 1 {
