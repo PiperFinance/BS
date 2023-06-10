@@ -44,12 +44,15 @@ func LoadRedis() {
 	}
 
 	if _, err := RedisClient.GetOrSetTTL(context.Background(), "-cconn-", "-ok-", time.Second); err != nil {
+		fmt.Println(err)
 		Logger.Fatalf("RedisConnectionCheck: %+v", err)
 	}
 	if err := RedisClient.loadPools(); err != nil {
+		fmt.Println(err)
 		Logger.Fatalf("RedisConnectionCheck: %+v", err)
 	}
 	if err := RedisClient.loadMutexes(); err != nil {
+		fmt.Println(err)
 		Logger.Fatalf("RedisConnectionCheck: %+v", err)
 	}
 }

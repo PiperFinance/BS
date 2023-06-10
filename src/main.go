@@ -19,15 +19,14 @@ func init() {
 	conf.LoadLocalCache()
 	fmt.Println("BOOT : Loading Mongo ...")
 	conf.LoadMongo()
-	fmt.Println("BOOT : Loading Mongo ...")
-	conf.LoadRedis()
 	fmt.Println("BOOT : Loading Redis ...")
-	conf.LoadMainNets()
+	conf.LoadRedis()
 	fmt.Println("BOOT : Loading Mainnets ...")
-	conf.LoadNetwork()
+	conf.LoadMainNets()
 	fmt.Println("BOOT : Loading Networks ...")
-	conf.LoadQueue()
+	conf.LoadNetwork()
 	fmt.Println("BOOT : Loading Q ...")
+	conf.LoadQueue()
 }
 
 // ONLY FOR TESTING PURPOSES ...

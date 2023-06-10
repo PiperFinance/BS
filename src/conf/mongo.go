@@ -58,8 +58,8 @@ func LoadMongo() {
 		// chainIndexed[chain] = make(map[string]bool)
 		GetMongoCol(chain, UserBalColName).Indexes().CreateOne(
 			ctx, mongo.IndexModel{Keys: bson.D{{Key: "user", Value: 1}, {Key: "token", Value: 1}}})
-		GetMongoCol(chain, UserBalColName).Indexes().CreateOne(
-			ctx, mongo.IndexModel{Keys: bson.D{{Key: "user", Value: -1}, {Key: "token", Value: -1}}})
+		// GetMongoCol(chain, UserBalColName).Indexes().CreateOne(
+		// 	ctx, mongo.IndexModel{Keys: bson.D{{Key: "user", Value: -1}, {Key: "token", Value: -1}}})
 		GetMongoCol(chain, BlockColName).Indexes().CreateOne(
 			ctx, mongo.IndexModel{Keys: bson.D{{Key: "no", Value: -1}}})
 		GetMongoCol(chain, BlockColName).Indexes().CreateOne(
