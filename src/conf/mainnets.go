@@ -49,8 +49,10 @@ func LoadMainNets() {
 	for _, chain := range Config.SupportedChains {
 		sn, ok := SupportedNetworks[chain]
 		if ok && len(sn.GoodRpc) < 1 {
+			fmt.Printf("No Good Rpc for chain %d\n", chain)
 			Logger.Fatalf("No Good Rpc for chain %d", chain)
 		} else if !ok {
+			fmt.Printf("Where is Rpc for chain %d\n", chain)
 			Logger.Fatalf("Where is Rpc for chain %d", chain)
 		}
 	}
