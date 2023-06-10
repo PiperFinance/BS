@@ -49,19 +49,19 @@ func LoadLogger() {
 	fileEncoder := zapcore.NewJSONEncoder(zap.NewDevelopmentEncoderConfig())
 	consoleEncoder := zapcore.NewConsoleEncoder(zap.NewProductionEncoderConfig())
 	var core zapcore.Core
-	if Config.LogLevel == "debug" {
-		core = zapcore.NewTee(
-			zapcore.NewCore(fileEncoder, topicErrors, highPriority),
-			zapcore.NewCore(consoleEncoder, consoleErrors, highPriority),
-			zapcore.NewCore(fileEncoder, topicDebugging, lowPriority),
-			zapcore.NewCore(consoleEncoder, consoleDebugging, lowPriority),
-		)
-	} else {
-		core = zapcore.NewTee(
-			zapcore.NewCore(fileEncoder, topicErrors, highPriority),
-			zapcore.NewCore(consoleEncoder, consoleErrors, highPriority),
-		)
-	}
+	// if Config.LogLevel == "debug" {
+	core = zapcore.NewTee(
+		zapcore.NewCore(fileEncoder, topicErrors, highPriority),
+		zapcore.NewCore(consoleEncoder, consoleErrors, highPriority),
+		zapcore.NewCore(fileEncoder, topicDebugging, lowPriority),
+		zapcore.NewCore(consoleEncoder, consoleDebugging, lowPriority),
+	)
+	// } else {
+	// 	core = zapcore.NewTee(
+	// 		zapcore.NewCore(fileEncoder, topicErrors, highPriority),
+	// 		zapcore.NewCore(consoleEncoder, consoleErrors, highPriority),
+	// 	)
+	// }
 
 	zp = zap.New(core, zap.Development(), zap.AddStacktrace(zap.WarnLevel))
 	defer zp.Sync()
