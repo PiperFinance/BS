@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"strings"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -49,7 +50,7 @@ func LoadLogger() {
 	fileEncoder := zapcore.NewJSONEncoder(zap.NewDevelopmentEncoderConfig())
 	consoleEncoder := zapcore.NewConsoleEncoder(zap.NewProductionEncoderConfig())
 	var core zapcore.Core
-	if Config.LogLevel == "debug" {
+	if strings.ToLower(Config.LogLevel) == "debug" {
 		core = zapcore.NewTee(
 			zapcore.NewCore(fileEncoder, topicErrors, highPriority),
 			zapcore.NewCore(consoleEncoder, consoleErrors, highPriority),
