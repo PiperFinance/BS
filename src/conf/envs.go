@@ -15,6 +15,7 @@ type config struct {
 	RedisUrl                     url.URL       `env:"REDIS_URL"`
 	MongoSlowLoading             time.Duration `env:"MONGO_SLOW_LOAD" envDefault:"10s"`
 	MongoMaxPoolSize             uint64        `env:"MONGO_MAX_POOL_SIZE" envDefault:"340"`
+	MongoMaxTimeout              time.Duration `env:"MONGO_MAX_TIMEOUT" envDefault:"5m"`
 	RedisDB                      int           `env:"REDIS_DB"`
 	RedisMongoSlowLoading        time.Duration `env:"REDIS_SLOW_LOAD" envDefault:"3s"`
 	MaxConcurrency               int           `env:"MAX_CONCURRENT_WORKER"`
@@ -35,6 +36,7 @@ type config struct {
 	UpdateOnlineUsersTaskTimeout time.Duration `env:"ONLINE_USERS_TASK_TIMEOUT" envDefault:"25s"`
 	LogLevel                     string        `env:"LOG_LEVEL" envDefault:"warn"`
 	LogDir                       string        `env:"LOG_DIR" envDefault:"/var/bs/log"`
+	MainnetDir                   string        `env:"MAINNET_DIR" envDefault:"/data/mainnet.json"`
 	DEV                          bool          `env:"DEV_DEBUG" envDefault:"false"`
 	LimitUsers                   bool          `env:"LIMIT_USERS" envDefault:"false"`
 	UserAppUrl                   url.URL       `env:"USER_APP_URL" envDefault:"https://ua.piper.finance"`

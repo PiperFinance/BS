@@ -11,7 +11,7 @@ ENV GOPROXY=https://goproxy.cn,direct
 
 RUN go mod download
 COPY ./src ./src
-RUN go build -o ./app  github.com/PiperFinance/BS/src
+RUN GOOS=linux GOARCH=amd64 CGO_ENABLED=0  go build -o ./app  github.com/PiperFinance/BS/src
 
 FROM alpine:latest
 

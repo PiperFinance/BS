@@ -14,16 +14,15 @@ type QueueErrorHandler struct{}
 func errType(ChainId int64, v interface{}) interface{} {
 	_ = ChainId
 	switch v.(type) {
-	case error:
-		return v
-	case utils.RpcError:
-		// NOTE - results are in consistent !
-		// FailedCallCount.Add(ChainId)
+	case *utils.RpcError:
+		FailedCallCount.Add(ChainId)
 		if Config.SilenceRRCErrs {
 			return nil
 		} else {
 			return v
 		}
+	case error:
+		return v
 	default:
 		return "unknown"
 	}

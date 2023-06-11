@@ -93,7 +93,6 @@ func MulticallMaxSize(chain int64) uint64 {
 func LatestBlock(ctx context.Context, chain int64) (uint64, error) {
 	CallCount.Add(chain)
 	if b, err := EthClient(chain).BlockNumber(ctx); err != nil {
-		FailedCallCount.Add(chain)
 		return Config.StartingBlockNumber, err
 	} else {
 		return b - Config.BlockHeadDelay, nil

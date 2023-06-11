@@ -2,7 +2,6 @@ package conf
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"time"
@@ -19,23 +18,20 @@ var (
 func LoadMainNets() {
 	MainNets = make([]*schema.Network, 0)
 	SupportedNetworks = make(map[int64]*schema.Network, len(Config.SupportedChains))
-	jsonFile, err := os.Open("/data/mainnets.json")
+	jsonFile, err := os.Open(Config.MainnetDir)
 
 	defer jsonFile.Close()
 
 	if err != nil {
-		fmt.Println(err)
 		Logger.Panicf("%+v", err)
 	}
 
 	byteValue, err := ioutil.ReadAll(jsonFile)
 	if err != nil {
-		fmt.Println(err)
 		Logger.Panic(err)
 	}
 
 	if err := json.Unmarshal(byteValue, &MainNets); err != nil {
-		fmt.Println(err)
 		Logger.Panic(err)
 	}
 
@@ -49,10 +45,8 @@ func LoadMainNets() {
 	for _, chain := range Config.SupportedChains {
 		sn, ok := SupportedNetworks[chain]
 		if ok && len(sn.GoodRpc) < 1 {
-			fmt.Printf("No Good Rpc for chain %d\n", chain)
 			Logger.Panicf("No Good Rpc for chain %d", chain)
 		} else if !ok {
-			fmt.Printf("Where is Rpc for chain %d\n", chain)
 			Logger.Panicf("Where is Rpc for chain %d", chain)
 		}
 	}

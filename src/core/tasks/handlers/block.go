@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"math/big"
-	"time"
 
 	"github.com/PiperFinance/BS/src/conf"
 	"github.com/PiperFinance/BS/src/core/events"
@@ -29,7 +28,7 @@ func BlockScanTaskHandler(ctx context.Context, task *asynq.Task) error {
 	if err != nil {
 		return err
 	}
-	err = blockScanTask(ctx, blockTask, *conf.QueueClient)
+	err = scanBlockJob(ctx, blockTask, *conf.QueueClient)
 	_ = task
 	return err
 }
@@ -43,7 +42,7 @@ func BlockEventsTaskHandler(ctx context.Context, task *asynq.Task) error {
 		// conf.Logger.Errorf("Task BlockEvents [%+v] : %s ", blockTask, err)
 		return err
 	}
-	err = blockEventsTask(
+	err = fetchBlockEventsJob(
 		ctx,
 		blockTask,
 		*conf.QueueClient,
@@ -78,11 +77,13 @@ func ParseBlockEventsTaskHandler(ctx context.Context, task *asynq.Task) error {
 		conf.Logger.Errorf("Task ParseBlockEvents [%+v] %s", blockTask, err)
 		return err
 	}
-	ctxFind, cancelFind := context.WithTimeout(ctx, 5*time.Minute)
+	ctxFind, cancelFind := context.WithTimeout(ctx, conf.Config.MongoMaxTimeout)
 	defer cancelFind()
-	ctxDel, cancelDel := context.WithTimeout(ctx, 5*time.Minute)
+	ctxDel, cancelDel := context.WithTimeout(ctx, conf.Config.MongoMaxTimeout)
 	defer cancelDel()
-	filter := bson.M{"blockNumber": bson.D{{Key: "$gte", Value: blockTask.FromBlockNumber}, {Key: "$lt", Value: blockTask.ToBlockNumber}}}
+
+	filter := bson.M{"blockNumber": bson.D{{Key: "$gte", Value: blockTask.FromBlockNumber}, {Key: "$lte", Value: blockTask.ToBlockNumber}}}
+
 	cursor, err := conf.GetMongoCol(blockTask.ChainId, conf.LogColName).Find(ctxFind, filter)
 	defer func() {
 		if err := cursor.Close(ctxFind); err != nil {
@@ -99,7 +100,6 @@ func ParseBlockEventsTaskHandler(ctx context.Context, task *asynq.Task) error {
 		return err
 	}
 	for i := blockTask.FromBlockNumber; i < blockTask.ToBlockNumber; i++ {
-
 		bm := schema.BlockM{BlockNumber: i, ChainId: blockTask.ChainId}
 		bm.SetParsed()
 		if _, err := conf.GetMongoCol(blockTask.ChainId, conf.BlockColName).ReplaceOne(
@@ -120,8 +120,8 @@ func ParseBlockEventsTaskHandler(ctx context.Context, task *asynq.Task) error {
 	return err
 }
 
-// blockScanTask Enqueues a task to fetch events if new block is Found
-func blockScanTask(ctx context.Context, blockTask schema.BatchBlockTask, aqCl asynq.Client) error {
+// scanBlockJob Enqueues a task to fetch events if new block is Found
+func scanBlockJob(ctx context.Context, blockTask schema.BatchBlockTask, aqCl asynq.Client) error {
 	var lastBlock uint64
 	chain := blockTask.ChainId
 	currentBlock, err := conf.LatestBlock(ctx, blockTask.ChainId)
@@ -131,15 +131,10 @@ func blockScanTask(ctx context.Context, blockTask schema.BatchBlockTask, aqCl as
 
 	if lastBlockVal := conf.RedisClient.Get(ctx, tasks.LastScannedBlockKey(chain)); lastBlockVal.Err() == redis.Nil {
 		// NOTE - First Running no head block is stored
-		// if _lastBlock, err := conf.LatestBlock(ctx, blockTask.ChainId); err != nil {
-		// 	return &utils.RpcError{Err: err, ChainId: blockTask.ChainId, ToBlockNumber: blockTask.ToBlockNumber, FromBlockNumber: blockTask.FromBlockNumber, Name: "BlockScan"}
-		// } else {
 		lastBlock = currentBlock
 		if status := conf.RedisClient.Set(ctx, tasks.LastScannedBlockKey(chain), lastBlock, 0); status != nil && status.Err() != nil {
 			return status.Err()
 		}
-		// lastBlock = _lastBlock
-		// }
 	} else {
 		// NOTE - Next Iterations there is head block and is parsed below
 		if r, parseErr := lastBlockVal.Int(); parseErr != nil {
@@ -151,7 +146,6 @@ func blockScanTask(ctx context.Context, blockTask schema.BatchBlockTask, aqCl as
 	}
 	batchSize := conf.BatchLogMaxHeight(chain)
 	head := lastBlock + batchSize
-	// TODO Test here !
 	if head < currentBlock {
 		remainingBlocks := currentBlock - lastBlock
 		batchCount := remainingBlocks / batchSize
@@ -170,8 +164,8 @@ func blockScanTask(ctx context.Context, blockTask schema.BatchBlockTask, aqCl as
 				ToBlockNumber:   lastBlock + ((j + 1) * batchSize),
 				ChainId:         chain,
 			}
-			if b.ToBlockNumber > currentBlock {
-				b.ToBlockNumber = currentBlock
+			if b.ToBlockNumber >= currentBlock {
+				b.ToBlockNumber = currentBlock - 1
 			}
 			_err := enqueuer.EnqueueFetchBlockJob(aqCl, b)
 			if _err != nil {
@@ -190,8 +184,8 @@ func blockScanTask(ctx context.Context, blockTask schema.BatchBlockTask, aqCl as
 	return err
 }
 
-// BlockEventsTask Fetches Block Events and stores them to mongo and enqueues another task for parsing them
-func blockEventsTask(
+// fetchBlockEventsJob Fetches Block Events and stores them to mongo and enqueues another task for parsing them
+func fetchBlockEventsJob(
 	ctx context.Context,
 	blockTask schema.BatchBlockTask,
 	aqCl asynq.Client,

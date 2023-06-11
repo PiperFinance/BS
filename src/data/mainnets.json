@@ -24,7 +24,7 @@
       },
       { "url": "https://rpc.ankr.com/eth", "tracking": "limited" },
       {
-        "url": "https://eth-mainnet.nodereal.io/v1/1659dfb40aa24bbb8153a677b98064d7",
+        "url": "https://eth-mainnet.nodereal.io/v1/f3f585d934524c34b4637be21eb513b4",
         "tracking": "yes"
       },
       {
@@ -181,13 +181,12 @@
         "tracking": "none"
       },
       {
-        "url": "https://bsc-mainnet.nodereal.io/v1/64a9df0874fb4a93b9d0a3849de012d3",
+        "url": "https://bsc-mainnet.nodereal.io/v1/f3f585d934524c34b4637be21eb513b4",
         "tracking": "yes"
       },
       { "url": "https://rpc.ankr.com/bsc", "tracking": "limited" },
       { "url": "https://bscrpc.com" },
       { "url": "https://bsc.rpcgator.com" },
-      { "url": "https://binance.nodereal.io", "tracking": "yes" },
       {
         "url": "https://bsc-mainnet.rpcfast.com?api_key=xbhWBI1Wkguk8SNMu1bvvLurPGLXmgwYeC4S6g2H7WdwFigZSmPWVZRxrskEQwIf"
       },

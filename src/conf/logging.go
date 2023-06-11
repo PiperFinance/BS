@@ -63,8 +63,11 @@ func LoadLogger() {
 			zapcore.NewCore(consoleEncoder, consoleErrors, highPriority),
 		)
 	}
-
-	zp = zap.New(core, zap.Development(), zap.AddStacktrace(zap.WarnLevel))
+	if Config.DEV {
+		zp = zap.New(core, zap.Development(), zap.AddStacktrace(zap.WarnLevel))
+	} else {
+		zp = zap.New(core, zap.Development())
+	}
 	defer zp.Sync()
 	errLJ := lumberjack.Logger{
 		Filename:   errFile,
@@ -90,15 +93,6 @@ func LoadLogger() {
 			Logger: &debugLJ,
 		}, nil
 	})
-
-	// if Config.DEV {
-	// 	zp, err = zap.NewDevelopment(zap.IncreaseLevel(Config.ZapLogLevel), zap.WrapCore())
-	// } else {
-	// 	zp, err = zap.NewProduction(zap.IncreaseLevel(Config.ZapLogLevel))
-	// }
-	// if err != nil {
-	// 	panic(err)
-	// }
 	sugar := zp.Sugar()
 	Logger = sugar
 }
