@@ -42,15 +42,34 @@ func GetUsers(c *fiber.Ctx) error {
 	})
 }
 
+type UserRequest struct {
+	Users  []common.Address `json:"users"`
+	Tokens []common.Address `json:"tokens"`
+	Chains []int64          `json:"chains"`
+}
+
 func GetUser(c *fiber.Ctx) error {
-	token := c.Query("token", "")
-	if !common.IsHexAddress(token) {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"err": "user field in required and should be in formate of 0x...!"})
+	r := UserRequest{}
+	if err := c.QueryParser(&r); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"err": err.Error()})
 	}
-	return nil
-	// chainQ := c.Query("chain", "")
-	// chain, err := strconv.ParseInt(chainQ, 10, 64)
-	// if err != nil {
-	// 	return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"err": "chain field should be an int!"})
-	// }
+	res := make(map[int64][]interface{}, len(r.Chains))
+	filter := bson.M{"user": r.Users[0]}
+	for _, chain := range r.Chains {
+		if count, err := conf.GetMongoCol(chain, conf.UserBalColName).CountDocuments(c.Context(), filter); err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"err": err.Error()})
+		} else {
+			if count == 0 {
+				continue
+			}
+			res[chain] = make([]interface{}, count)
+		}
+		if cursor, err := conf.GetMongoCol(chain, conf.UserBalColName).Find(
+			c.Context(), filter); err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"err": err.Error()})
+		} else {
+			cursor.All(c.Context(), res[chain])
+		}
+	}
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{"res": res})
 }
