@@ -32,6 +32,7 @@ func init() {
 // ONLY FOR TESTING PURPOSES ...
 
 func main() {
+	// (&StartConf{}).StartApi()
 	(&StartConf{}).StartAll()
 	select {}
 

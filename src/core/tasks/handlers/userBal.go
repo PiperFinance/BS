@@ -250,7 +250,7 @@ func updateUserTokens(ctx context.Context, blockTask schema.BatchBlockTask, user
 			Token:     userToken.Token,
 			UserStr:   userToken.User.String(),
 			TokenStr:  userToken.Token.String(),
-			TrxCount:  0,
+			TrxCount:  1,
 			ChangedAt: blockTask.FromBlockNumber, // TODO - this is not exact due to batch block task !
 			StartedAt: blockTask.FromBlockNumber,
 			Balance:   userToken.Balance.String(),

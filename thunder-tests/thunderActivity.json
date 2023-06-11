@@ -1,0 +1,56 @@
+[
+  {
+    "_id": "2eeecb87-3323-4846-a422-73af5451aba4",
+    "colId": "history",
+    "containerId": "",
+    "name": "http://localhost:6001/mbal",
+    "url": "http://localhost:6001/mbal",
+    "method": "GET",
+    "sortNum": 0,
+    "created": "2023-06-11T16:47:53.914Z",
+    "modified": "2023-06-11T16:47:53.914Z",
+    "headers": [],
+    "params": [],
+    "tests": []
+  },
+  {
+    "_id": "76694966-4498-40f7-9c01-4a6a28720b3e",
+    "colId": "history",
+    "containerId": "",
+    "name": "http://localhost:6001/mbal?users=1",
+    "url": "http://localhost:6001/mbal?users=1",
+    "method": "GET",
+    "sortNum": 0,
+    "created": "2023-06-11T16:49:48.196Z",
+    "modified": "2023-06-11T16:49:48.196Z",
+    "headers": [],
+    "params": [
+      {
+        "name": "users",
+        "value": "1",
+        "isPath": false
+      }
+    ],
+    "tests": []
+  },
+  {
+    "_id": "fe829fc3-6731-4011-b74c-9de150c80da2",
+    "colId": "history",
+    "containerId": "",
+    "name": "http://localhost:6001/mbal?users=0x0000000000CC1FFB95df1486af6dacb26D6D1Af0",
+    "url": "http://localhost:6001/mbal?users=0x0000000000CC1FFB95df1486af6dacb26D6D1Af0",
+    "method": "GET",
+    "sortNum": 0,
+    "created": "2023-06-11T16:50:08.704Z",
+    "modified": "2023-06-11T16:50:08.704Z",
+    "headers": [],
+    "params": [
+      {
+        "name": "users",
+        "value": "0x0000000000CC1FFB95df1486af6dacb26D6D1Af0",
+        "isPath": false
+      }
+    ],
+    "tests": []
+  }
+]

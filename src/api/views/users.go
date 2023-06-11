@@ -43,9 +43,9 @@ func GetUsers(c *fiber.Ctx) error {
 }
 
 type UserRequest struct {
-	Users  []common.Address `json:"users"`
-	Tokens []common.Address `json:"tokens"`
-	Chains []int64          `json:"chains"`
+	Users  []string `json:"users"`
+	Tokens []string `json:"tokens"`
+	Chains []int64  `json:"chains"`
 }
 
 func GetUser(c *fiber.Ctx) error {
@@ -53,22 +53,44 @@ func GetUser(c *fiber.Ctx) error {
 	if err := c.QueryParser(&r); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"err": err.Error()})
 	}
-	res := make(map[int64][]interface{}, len(r.Chains))
-	filter := bson.M{"user": r.Users[0]}
-	for _, chain := range r.Chains {
+	if len(r.Users) == 0 {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"err": "[users] param is required !"})
+	}
+	if !common.IsHexAddress(r.Users[0]) {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"err": "[users] param must be of type hex address"})
+	}
+	var chains []int64
+	if len(r.Chains) == 0 {
+		chains = conf.Config.SupportedChains
+	} else {
+		chains = r.Chains
+	}
+	res := make(map[int64][]schema.UserBalance, len(chains))
+	filter := bson.M{"user": common.HexToAddress(r.Users[0])}
+	for _, chain := range chains {
 		if count, err := conf.GetMongoCol(chain, conf.UserBalColName).CountDocuments(c.Context(), filter); err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"err": err.Error()})
 		} else {
 			if count == 0 {
 				continue
 			}
-			res[chain] = make([]interface{}, count)
+			res[chain] = make([]schema.UserBalance, count)
 		}
-		if cursor, err := conf.GetMongoCol(chain, conf.UserBalColName).Find(
+		if curs, err := conf.GetMongoCol(chain, conf.UserBalColName).Find(
 			c.Context(), filter); err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"err": err.Error()})
 		} else {
-			cursor.All(c.Context(), res[chain])
+			// cursor.All(c.Context(), res[chain])
+			i := 0
+			for curs.Next(c.Context()) {
+				ub := schema.UserBalance{}
+				err := curs.Decode(&ub)
+				if err != nil {
+					conf.Logger.Errorf("GetBal: %s", err.Error())
+				}
+				res[chain][i] = ub
+				i++
+			}
 		}
 	}
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{"res": res})

@@ -36,7 +36,7 @@ type config struct {
 	UpdateOnlineUsersTaskTimeout time.Duration `env:"ONLINE_USERS_TASK_TIMEOUT" envDefault:"25s"`
 	LogLevel                     string        `env:"LOG_LEVEL" envDefault:"warn"`
 	LogDir                       string        `env:"LOG_DIR" envDefault:"/var/bs/log"`
-	MainnetDir                   string        `env:"MAINNET_DIR" envDefault:"/data/mainnet.json"`
+	MainnetDir                   string        `env:"MAINNET_DIR" envDefault:"/data/mainnets.json"`
 	DEV                          bool          `env:"DEV_DEBUG" envDefault:"false"`
 	LimitUsers                   bool          `env:"LIMIT_USERS" envDefault:"false"`
 	UserAppUrl                   url.URL       `env:"USER_APP_URL" envDefault:"https://ua.piper.finance"`
