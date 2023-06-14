@@ -164,11 +164,6 @@ func updateTokens(ctx context.Context, block schema.BatchBlockTask, transfers []
 			return err
 		}
 	}
-	// if len(tokens) > 1 {
-	// 	if _, err := col.InsertMany(ctx, tokens); err != nil {
-	// 		return err
-	// 	}
-	// }
 	return nil
 }
 
@@ -250,6 +245,7 @@ func updateUserTokens(ctx context.Context, blockTask schema.BatchBlockTask, user
 			Token:     userToken.Token,
 			UserStr:   userToken.User.String(),
 			TokenStr:  userToken.Token.String(),
+			TokenId:   conf.FindTokenId(bal.ChainId, userToken.Token),
 			TrxCount:  1,
 			ChangedAt: blockTask.FromBlockNumber, // TODO - this is not exact due to batch block task !
 			StartedAt: blockTask.FromBlockNumber,

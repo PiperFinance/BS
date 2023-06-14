@@ -22,6 +22,8 @@ func init() {
 	fmt.Println("BOOT : Loading Redis ...")
 	conf.LoadRedis()
 	fmt.Println("BOOT : Loading Mainnets ...")
+	conf.LoadTokens()
+	fmt.Println("BOOT : Loading Tokens ...")
 	conf.LoadMainNets()
 	fmt.Println("BOOT : Loading Networks ...")
 	conf.LoadNetwork()

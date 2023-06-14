@@ -16,15 +16,16 @@ type UserBalance struct {
 	UserStr   string         `bson:"userStr" json:"userStr"`
 	User      common.Address `bson:"user" json:"user"`
 	Token     common.Address `bson:"token" json:"token"`
+	TokenId   TokenId        `bson:"token_id" json:"token_id"`
 	TrxCount  uint64         `bson:"count" json:"count"`
 	ChangedAt uint64         `bson:"c_t" json:"c_t"`
 	StartedAt uint64         `bson:"s_t" json:"s_t"`
 	Balance   string         `bson:"bal" json:"bal"`
 }
 
-func (ub *UserBalance) SetBalanceInt(newBal int64) {
-	ub.SetBalance(big.NewInt(newBal))
-}
+// func (ub *UserBalance) SetBalanceInt(newBal int64) {
+// 	ub.SetBalance(big.NewInt(newBal))
+// }
 
 func (ub *UserBalance) SetBalance(newBal *big.Int) {
 	ub.Balance = newBal.String()
@@ -60,6 +61,7 @@ func (ub *UserBalance) SubBal(b *big.Int) error {
 	if !ok {
 		return fmt.Errorf("failed to cast %s to big.Int", ub.Balance)
 	}
-	ub.SetBalance(a.Sub(a, b))
+	nb := a.Sub(a, b)
+	ub.SetBalance(nb)
 	return nil
 }

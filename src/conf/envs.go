@@ -40,6 +40,8 @@ type config struct {
 	DEV                          bool          `env:"DEV_DEBUG" envDefault:"false"`
 	LimitUsers                   bool          `env:"LIMIT_USERS" envDefault:"false"`
 	UserAppUrl                   url.URL       `env:"USER_APP_URL" envDefault:"https://ua.piper.finance"`
+	TokenListUrl                 url.URL       `env:"TOKEN_LIST_URL" envDefault:"https://github.com/PiperFinance/CD/blob/main/tokens/outVerified/all_tokens.json?raw=true"`
+	TokensDir                    string        `env:"TOKEN_LIST_DIR" envDefault:"data/all_tokens.json"`
 	ZapLogLevel                  zapcore.Level
 }
 
