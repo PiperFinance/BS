@@ -97,6 +97,7 @@ services:
       MONGO_INITDB_ROOT_USERNAME: piperFinance
       MONGO_INITDB_ROOT_PASSWORD: Piper2022
       MONGO_INITDB_DATABASE: piper
+    command: --wiredTigerCacheSizeGB 2
     volumes:
       - ./data/mongodb:/data/db
     ports:
@@ -114,7 +115,7 @@ services:
       resources:
         limits:
           cpus: "1"
-          memory: 1024M
+          memory: 2048M
 
 networks:
   bs_redis_db:

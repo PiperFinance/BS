@@ -59,16 +59,17 @@ func ParseLog(vLog types.Log) (interface{}, error) {
 		switch event {
 		case transferESigHash.Hex():
 			return TransferEventParser(vLog)
-		case approvalESigHash.Hex():
-			return ApproveEventParser(vLog)
-		case approvalForAllESigHash.Hex():
-			return ApproveForAllEventParser(vLog)
-		case uRIESigHash.Hex():
-			return URLEventParser(vLog)
-		case transferBatchESigHash.Hex():
-			return TransferBatchEventParser(vLog)
-		case transferSingleESigHash.Hex():
-			return TransferSingleEventParser(vLog)
+		// TODO - Add other event types as time goes
+		// case approvalESigHash.Hex():
+		// 	return ApproveEventParser(vLog)
+		// case approvalForAllESigHash.Hex():
+		// 	return ApproveForAllEventParser(vLog)
+		// case uRIESigHash.Hex():
+		// 	return URLEventParser(vLog)
+		// case transferBatchESigHash.Hex():
+		// 	return TransferBatchEventParser(vLog)
+		// case transferSingleESigHash.Hex():
+		// 	return TransferSingleEventParser(vLog)
 		default:
 			return nil, &utils.ErrEventParserNotFound{Event: event, BlockNumber: vLog.BlockNumber, TrxIndex: vLog.TxIndex}
 		}
