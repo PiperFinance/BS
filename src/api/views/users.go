@@ -3,11 +3,12 @@ package views
 import (
 	"strconv"
 
-	"github.com/PiperFinance/BS/src/conf"
-	"github.com/PiperFinance/BS/src/core/schema"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson"
+
+	"github.com/PiperFinance/BS/src/conf"
+	"github.com/PiperFinance/BS/src/core/schema"
 )
 
 func GetUsers(c *fiber.Ctx) error {

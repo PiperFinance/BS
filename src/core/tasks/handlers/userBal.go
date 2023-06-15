@@ -7,15 +7,17 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/PiperFinance/BS/src/conf"
-	contract_helpers "github.com/PiperFinance/BS/src/contracts/helpers"
-	"github.com/PiperFinance/BS/src/core/events"
-	"github.com/PiperFinance/BS/src/core/schema"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/hibiken/asynq"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+
+	"github.com/PiperFinance/BS/src/conf"
+	contract_helpers "github.com/PiperFinance/BS/src/contracts/helpers"
+	"github.com/PiperFinance/BS/src/core/events"
+	"github.com/PiperFinance/BS/src/core/schema"
+	"github.com/PiperFinance/BS/src/core/utils"
 )
 
 // func lock(key string) {
@@ -168,56 +170,7 @@ func updateTokens(ctx context.Context, block schema.BatchBlockTask, transfers []
 }
 
 func isNew(ctx context.Context, chainId int64, user common.Address, token common.Address) (error, bool) {
-	// TODO - Add user Limit here
-	// FIXME - For Request CountReduction contracts contract and zero address is not included
-	if conf.Config.LimitUsers && !conf.OnlineUsers.IsAddressOnline(user) {
-		return nil, false
-	}
-	if isLimited(ctx, chainId, user) {
-		return nil, false
-	}
-
-	filter := bson.D{{Key: "user", Value: user}, {Key: "token", Value: token}}
-	if count, err := userBalanceCol(chainId).CountDocuments(ctx, filter); count == 0 || err == mongo.ErrNoDocuments {
-		return nil, true
-	} else {
-		if err == nil {
-			conf.Logger.Infow("NewUserFinder", "user", user, "token", token, "err", err)
-		} else {
-			conf.Logger.Errorw("NewUserFinder", "user", user, "token", token, "err", err)
-		}
-		return err, false
-	}
-}
-
-func isLimited(ctx context.Context, chainId int64, user common.Address) bool {
-	return isAddressNull(ctx, chainId, user) || isAddressToken(ctx, chainId, user) || isUserBanned(ctx, chainId, user)
-}
-
-func isUserBanned(ctx context.Context, chainId int64, user common.Address) bool {
-	if res := conf.GetMongoCol(chainId, conf.UserBalColName).FindOne(ctx, bson.D{{Key: "_id", Value: user.String()}}); res.Err() == mongo.ErrNoDocuments {
-		return false
-	} else if res.Err() == nil {
-		return true
-	} else {
-		conf.Logger.Errorw("BannedUsers", "err", res.Err(), "user", user, "chain", chainId)
-		return false
-	}
-}
-
-func isAddressNull(ctx context.Context, chainId int64, user common.Address) bool {
-	return user.Big().Cmp(big.NewInt(0)) < 1
-}
-
-func isAddressToken(ctx context.Context, chainId int64, user common.Address) bool {
-	if res := conf.GetMongoCol(chainId, conf.TokenColName).FindOne(ctx, bson.D{{Key: "_id", Value: user}}); res.Err() == mongo.ErrNoDocuments {
-		return false
-	} else if res.Err() == nil {
-		return true
-	} else {
-		conf.Logger.Errorw("IsAddressAToken", "err", res.Err(), "user", user, "chain", chainId)
-		return false
-	}
+	return utils.IsNew(ctx, chainId, user, token)
 }
 
 func updateUserTokens(ctx context.Context, blockTask schema.BatchBlockTask, usersTokens []contract_helpers.UserToken) error {

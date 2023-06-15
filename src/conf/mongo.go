@@ -30,7 +30,7 @@ var (
 	mongoCl *mongo.Client
 	// mongoDB            *mongo.Database
 	MongoDefaultErrCol *mongo.Collection
-	// Compund Index
+	// Compound Index
 	// chainIndexed map[int64]map[string]bool
 
 )

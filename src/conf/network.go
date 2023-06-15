@@ -4,9 +4,9 @@ import (
 	"context"
 	"sync"
 
-	"github.com/PiperFinance/BS/src/utils"
-
 	"github.com/ethereum/go-ethereum/ethclient"
+
+	"github.com/PiperFinance/BS/src/utils"
 )
 
 var (

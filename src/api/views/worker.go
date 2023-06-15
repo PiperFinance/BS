@@ -142,6 +142,17 @@ func BlockStats(c *fiber.Ctx) error {
 }
 
 // func MissedBlocks(c *fiber.Ctx) error {
+// 	r := make(map[int64][]int64)
+// 	for _, chain := range conf.Config.SupportedChains {
+// 		r[chain] = make([]int64, 0)
+// 		col := conf.GetMongoCol(chain, conf.BlockColName)
+// 	}
+// 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+// 		"msg": r,
+// 	})
+// }
+
+// func MissedBlocks(c *fiber.Ctx) error {
 // 	var lastBlock uint64
 // 	if res := conf.RedisClient.Get(ctx, tasks.LastScannedBlockKey); res.Err() == nil{
 // 		lb , err := res.Uint64()
