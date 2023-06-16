@@ -79,14 +79,14 @@ func (r *StartConf) StartApi() {
 }
 
 func (r *StartConf) StartAll() {
-	// conf.Logger.Info("Starting Worker")
-	// r.StartWorker() // Consumer
-	// conf.Logger.Info("Starting Client")
-	// r.StartClient() // Producer
-	// conf.Logger.Info("Starting Scheduler")
-	// r.StartScheduler() // Scheduled Producer
-	// conf.Logger.Info("Starting AsynQMon")
-	// r.StartMon() // asynqMon
+	conf.Logger.Info("Starting Worker")
+	r.StartWorker() // Consumer
+	conf.Logger.Info("Starting Client")
+	r.StartClient() // Producer
+	conf.Logger.Info("Starting Scheduler")
+	r.StartScheduler() // Scheduled Producer
+	conf.Logger.Info("Starting AsynQMon")
+	r.StartMon() // asynqMon
 	conf.Logger.Info("Starting Api")
 	r.StartApi()
 }

@@ -12,11 +12,12 @@ import (
 
 var (
 	// EthClient  *ethclient.Client
-	EthClientS    map[int64][]*ethclient.Client
-	selectorMutex sync.Mutex
-	selectorIndex map[int64]int
-	clientCount   map[int64]int
-	rpcs          map[int64][]string
+	EthClientS           map[int64][]*ethclient.Client
+	selectorMutex        sync.Mutex
+	selectorIndex        map[int64]int
+	clientCount          map[int64]int
+	rpcs                 map[int64][]string
+	MULTICALL_V3_ADDRESS = common.HexToAddress("0xca11bde05977b3631167028862be2a173976ca11")
 )
 
 func LoadNetwork() {
@@ -90,6 +91,10 @@ func MulticallMaxSize(chain int64) uint64 {
 	}
 }
 
+func MulticallAddress(chain int64) common.Address {
+	return MULTICALL_V3_ADDRESS
+}
+
 // LatestBlock Last block mines head delay for safe data aggregation (uncle blocks!)
 func LatestBlock(ctx context.Context, chain int64) (uint64, error) {
 	CallCount.Add(chain)
@@ -99,8 +104,6 @@ func LatestBlock(ctx context.Context, chain int64) (uint64, error) {
 		return b - Config.BlockHeadDelay, nil
 	}
 }
-
-
 
 func NetworkValueAddress(chain int64) common.Address {
 	return common.HexToAddress("0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE")
