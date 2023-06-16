@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"math/rand"
 
+	"github.com/hibiken/asynq"
+
 	"github.com/PiperFinance/BS/src/api"
 	"github.com/PiperFinance/BS/src/api/views"
 	"github.com/PiperFinance/BS/src/conf"
 	"github.com/PiperFinance/BS/src/core/tasks"
 	"github.com/PiperFinance/BS/src/core/tasks/handlers"
 	"github.com/PiperFinance/BS/src/utils"
-	"github.com/hibiken/asynq"
 )
 
 type StartConf struct{}
@@ -42,8 +43,8 @@ func (r *StartConf) xUrls() []api.Route {
 	return []api.Route{
 		{Path: "/lsb", Method: api.Get, Handler: views.LastScannedBlock},
 		{Path: "/lsb/100", Method: api.Get, Handler: views.LastScannedBlocks},
-		{Path: "/bal", Method: api.Get, Handler: views.GetBal},
 		{Path: "/bal/:chain/", Method: api.Post, Handler: views.SetBal},
+		{Path: "/bal", Method: api.Get, Handler: views.GetBal},
 		{Path: "/mbal", Method: api.Get, Handler: views.GetUser},
 		{Path: "/bal/users", Method: api.Get, Handler: views.GetUsers},
 
