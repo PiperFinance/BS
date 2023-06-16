@@ -67,6 +67,7 @@ func GetUser(c *fiber.Ctx) error {
 		chains = r.Chains
 	}
 	res := make(map[int64][]schema.UserBalance, len(chains))
+	// TODO add token to this filter
 	filter := bson.M{"user": common.HexToAddress(r.Users[0])}
 	for _, chain := range chains {
 		if count, err := conf.GetMongoCol(chain, conf.UserBalColName).CountDocuments(c.Context(), filter); err != nil {
