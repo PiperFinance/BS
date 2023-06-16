@@ -4,6 +4,7 @@ import (
 	"context"
 	"sync"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 
 	"github.com/PiperFinance/BS/src/utils"
@@ -97,4 +98,10 @@ func LatestBlock(ctx context.Context, chain int64) (uint64, error) {
 	} else {
 		return b - Config.BlockHeadDelay, nil
 	}
+}
+
+
+
+func NetworkValueAddress(chain int64) common.Address {
+	return common.HexToAddress("0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE")
 }

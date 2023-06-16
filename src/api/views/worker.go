@@ -3,12 +3,12 @@ package views
 import (
 	"strconv"
 
+	"github.com/gofiber/fiber/v2"
+	"go.mongodb.org/mongo-driver/bson"
+
 	"github.com/PiperFinance/BS/src/conf"
 	"github.com/PiperFinance/BS/src/core/schema"
 	"github.com/PiperFinance/BS/src/core/utils"
-
-	"github.com/gofiber/fiber/v2"
-	"go.mongodb.org/mongo-driver/bson"
 )
 
 func LastScannedBlock(c *fiber.Ctx) error {
@@ -141,16 +141,34 @@ func BlockStats(c *fiber.Ctx) error {
 	})
 }
 
-// func MissedBlocks(c *fiber.Ctx) error {
-// 	r := make(map[int64][]int64)
-// 	for _, chain := range conf.Config.SupportedChains {
-// 		r[chain] = make([]int64, 0)
-// 		col := conf.GetMongoCol(chain, conf.BlockColName)
-// 	}
-// 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-// 		"msg": r,
-// 	})
-// }
+func MissedBlocks(c *fiber.Ctx) error {
+	r := make(map[int64][]schema.BlockM)
+	for _, chain := range conf.Config.SupportedChains {
+		block, err := conf.LatestBlock(c.Context(), chain)
+		if err != nil {
+			return err
+		}
+		r[chain] = make([]schema.BlockM, 0)
+		col := conf.GetMongoCol(chain, conf.BlockColName)
+		filter := bson.M{"status": bson.D{{Key: "$not", Value: schema.Added}}, "no": bson.D{{Key: "$gt", Value: block - conf.Config.BlockHeadDelay}}}
+		if curs, err := col.Find(c.Context(), filter); err != nil {
+			return err
+		} else {
+			for curs.Next(c.Context()) {
+				ub := schema.BlockM{}
+				err := curs.Decode(&ub)
+				if err != nil {
+					conf.Logger.Errorf("GetBal: %s", err.Error())
+					continue
+				}
+				r[chain] = append(r[chain], ub)
+			}
+		}
+	}
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"msg": r,
+	})
+}
 
 // func MissedBlocks(c *fiber.Ctx) error {
 // 	var lastBlock uint64

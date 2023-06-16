@@ -52,7 +52,7 @@ func (r *StartConf) xUrls() []api.Route {
 		{Path: "/stats/call", Method: api.Get, Handler: views.CallStatus},
 		{Path: "/stats/block", Method: api.Get, Handler: views.NewBlockStatus},
 		// TODO !
-		// {Path: "/stats/block/missed", Method: api.Get, Handler: views.MissedBlocks},
+		{Path: "/stats/block/missed", Method: api.Get, Handler: views.MissedBlocks},
 		{Path: "/stats/block/simple", Method: api.Get, Handler: views.NewBlockStatusSimple},
 		{Path: "/stats/block/stats", Method: api.Get, Handler: views.BlockStats},
 	}
@@ -79,14 +79,14 @@ func (r *StartConf) StartApi() {
 }
 
 func (r *StartConf) StartAll() {
-	conf.Logger.Info("Starting Worker")
-	r.StartWorker() // Consumer
-	conf.Logger.Info("Starting Client")
-	r.StartClient() // Producer
-	conf.Logger.Info("Starting Scheduler")
-	r.StartScheduler() // Scheduled Producer
-	conf.Logger.Info("Starting AsynQMon")
-	r.StartMon() // asynqMon
+	// conf.Logger.Info("Starting Worker")
+	// r.StartWorker() // Consumer
+	// conf.Logger.Info("Starting Client")
+	// r.StartClient() // Producer
+	// conf.Logger.Info("Starting Scheduler")
+	// r.StartScheduler() // Scheduled Producer
+	// conf.Logger.Info("Starting AsynQMon")
+	// r.StartMon() // asynqMon
 	conf.Logger.Info("Starting Api")
 	r.StartApi()
 }

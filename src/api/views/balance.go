@@ -49,6 +49,7 @@ func SetBal(c *fiber.Ctx) error {
 	if err != nil {
 		return c.SendStatus(422)
 	}
+	// TODO check token , user common add binaries
 	var payload []schema.UserBalance
 	if err := c.BodyParser(&payload); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"status": "fail", "message": err.Error()})
@@ -57,12 +58,16 @@ func SetBal(c *fiber.Ctx) error {
 	col := conf.GetMongoCol(chain, conf.UserBalColName)
 	userTokens := make([]interface{}, 0)
 	currentBlock, err := conf.EthClient(chain).BlockNumber(c.Context())
-	// conf.CallCount.Add(chain)
+	conf.CallCount.Add(chain)
 	if err != nil {
+		conf.FailedCallCount.Add(chain)
 		// TODO - change err type
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"status": "fail", "message": err.Error()})
 	}
 	for _, userBal := range payload {
+		if userBal.Token == conf.NetworkValueAddress(chain) {
+			continue
+		}
 		if err, ok := coreUtils.IsNew(c.Context(), chain, userBal.User, userBal.Token); err == nil && ok {
 			userBal.ChangedAt = currentBlock
 			userBal.StartedAt = currentBlock

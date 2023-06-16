@@ -23,10 +23,6 @@ type UserBalance struct {
 	Balance   string         `bson:"bal" json:"bal"`
 }
 
-// func (ub *UserBalance) SetBalanceInt(newBal int64) {
-// 	ub.SetBalance(big.NewInt(newBal))
-// }
-
 func (ub *UserBalance) SetBalance(newBal *big.Int) {
 	ub.Balance = newBal.String()
 }
