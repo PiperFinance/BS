@@ -76,8 +76,10 @@ func SetBal(c *fiber.Ctx) error {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"status": "fail", "message": err.Error()})
 		}
 	}
-	if _, err := col.InsertMany(c.Context(), userTokens); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"status": "fail", "message": err.Error()})
+	if len(userTokens) > 0 {
+		if _, err := col.InsertMany(c.Context(), userTokens); err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"status": "fail", "message": err.Error()})
+		}
 	}
 	return nil
 }

@@ -38,19 +38,38 @@
     "colId": "history",
     "containerId": "",
     "name": "http://localhost:6001/mbal?users=0x0000000000CC1FFB95df1486af6dacb26D6D1Af0",
-    "url": "http://localhost:6001/mbal?users=0x0000000000CC1FFB95df1486af6dacb26D6D1Af0",
+    "url": "http://localhost:6001/mbal?users=0x0000000000CC1FFB95df1486af6dacb26D6D1Af0&users=0xB49F17514D6F340d7bcdFfC47526C9A3713697e0",
     "method": "GET",
     "sortNum": 0,
     "created": "2023-06-11T16:50:08.704Z",
-    "modified": "2023-06-11T16:50:08.704Z",
+    "modified": "2023-06-16T11:03:24.473Z",
     "headers": [],
     "params": [
       {
         "name": "users",
         "value": "0x0000000000CC1FFB95df1486af6dacb26D6D1Af0",
         "isPath": false
+      },
+      {
+        "name": "users",
+        "value": "0xB49F17514D6F340d7bcdFfC47526C9A3713697e0",
+        "isPath": false
       }
     ],
+    "tests": []
+  },
+  {
+    "_id": "fe35c135-bc1b-47c8-a0c4-128318de3d52",
+    "colId": "history",
+    "containerId": "",
+    "name": "http://154.49.243.32:6001/bal/users",
+    "url": "http://154.49.243.32:6001/bal/users",
+    "method": "GET",
+    "sortNum": 0,
+    "created": "2023-06-16T10:54:35.846Z",
+    "modified": "2023-06-16T10:54:35.846Z",
+    "headers": [],
+    "params": [],
     "tests": []
   }
 ]

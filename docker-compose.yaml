@@ -52,7 +52,7 @@ services:
       resources:
         limits:
           cpus: "1"
-          memory: 450M
+          memory: 650M
 
   redis:
     image: redis:latest
