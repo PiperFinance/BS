@@ -27,8 +27,10 @@ x-db:
   MONGO_URL: mongodb://piperFinance:Piper2022@bs_mongo:27017
 
 services:
-  bs_main:
+  bs:
     <<: *scanner
+    hostname: BS
+    container_name: bs
     ports:
       - 7001:7001
       - 6001:6001
