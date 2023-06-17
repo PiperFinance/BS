@@ -25,7 +25,7 @@ type Msg struct {
 }
 
 func OnlineUsersHandler(ctx context.Context, task *asynq.Task) error {
-	resp, err := http.Get(conf.Config.UserAppUrl.JoinPath(AllAddresses).String())
+	resp, err := http.Get(conf.Config.UserAppURL.JoinPath(AllAddresses).String())
 	if err != nil {
 		return err
 	}
