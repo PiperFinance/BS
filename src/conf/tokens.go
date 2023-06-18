@@ -4,14 +4,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"hash/crc32"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"strings"
 
-	"github.com/PiperFinance/BS/src/core/schema"
 	"github.com/ethereum/go-ethereum/common"
+
+	"github.com/PiperFinance/BS/src/core/schema"
 )
 
 var (
@@ -77,10 +77,10 @@ func AllChainsTokensArray() []schema.Token {
 func FindTokenId(chainId int64, add common.Address) schema.TokenId {
 	id, ok := chainAddTokens[chainId][add]
 	// crc32("-".join([self.address.lower(), str(self.chainId)]).encode()) <- token's Id
-	key := fmt.Sprintf("%s-%d", strings.ToLower(add.String()), chainId)
 	if !ok {
-		sum := crc32.ChecksumIEEE([]byte(key))
-		return schema.TokenId(sum)
+		key := fmt.Sprintf("%s-%d", strings.ToLower(add.String()), chainId)
+		// sum := crc32.ChecksumIEEE([]byte(key))
+		return schema.TokenId(key)
 	} else {
 		return id
 	}
