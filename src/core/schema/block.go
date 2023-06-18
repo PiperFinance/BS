@@ -5,7 +5,7 @@ import "time"
 type BatchBlockTask struct {
 	FromBlockNumber uint64 `bson:"from_no"`
 	ToBlockNumber   uint64 `bson:"to_no"`
-	blockNumber     uint64 `bson:"no"`
+	BlockNumber     uint64 `bson:"no"`
 	ChainId         int64  `bson:"chain"`
 }
 

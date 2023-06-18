@@ -6,7 +6,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 )
 
-type TokenId uint32
+type TokenId string
 
 type TokenDet struct {
 	ChainId     int64          `json:"chainId"`
