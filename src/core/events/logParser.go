@@ -4,12 +4,13 @@ import (
 	"context"
 	"time"
 
-	"github.com/PiperFinance/BS/src/conf"
-	"github.com/PiperFinance/BS/src/utils"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"go.mongodb.org/mongo-driver/mongo"
+
+	"github.com/PiperFinance/BS/src/conf"
+	"github.com/PiperFinance/BS/src/utils"
 )
 
 // NOTE - Inside Solidity and contracts it's called event but inside eth lib and block it's called log !
