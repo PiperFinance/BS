@@ -5,19 +5,18 @@ import (
 	"encoding/json"
 	"math/big"
 
+	"github.com/ethereum/go-ethereum"
+	"github.com/go-redis/redis/v8"
+	"github.com/hibiken/asynq"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+
 	"github.com/PiperFinance/BS/src/conf"
 	"github.com/PiperFinance/BS/src/core/events"
 	"github.com/PiperFinance/BS/src/core/schema"
 	"github.com/PiperFinance/BS/src/core/tasks"
 	"github.com/PiperFinance/BS/src/core/tasks/enqueuer"
 	"github.com/PiperFinance/BS/src/utils"
-	"github.com/go-redis/redis/v8"
-
-	"github.com/ethereum/go-ethereum"
-	"github.com/hibiken/asynq"
-
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 // BlockScanTaskHandler Uses BlockScanKey and requires no arg
@@ -39,7 +38,6 @@ func BlockEventsTaskHandler(ctx context.Context, task *asynq.Task) error {
 	blockTask := schema.BatchBlockTask{}
 	err := json.Unmarshal(task.Payload(), &blockTask)
 	if err != nil {
-		// conf.Logger.Errorf("Task BlockEvents [%+v] : %s ", blockTask, err)
 		return err
 	}
 	err = fetchBlockEventsJob(
@@ -49,7 +47,6 @@ func BlockEventsTaskHandler(ctx context.Context, task *asynq.Task) error {
 		*conf.GetMongoCol(blockTask.ChainId, conf.LogColName),
 	)
 	if err != nil {
-		// conf.Logger.Errorf("Task BlockEvents [%+v] : %s ", blockTask, err)
 		return err
 	}
 	for i := blockTask.FromBlockNumber; i < blockTask.ToBlockNumber; i++ {
