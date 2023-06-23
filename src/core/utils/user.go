@@ -11,6 +11,11 @@ import (
 	"github.com/PiperFinance/BS/src/conf"
 )
 
+func IsRegistered(add common.Address) bool {
+	found, ok := conf.OnlineUsers.AllAdd[add]
+	return ok && found
+}
+
 func IsAddressNull(ctx context.Context, chainId int64, user common.Address) bool {
 	return user.Big().Cmp(big.NewInt(0)) < 1
 }

@@ -35,8 +35,10 @@ func TokenVolumeCol(chain int64) *mongo.Collection {
 func UpdateUserBalTaskHandler(ctx context.Context, task *asynq.Task) error {
 	// TODO - Why fixed timeout ?
 
+	ctxInsert, cancelInsert := context.WithTimeout(ctx, 5*time.Minute)
 	ctxFind, cancelFind := context.WithTimeout(ctx, 5*time.Minute)
 	ctxDel, cancelDel := context.WithTimeout(ctx, 5*time.Minute)
+	defer cancelInsert()
 	defer cancelFind()
 	defer cancelDel()
 	blockTask := schema.BatchBlockTask{}
@@ -45,13 +47,6 @@ func UpdateUserBalTaskHandler(ctx context.Context, task *asynq.Task) error {
 		// conf.Logger.Infof("Task ParseBlockEvents [%s] : Finished !", err)
 		return err
 	}
-
-	// mutex := conf.RedisClient.ChainMutex(blockTask.ChainId, conf.UserBalanceRMutex)
-	// defer mutex.Unlock()
-	// if err := mutex.Lock(); err != nil {
-	// 	conf.Logger.Warnf("UserBalHandler is Locked: %+v", blockTask)
-	// 	return err
-	// }
 
 	filter := bson.M{
 		"log.blockNumber": bson.D{{Key: "$gte", Value: &blockTask.FromBlockNumber}, {Key: "$lt", Value: &blockTask.ToBlockNumber}},
@@ -68,17 +63,21 @@ func UpdateUserBalTaskHandler(ctx context.Context, task *asynq.Task) error {
 		return err
 	}
 	transfers := make([]schema.LogTransfer, 0)
-	transferIDs := make([]primitive.ObjectID, 0)
+	IdsToVacuum := make([]primitive.ObjectID, 0)
+	transfersToStore := make([]interface{}, 0)
 	for cursor.Next(ctx) {
 		transfer := schema.LogTransfer{}
 		if err := cursor.Decode(&transfer); err != nil {
 			conf.Logger.Errorw("UserBal", "err", err, "block", blockTask)
 			continue
 		}
-		transferIDs = append(transferIDs, transfer.ID)
+		IdsToVacuum = append(IdsToVacuum, transfer.ID)
 		amount, ok := transfer.GetAmount()
 		if ok && amount.Cmp(big.NewInt(0)) >= 1 {
 			transfers = append(transfers, transfer)
+		}
+		if utils.IsRegistered(transfer.From) || utils.IsRegistered(transfer.To) {
+			transfersToStore = append(transfersToStore, transfer)
 		}
 	}
 	if len(transfers) > 0 {
@@ -86,8 +85,13 @@ func UpdateUserBalTaskHandler(ctx context.Context, task *asynq.Task) error {
 			return err
 		}
 	}
-	if len(transferIDs) > 0 {
-		if _, err := conf.GetMongoCol(blockTask.ChainId, conf.ParsedLogColName).DeleteMany(ctxDel, bson.M{"_id": bson.M{"$in": transferIDs}}); err != nil {
+	if len(IdsToVacuum) > 0 {
+		if _, err := conf.GetMongoCol(blockTask.ChainId, conf.ParsedLogColName).DeleteMany(ctxDel, bson.M{"_id": bson.M{"$in": IdsToVacuum}}); err != nil {
+			return err
+		}
+	}
+	if len(transfersToStore) > 0 {
+		if _, err := conf.GetMongoCol(blockTask.ChainId, conf.TransfersColName).InsertMany(ctxInsert, transfersToStore); err != nil {
 			return err
 		}
 	}

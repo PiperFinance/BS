@@ -18,6 +18,7 @@ const (
 	ParsedLogColName    = "ParsedLogs"
 	UserBalColName      = "UsersBalance"
 	BannedUsersColName  = "BannedUsers"
+	TransfersColName    = "Transfers"
 	TokenVolumeColName  = "TokenVolume"
 	TokenUserMapColName = "TokenUserMap"
 	UserTokenMapColName = "UserTokenMap"
