@@ -2,6 +2,7 @@ package views
 
 import (
 	"strconv"
+	"strings"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/gofiber/fiber/v2"
@@ -72,14 +73,15 @@ func SetBal(c *fiber.Ctx) error {
 			userBal.ChangedAt = currentBlock
 			userBal.StartedAt = currentBlock
 			userTokens = append(userTokens, userBal)
+			coreUtils.AddNew(c.Context(), chain, userBal.User, userBal.Token)
 		} else if err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"status": "fail", "message": err.Error()})
 		}
 	}
 	if len(userTokens) > 0 {
-		if _, err := col.InsertMany(c.Context(), userTokens); err != nil {
+		if _, err := col.InsertMany(c.Context(), userTokens); err != nil && !strings.Contains(err.Error(), "duplicate") {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"status": "fail", "message": err.Error()})
 		}
 	}
-	return nil
+	return c.SendStatus(fiber.StatusAccepted)
 }
