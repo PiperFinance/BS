@@ -37,7 +37,7 @@ func (er *QueueErrorHandler) HandleError(ctx context.Context, task *asynq.Task, 
 			return
 		}
 		_ = blockTask.BlockNumber
-		Logger.Errorw("QErr", "Retires", retried, "block", blockTask, "err", err)
+		Logger.Errorw("QErr", "task", task.Type(), "Retires", retried, "block", blockTask, "err", err)
 	} else {
 		Logger.Errorw("QErr", "task", task.Type(), "Retries", retried, "err", err)
 	}
