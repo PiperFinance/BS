@@ -52,17 +52,18 @@ func LoadMongo() {
 	if err != nil {
 		Logger.Panicf("Mongo: %s", err)
 	}
-	// mongoDB = mongoCl.Database(Config.MongoDBName)
 	MongoDefaultErrCol = mongoCl.Database(BlockScannerDB).Collection(QueueErrorsColName)
-	// chainIndexed = make(map[int64]map[string]bool)
 	for _, chain := range Config.SupportedChains {
-		// chainIndexed[chain] = make(map[string]bool)
 		GetMongoCol(chain, UserBalColName).Indexes().CreateOne(
-			ctx, mongo.IndexModel{Keys: bson.D{{Key: "user", Value: 1}, {Key: "token", Value: 1}}})
-		// GetMongoCol(chain, UserBalColName).Indexes().CreateOne(
-		// 	ctx, mongo.IndexModel{Keys: bson.D{{Key: "user", Value: -1}, {Key: "token", Value: -1}}})
+			ctx, mongo.IndexModel{
+				Keys:    bson.D{{Key: "user", Value: 1}, {Key: "token", Value: 1}},
+				Options: options.Index().SetUnique(true),
+			})
 		GetMongoCol(chain, BlockColName).Indexes().CreateOne(
-			ctx, mongo.IndexModel{Keys: bson.D{{Key: "no", Value: -1}}})
+			ctx, mongo.IndexModel{
+				Keys:    bson.D{{Key: "no", Value: -1}},
+				Options: options.Index().SetUnique(true),
+			})
 		GetMongoCol(chain, BlockColName).Indexes().CreateOne(
 			ctx, mongo.IndexModel{Keys: bson.D{{Key: "no", Value: -1}, {Key: "status", Value: 1}}})
 		GetMongoCol(chain, TokenColName).Indexes().CreateOne(

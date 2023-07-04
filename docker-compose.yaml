@@ -10,7 +10,7 @@ x-scanner:
     - bs_net
     - tp_net
     - ua_net
-    - bs_redis_db
+    - redis_db
     - bs_mongo_db
   restart: always
   logging:
@@ -21,9 +21,8 @@ x-scanner:
 
 x-db:
   &db
-  REDIS_URL: redis://bs_redis:6379
-  REDIS_PORT: 6379
-  REDIS_HOST: bs_redis
+  REDIS_URL: redis://redis:6379
+  REDIS_DB: 6
   MONGO_URL: mongodb://piperFinance:Piper2022@bs_mongo:27017
 
 services:
@@ -38,22 +37,20 @@ services:
       ASYNQ_MON_URL: ":7001"
       API_URL: ":6001"
       MONGO_DBNAME: BS
-      REDIS_DB: 1
       LOG_LEVEL: warn
-      MAX_CONCURRENT_WORKER: 500
+      MAX_CONCURRENT_WORKER: 600
       MONGO_MAX_POOL_SIZE: 600
       BLOCK_HEAD_DELAY: 15
       LIMIT_USERS: "false"
       SCAN_TASK_TIMEOUT: 20s
       TEST_RPC_CONNECTION_TIMEOUT: 12s
-      RPC_ERROR_SILENCE: "False"
+      RPC_ERROR_SILENCE: "false"
       PARSE_ERROR_SILENCE: "true"
       SUPPORTED_CHAINS: 1,250,56,137,43114,42161,9001,100,1284,10,1313161554
       BS_URL: http://BS:6001
       PS_URL: http://PS:6002
       UA_URL: http://UA:6003
       TP_URL: http://TP:6004
-      # SUPPORTED_CHAINS: "1,250,56,137,43114,12306,100,10000,52,2021,9001,2000,1284,1285,58,25,8217,42220,32659,128,592"
       <<: *db
     volumes:
       - ./logs/:/var/bs/log/
@@ -63,25 +60,6 @@ services:
           cpus: "1"
           memory: 650M
 
-  redis:
-    image: redis:latest
-    hostname: bs_redis
-    ports:
-      - 127.0.0.1:6379:6379
-    restart: always
-    networks:
-      - bs_redis_db
-    healthcheck:
-      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
-    volumes:
-      - ./data/redis:/data
-    command: >
-      --port 6379 --maxclients 10000  --tcp-keepalive 300  --databases 8  --save 3000 500000  --rdbcompression yes --rdbchecksum no
-    deploy:
-      resources:
-        limits:
-          cpus: "1"
-          memory: 1200M
   ## Maybe this bit will be seperated
   mongo-express:
     image: mongo-express:latest
@@ -99,7 +77,7 @@ services:
       - bs_mongo_db
 
   mongo:
-    image: mongo:4.4.6
+    image: mongo:latest
     hostname: bs_mongo
     environment:
       MONGO_INITDB_ROOT_USERNAME: piperFinance
@@ -112,7 +90,7 @@ services:
       - 127.0.0.1:27017:27017
     restart: always
     healthcheck:
-      test: echo 'db.stats().ok' | mongo localhost:27017/test --quiet
+      test: echo 'db.stats().ok' | mongosh localhost:27017/test --quiet
       interval: 10s
       timeout: 10s
       retries: 5
@@ -126,13 +104,14 @@ services:
           memory: 2048M
 
 networks:
-  bs_redis_db:
-    name: redis_db
   bs_mongo_db:
     name: bs_mongo_db
   bs_net:
     driver: bridge
     name: bs_net
+  redis_db:
+    external: true
+    name: redis_db
   tp_net:
     external: true
     name: tp_net

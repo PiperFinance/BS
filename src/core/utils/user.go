@@ -1,10 +1,12 @@
 package utils
 
 import (
+	"bytes"
 	"context"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/go-redis/redis/v8"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 
@@ -32,7 +34,7 @@ func IsAddressToken(ctx context.Context, chainId int64, user common.Address) boo
 }
 
 func IsUserBanned(ctx context.Context, chainId int64, user common.Address) bool {
-	if res := conf.GetMongoCol(chainId, conf.UserBalColName).FindOne(ctx, bson.D{{Key: "_id", Value: user.String()}}); res.Err() == mongo.ErrNoDocuments {
+	if res := conf.GetMongoCol(chainId, conf.BannedUsersColName).FindOne(ctx, bson.D{{Key: "_id", Value: user.String()}}); res.Err() == mongo.ErrNoDocuments {
 		return false
 	} else if res.Err() == nil {
 		return true
@@ -42,29 +44,34 @@ func IsUserBanned(ctx context.Context, chainId int64, user common.Address) bool 
 	}
 }
 
-func IsLimited(ctx context.Context, chainId int64, user common.Address) bool {
-	return IsAddressNull(ctx, chainId, user) || IsAddressToken(ctx, chainId, user) || IsUserBanned(ctx, chainId, user)
+func IsDuplicated(user common.Address, token common.Address) bool {
+	return bytes.Equal(user.Bytes(), token.Bytes())
+}
+
+func IsLimited(ctx context.Context, chainId int64, user common.Address, token common.Address) bool {
+	// FIXME - change this back if you see huge number of requests happening !
+	return IsDuplicated(user, token) || IsAddressNull(ctx, chainId, user) || IsAddressToken(ctx, chainId, user) || IsUserBanned(ctx, chainId, user)
+}
+
+func AddNew(ctx context.Context, chainId int64, user common.Address, token common.Address) error {
+	k, f := conf.UserTokenHSKey(chainId, user, token)
+	return conf.RedisClient.HSet(ctx, k, f, true).Err()
 }
 
 func IsNew(ctx context.Context, chainId int64, user common.Address, token common.Address) (error, bool) {
-	// TODO - Add user Limit here
-	// FIXME - For Request CountReduction contracts contract and zero address is not included
-	if conf.Config.LimitUsers && !conf.OnlineUsers.IsAddressOnline(user) {
-		return nil, false
-	}
-	if IsLimited(ctx, chainId, user) {
+	// NOTE - For Request CountReduction contracts contract and zero address is not included
+	if (conf.Config.LimitUsers && !conf.OnlineUsers.IsAddressOnline(user)) || IsLimited(ctx, chainId, user, token) {
 		return nil, false
 	}
 
-	filter := bson.D{{Key: "user", Value: user}, {Key: "token", Value: token}}
-	if count, err := conf.GetMongoCol(chainId, conf.UserBalColName).CountDocuments(ctx, filter); count == 0 || err == mongo.ErrNoDocuments {
-		return nil, true
-	} else {
-		if err == nil {
-			conf.Logger.Infow("NewUserFinder", "user", user, "token", token, "err", err)
+	k, f := conf.UserTokenHSKey(chainId, user, token)
+	if cmd := conf.RedisClient.HExists(ctx, k, f); cmd.Err() != nil {
+		if cmd.Err() == redis.Nil {
+			return nil, false
 		} else {
-			conf.Logger.Errorw("NewUserFinder", "user", user, "token", token, "err", err)
+			return cmd.Err(), false
 		}
-		return err, false
+	} else {
+		return nil, !cmd.Val()
 	}
 }

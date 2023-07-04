@@ -78,16 +78,13 @@ func (easBal *EasyBalanceOf) Execute(ctx context.Context) error {
 		calls[i] = userTokens.call
 	}
 
-	ctxWTimeout, _ := context.WithTimeout(ctx, conf.Config.MultiCallTimeout)
+	ctxWTimeout, cancel := context.WithTimeout(ctx, conf.Config.MultiCallTimeout)
+	defer cancel()
 	var cOpts bind.CallOpts
 	if easBal.BlockNumber > 1 {
 		cOpts = bind.CallOpts{Context: ctxWTimeout, BlockNumber: big.NewInt(easBal.BlockNumber)}
 	} else {
 		cOpts = bind.CallOpts{Context: ctxWTimeout}
-	}
-
-	for i, _call := range calls {
-		conf.Logger.Infof("[%d][%s][%s]", i, _call.Target, common.Bytes2Hex(_call.CallData))
 	}
 
 	res, err := easBal.multiCaller().Aggregate3(&cOpts, calls)

@@ -4,12 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"math/big"
+	"strings"
 
 	"github.com/ethereum/go-ethereum"
 	"github.com/go-redis/redis/v8"
 	"github.com/hibiken/asynq"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"github.com/PiperFinance/BS/src/conf"
 	"github.com/PiperFinance/BS/src/core/events"
@@ -49,7 +51,7 @@ func BlockEventsTaskHandler(ctx context.Context, task *asynq.Task) error {
 	if err != nil {
 		return err
 	}
-	for i := blockTask.FromBlockNumber; i < blockTask.ToBlockNumber; i++ {
+	for i := blockTask.FromBlockNumber; i <= blockTask.ToBlockNumber; i++ {
 		bm := schema.BlockM{BlockNumber: i}
 		bm.SetFetched()
 		if _, err := conf.GetMongoCol(blockTask.ChainId, conf.BlockColName).ReplaceOne(
@@ -96,7 +98,7 @@ func ParseBlockEventsTaskHandler(ctx context.Context, task *asynq.Task) error {
 	if err != nil {
 		return err
 	}
-	for i := blockTask.FromBlockNumber; i < blockTask.ToBlockNumber; i++ {
+	for i := blockTask.FromBlockNumber; i <= blockTask.ToBlockNumber; i++ {
 		bm := schema.BlockM{BlockNumber: i, ChainId: blockTask.ChainId}
 		bm.SetParsed()
 		if _, err := conf.GetMongoCol(blockTask.ChainId, conf.BlockColName).ReplaceOne(
@@ -117,7 +119,9 @@ func ParseBlockEventsTaskHandler(ctx context.Context, task *asynq.Task) error {
 	return err
 }
 
-// scanBlockJob Enqueues a task to fetch events if new block is Found
+// scanBlockJob Enqueues a task to fetch events if new block range is met the  height
+// from head up current block - delay
+// 🚧 inner app queries are gte -> lte
 func scanBlockJob(ctx context.Context, blockTask schema.BatchBlockTask, aqCl asynq.Client) error {
 	var lastBlock uint64
 	chain := blockTask.ChainId
@@ -127,7 +131,7 @@ func scanBlockJob(ctx context.Context, blockTask schema.BatchBlockTask, aqCl asy
 	}
 
 	if lastBlockVal := conf.RedisClient.Get(ctx, tasks.LastScannedBlockKey(chain)); lastBlockVal.Err() == redis.Nil {
-		// NOTE - First Running no head block is stored
+		// NOTE - First Running no head block is set
 		lastBlock = currentBlock
 		if status := conf.RedisClient.Set(ctx, tasks.LastScannedBlockKey(chain), lastBlock, 0); status != nil && status.Err() != nil {
 			return status.Err()
@@ -141,42 +145,55 @@ func scanBlockJob(ctx context.Context, blockTask schema.BatchBlockTask, aqCl asy
 			lastBlock = uint64(r)
 		}
 	}
+
 	batchSize := conf.BatchLogMaxHeight(chain)
 	head := lastBlock + batchSize
 	if head < currentBlock {
-		remainingBlocks := currentBlock - lastBlock
-		batchCount := remainingBlocks / batchSize
-		newBlocks := make([]interface{}, remainingBlocks)
-		i := 0
+		newBlocks := make([]interface{}, 0)
 		for blockNum := lastBlock; blockNum < currentBlock; blockNum++ {
 			b := schema.BlockM{BlockNumber: blockNum, ChainId: chain}
 			b.SetScanned()
-			newBlocks[i] = b
-			i++
+			newBlocks = append(newBlocks, b)
 		}
+
+		remainingBlocks := uint64(len(newBlocks))
+		batchCount := (remainingBlocks / batchSize) + 1
+
+		if _, err := conf.GetMongoCol(blockTask.ChainId, conf.BlockColName).InsertMany(ctx, newBlocks); err != nil {
+			if strings.Contains(err.Error(), "duplicate") {
+				lastBlock := schema.BlockM{}
+				if cmd := conf.GetMongoCol(blockTask.ChainId, conf.BlockColName).FindOne(ctx, bson.M{}, options.FindOne().SetSort(bson.M{"no": -1})); cmd.Err() == nil && cmd.Decode(&lastBlock) == nil {
+					status := conf.RedisClient.Set(ctx, tasks.LastScannedBlockKey(chain), lastBlock.BlockNumber+1, 0)
+					if status != nil && status.Err() != nil {
+						return status.Err()
+					}
+				}
+			}
+			return err
+		}
+
 		var j uint64
-		for j = 0; j <= batchCount; j++ {
+		for j = 0; j < batchCount; j++ {
 			b := schema.BatchBlockTask{
 				FromBlockNumber: lastBlock + (j * batchSize),
 				ToBlockNumber:   lastBlock + ((j + 1) * batchSize),
 				ChainId:         chain,
 			}
 			if b.ToBlockNumber >= currentBlock {
-				b.ToBlockNumber = currentBlock - 1
+				b.ToBlockNumber = currentBlock
 			}
-			_err := enqueuer.EnqueueFetchBlockJob(aqCl, b)
-			if _err != nil {
+			if b.FromBlockNumber == b.ToBlockNumber {
+				break
+			}
+			if cmd := conf.RedisClient.Set(ctx, tasks.LastScannedBlockKey(chain), b.ToBlockNumber+1, 0); cmd.Err() != nil {
+				return cmd.Err()
+			}
+			if _err := enqueuer.EnqueueFetchBlockJob(aqCl, b); _err != nil {
 				return _err
 			}
+			conf.NewBlockCount.AddFor(chain, uint64(b.ToBlockNumber-b.FromBlockNumber))
+
 		}
-		if _, err := conf.GetMongoCol(blockTask.ChainId, conf.BlockColName).InsertMany(ctx, newBlocks); err != nil {
-			return err
-		}
-		status := conf.RedisClient.Set(ctx, tasks.LastScannedBlockKey(chain), currentBlock, 0)
-		if status != nil && status.Err() != nil {
-			return status.Err()
-		}
-		conf.NewBlockCount.AddFor(chain, uint64(len(newBlocks)))
 	}
 	return err
 }

@@ -45,6 +45,8 @@ func TransferEventParser(vLog types.Log) (interface{}, error) {
 	}
 	log.From = common.HexToAddress(vLog.Topics[1].Hex())
 	log.To = common.HexToAddress(vLog.Topics[2].Hex())
+	// log.ToStr = log.To.String()
+	// log.FromStr = log.From.String()
 	log.TokensStr = log.Tokens.String()
 	log.EmitterAddress = vLog.Address
 	log.Name = EventName

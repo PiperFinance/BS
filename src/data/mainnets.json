@@ -247,7 +247,7 @@
     "infoURL": "https://www.binance.org",
     "shortName": "bnb",
     "chainId": 56,
-    "maxGetLogHeight": 40,
+    "maxGetLogHeight": 10,
     "maxMulticallSize": 500,
     "networkId": 56,
     "slip44": 714,

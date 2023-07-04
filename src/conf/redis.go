@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"time"
 
-	redsyncredis "github.com/go-redsync/redsync/v4/redis"
-
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/go-redis/redis/v8"
 	"github.com/go-redsync/redsync/v4"
+	redsyncredis "github.com/go-redsync/redsync/v4/redis"
 	"github.com/go-redsync/redsync/v4/redis/goredis/v8"
 )
 
@@ -96,4 +96,9 @@ func (r *RedisClientExtended) GetOrSetTTL(
 		value = res.Val()
 	}
 	return value, nil
+}
+
+// UserTokenHSKey Hash Set containing user's token + balance in each chain
+func UserTokenHSKey(chain int64, user common.Address, token common.Address) (string, string) {
+	return fmt.Sprintf("UTHS:%d", chain), fmt.Sprintf("%s-%s", user.String(), token.String())
 }
