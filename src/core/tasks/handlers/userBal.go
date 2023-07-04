@@ -40,8 +40,8 @@ func UpdateUserBalTaskHandler(ctx context.Context, task *asynq.Task) error {
 	defer cancelInsert()
 	ctxFind, cancelFind := context.WithTimeout(ctx, 5*time.Minute)
 	defer cancelFind()
-	// ctxDel, cancelDel := context.WithTimeout(ctx, 5*time.Minute)
-	// defer cancelDel()
+	ctxDel, cancelDel := context.WithTimeout(ctx, 5*time.Minute)
+	defer cancelDel()
 	blockTask := schema.BatchBlockTask{}
 	err := json.Unmarshal(task.Payload(), &blockTask)
 	if err != nil {
@@ -88,11 +88,11 @@ func UpdateUserBalTaskHandler(ctx context.Context, task *asynq.Task) error {
 			return err
 		}
 	}
-	// if len(IdsToVacuum) > 0 {
-	// 	if _, err := conf.GetMongoCol(blockTask.ChainId, conf.ParsedLogColName).DeleteMany(ctxDel, bson.M{"_id": bson.M{"$in": IdsToVacuum}}); err != nil {
-	// 		return err
-	// 	}
-	// }
+	if len(IdsToVacuum) > 0 {
+		if _, err := conf.GetMongoCol(blockTask.ChainId, conf.ParsedLogColName).DeleteMany(ctxDel, bson.M{"_id": bson.M{"$in": IdsToVacuum}}); err != nil {
+			return err
+		}
+	}
 	if len(indicesToStore) > 0 {
 		tmp := make([]interface{}, 0)
 
