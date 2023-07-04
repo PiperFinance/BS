@@ -95,10 +95,11 @@ func UpdateUserBalTaskHandler(ctx context.Context, task *asynq.Task) error {
 	}
 	if len(indicesToStore) > 0 {
 		tmp := make([]interface{}, 0)
-
 		for _, j := range indicesToStore {
-			transfers[j].ID = primitive.NilObjectID
-			tmp = append(tmp, transfers[j])
+			if len(transfers) > j {
+				transfers[j].ID = primitive.NilObjectID
+				tmp = append(tmp, transfers[j])
+			}
 		}
 		if _, err := conf.GetMongoCol(blockTask.ChainId, conf.TransfersColName).InsertMany(ctxInsert, tmp); err != nil {
 			return err
