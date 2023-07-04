@@ -50,7 +50,8 @@ func IsDuplicated(user common.Address, token common.Address) bool {
 
 func IsLimited(ctx context.Context, chainId int64, user common.Address, token common.Address) bool {
 	// FIXME - change this back if you see huge number of requests happening !
-	return IsDuplicated(user, token) || IsAddressNull(ctx, chainId, user) || IsAddressToken(ctx, chainId, user) || IsUserBanned(ctx, chainId, user)
+	// return IsDuplicated(user, token) || IsAddressNull(ctx, chainId, user) || IsAddressToken(ctx, chainId, user) || IsUserBanned(ctx, chainId, user)
+	return IsDuplicated(user, token) || IsAddressNull(ctx, chainId, user)
 }
 
 func AddNew(ctx context.Context, chainId int64, user common.Address, token common.Address) error {
