@@ -66,7 +66,7 @@ func LoadLogger() {
 	if Config.DEV {
 		zp = zap.New(core, zap.Development(), zap.AddStacktrace(zap.WarnLevel))
 	} else {
-		zp = zap.New(core, zap.Development())
+		zp = zap.New(core, zap.Development(), zap.AddStacktrace(zap.PanicLevel))
 	}
 	defer zp.Sync()
 	errLJ := lumberjack.Logger{
