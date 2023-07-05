@@ -99,7 +99,7 @@ services:
       - bs_mongo_db
 
   mongo:
-    image: mongo:latest
+    image: mongo:4.4.6
     hostname: bs_mongo
     environment:
       MONGO_INITDB_ROOT_USERNAME: piperFinance
