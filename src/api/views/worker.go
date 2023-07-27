@@ -141,16 +141,24 @@ func BlockStats(c *fiber.Ctx) error {
 	})
 }
 
+type MissBlockResp struct {
+	No     uint64 `json:"n"`
+	Status string `json:"s"`
+}
+
 func MissedBlocks(c *fiber.Ctx) error {
-	r := make(map[int64][]schema.BlockM)
+	r := make(map[int64][]MissBlockResp)
 	for _, chain := range conf.Config.SupportedChains {
 		block, err := conf.LatestBlock(c.Context(), chain)
 		if err != nil {
 			return err
 		}
-		r[chain] = make([]schema.BlockM, 0)
+		r[chain] = make([]MissBlockResp, 0)
 		col := conf.GetMongoCol(chain, conf.BlockColName)
-		filter := bson.M{"status": bson.D{{Key: "$ne", Value: schema.Added}}, "no": bson.D{{Key: "$lt", Value: block - conf.Config.BlockHeadDelay}}}
+		filter := bson.M{
+			"status": bson.D{{Key: "$ne", Value: schema.Added}},
+			"no":     bson.D{{Key: "$lt", Value: block - conf.Config.BlockHeadDelay - conf.BatchLogMaxHeight(chain)}},
+		}
 		if curs, err := col.Find(c.Context(), filter); err != nil {
 			return err
 		} else {
@@ -161,7 +169,7 @@ func MissedBlocks(c *fiber.Ctx) error {
 					conf.Logger.Errorf("GetBal: %s", err.Error())
 					continue
 				}
-				r[chain] = append(r[chain], ub)
+				r[chain] = append(r[chain], MissBlockResp{No: ub.BlockNumber, Status: ub.ScannerStatus})
 			}
 		}
 	}

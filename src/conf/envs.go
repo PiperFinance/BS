@@ -27,7 +27,7 @@ type config struct {
 	SilenceRRCErrs               bool          `env:"RPC_ERROR_SILENCE" envDefault:"false"`
 	SilenceParseErrs             bool          `env:"PARSE_ERROR_SILENCE" envDefault:"false"`
 	SupportedChains              []int64       `env:"SUPPORTED_CHAINS" envSeparator:","`
-	MultiCallTimeout             time.Duration `env:"PARSE_BLOCK_TIMEOUT" envDefault:"1m"`
+	MultiCallTimeout             time.Duration `env:"MULTICALL_TIMEOUT" envDefault:"1m"`
 	ParseBlockTimeout            time.Duration `env:"PARSE_BLOCK_TIMEOUT" envDefault:"2m"`
 	FetchBlockTimeout            time.Duration `env:"FETCH_BLOCK_TIMEOUT" envDefault:"5m"`
 	UserBalUpdateTimeout         time.Duration `env:"USER_BAL_UPDATE_TIMEOUT" envDefault:"5m"`

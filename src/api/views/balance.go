@@ -14,6 +14,10 @@ import (
 )
 
 func GetBal(c *fiber.Ctx) error {
+	token := c.Query("token", "")
+	if len(token) > 0 && !common.IsHexAddress(token) {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"err": "token field in required and should be in formate of 0x...!"})
+	}
 	user := c.Query("user", "")
 	if !common.IsHexAddress(user) {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"err": "user field in required and should be in formate of 0x...!"})
@@ -24,10 +28,18 @@ func GetBal(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"err": "chain field should be an int!"})
 	}
 	add := common.HexToAddress(user)
-
-	curs, err := conf.GetMongoCol(chain, conf.UserBalColName).Find(c.Context(), bson.M{
-		"user": add,
-	})
+	var filter bson.M
+	if len(token) > 0 {
+		filter = bson.M{
+			"user":  add,
+			"token": common.HexToAddress(token),
+		}
+	} else {
+		filter = bson.M{
+			"user": add,
+		}
+	}
+	curs, err := conf.GetMongoCol(chain, conf.UserBalColName).Find(c.Context(), filter)
 	if err != nil {
 		return err
 	}
