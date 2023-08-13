@@ -27,7 +27,11 @@ const (
 	TransferBatchE  = "TransferBatch"
 	TransferSingleE = "TransferSingle"
 	// Event Signatures
-	TransferESig       = "Transfer(address,address,uint256)"
+	// transfer actual asset
+	TransferESig   = "Transfer(address,address,uint256)"
+	DepositESig    = "Deposit(address,uint256)"
+	WithdrawalESig = "Withdrawal(address,uint256)"
+	// approve
 	ApprovalESig       = "Approval(address,address,uint256)"
 	ApprovalForAllESig = "ApprovalForAll(address,address,bool)"
 	URI_ESig           = "URI(string,uint256)"
@@ -36,6 +40,8 @@ const (
 )
 
 var (
+	depositESigHash        common.Hash
+	withdrawalESigHash     common.Hash
 	transferESigHash       common.Hash
 	approvalESigHash       common.Hash
 	approvalForAllESigHash common.Hash
@@ -46,8 +52,10 @@ var (
 
 func init() {
 	uRIESigHash = crypto.Keccak256Hash([]byte(URI_ESig))
-	transferESigHash = crypto.Keccak256Hash([]byte(TransferESig))
+	depositESigHash = crypto.Keccak256Hash([]byte(DepositESig))
 	approvalESigHash = crypto.Keccak256Hash([]byte(ApprovalESig))
+	transferESigHash = crypto.Keccak256Hash([]byte(TransferESig))
+	withdrawalESigHash = crypto.Keccak256Hash([]byte(WithdrawalESig))
 	transferBatchESigHash = crypto.Keccak256Hash([]byte(TransferBatchESig))
 	approvalForAllESigHash = crypto.Keccak256Hash([]byte(ApprovalForAllESig))
 	transferSingleESigHash = crypto.Keccak256Hash([]byte(TransferSingleESig))
@@ -58,6 +66,10 @@ func ParseLog(vLog types.Log) (interface{}, error) {
 	if len(vLog.Topics) > 1 {
 		event := vLog.Topics[0].Hex()
 		switch event {
+		case depositESigHash.Hex():
+			return DepositEventParser(vLog)
+		case withdrawalESigHash.Hex():
+			return WithdrawalEventParser(vLog)
 		case transferESigHash.Hex():
 			return TransferEventParser(vLog)
 		// TODO - Add other event types as time goes
