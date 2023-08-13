@@ -68,9 +68,9 @@ func EthClientDebug(chain int64) (*ethclient.Client, string) {
 	return nil, ""
 }
 
-// BatchLogMaxHeight staticky returns block height set in mainnet.json !
+// BatchLogMaxHeight staticly returns block height set in mainnet.json !
 func BatchLogMaxHeight(chain int64) uint64 {
-	return 15
+	// return 5
 	r := uint64(SupportedNetworks[chain].BatchLogMaxHeight)
 	if r == 0 {
 		return 1

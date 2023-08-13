@@ -123,7 +123,8 @@ func updateUserBalJob(ctx context.Context, bt schema.BatchBlockTask) error {
 		if len(idx) > 0 {
 			tmp := make([]interface{}, 0)
 			for _, j := range idx {
-				if len(blockTransfers[blockNum]) > j {
+				trxs, ok := blockTransfers[blockNum]
+				if ok && len(trxs) > j {
 					blockTransfers[blockNum][j].ID = primitive.NilObjectID
 					tmp = append(tmp, blockTransfers[blockNum][j])
 				}
