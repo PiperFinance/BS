@@ -25,7 +25,7 @@ func vaccumRawLogs(ctx context.Context, chain int64) error {
 		} else if vacRng == nil {
 			return nil
 		} else {
-			filter := bson.M{"blockNumber": bson.D{{Key: "$gte", Value: vacRng.FromBlock}, {Key: "$lt", Value: vacRng.ToBlock}}}
+			filter := bson.M{"blockNumber": bson.D{{Key: "$gte", Value: vacRng.FromBlock}, {Key: "$lte", Value: vacRng.ToBlock}}}
 			_, err := conf.GetMongoCol(chain, conf.LogColName).DeleteMany(ctx, filter)
 			if err != nil {
 				return err

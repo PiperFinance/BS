@@ -47,7 +47,7 @@ func ParseBlockEventsTaskHandler(ctx context.Context, task *asynq.Task) error {
 		return err
 	}
 
-	// TODO - Enqueue Other Tasks !
+	// TODO:  Enqueue Other Tasks !
 	if err := enqueuer.EnqueueUpdateUserBalJob(*conf.QueueClient, blockTask); err != nil {
 		conf.Logger.Errorf("Task ParseBlockEvents [%+v] %s", blockTask, err)
 	} else {

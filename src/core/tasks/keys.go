@@ -3,11 +3,7 @@ package tasks
 import "fmt"
 
 const (
-	// LastScannedBlockKey TODO - Add a model in db to save fetched block numbers
-	// TODO - use gocache - not redis ...
-	// MultiChain ...
-	lastScannedBlockKey = "block:lastScanned"
-
+	lastScannedBlockKey  = "block:lastScanned"
 	FetchBlockEventsKey  = "block:fetch_events"
 	BlockScanKey         = "block:scan"
 	ParseBlockEventsKey  = "block:parse_events"

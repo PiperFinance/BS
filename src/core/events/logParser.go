@@ -13,9 +13,10 @@ import (
 	"github.com/PiperFinance/BS/src/utils"
 )
 
-// NOTE - Inside Solidity and contracts it's called event but inside eth lib and block it's called log !
+// NOTE: - Inside Solidity and contracts it's called event but inside eth lib and block it's called log !
 const (
-	// TODO - more to be added
+	// TODO: - more to be added
+
 	// Event Names
 	// ERC20
 	TransferE = "Transfer"
@@ -72,7 +73,8 @@ func ParseLog(vLog types.Log) (interface{}, error) {
 			return WithdrawalEventParser(vLog)
 		case transferESigHash.Hex():
 			return TransferEventParser(vLog)
-		// TODO - Add other event types as time goes
+		// TODO: - Add other event types as time goes
+
 		// case approvalESigHash.Hex():
 		// 	return ApproveEventParser(vLog)
 		// case approvalForAllESigHash.Hex():
@@ -87,7 +89,6 @@ func ParseLog(vLog types.Log) (interface{}, error) {
 			return nil, &utils.ErrEventParserNotFound{Event: event, BlockNumber: vLog.BlockNumber, TrxIndex: vLog.TxIndex}
 		}
 	}
-	// TODO - No data
 	return nil, nil
 }
 

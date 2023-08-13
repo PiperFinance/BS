@@ -6,25 +6,13 @@ import (
 	"math/big"
 
 	"github.com/PiperFinance/BS/src/conf"
+	"github.com/PiperFinance/BS/src/core/helpers"
 	"github.com/PiperFinance/BS/src/core/schema"
 	"github.com/PiperFinance/BS/src/core/tasks/enqueuer"
 	"github.com/PiperFinance/BS/src/utils"
 	"github.com/ethereum/go-ethereum"
 	"github.com/hibiken/asynq"
 )
-
-// FetchBlockTaskHandlerDummie
-func FetchBlockTaskHandlerDummie(ctx context.Context, task *asynq.Task) error {
-	bt := schema.BatchBlockTask{}
-	if err := json.Unmarshal(task.Payload(), &bt); err != nil {
-		return err
-	}
-
-	for i := bt.FromBlockNumber; i <= bt.ToBlockNumber; i++ {
-		conf.Logger.Infow("Fetch ", "Block", i)
-	}
-	return nil
-}
 
 // FetchBlockTaskHandler Uses FetchBlockEventsKey and requires BlockTask as arg
 // Calls for events and store them to mongo !
@@ -36,6 +24,7 @@ func FetchBlockTaskHandler(ctx context.Context, task *asynq.Task) error {
 	if err := fetchBlockEventsJob(ctx, blockTask); err != nil {
 		return err
 	}
+	helpers.SetBTFetched(ctx, blockTask)
 	if err := enqueuer.EnqueueParseBlockJob(*conf.QueueClient, blockTask); err != nil {
 		return err
 	}
@@ -52,8 +41,8 @@ func fetchBlockEventsJob(
 	logs, err := conf.EthClient(blockTask.ChainId).FilterLogs(
 		context.Background(),
 		ethereum.FilterQuery{
-			FromBlock: big.NewInt(int64(blockTask.FromBlockNumber)),   // gte
-			ToBlock:   big.NewInt(int64(blockTask.ToBlockNumber) - 1), // lt
+			FromBlock: big.NewInt(int64(blockTask.FromBlockNumber)), // gte
+			ToBlock:   big.NewInt(int64(blockTask.ToBlockNumber)),   // lte
 		},
 	)
 	// NOTE: DEUBG

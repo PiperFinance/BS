@@ -162,7 +162,8 @@ func TransferBatchEventParser(vLog types.Log) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	// TODO - How does arrays work ?
+	// TODO: - How does arrays work ?
+
 	// log.TokenOwner = common.HexToAddress(vLog.Topics[1].Hex())
 	// log.Spender = common.HexToAddress(vLog.Topics[2].Hex())
 	// log.TokensStringValue = log.Tokens.String()

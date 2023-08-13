@@ -55,7 +55,7 @@ func EthClientDebug(chain int64) (*ethclient.Client, string) {
 		}
 		selectorMutex.Unlock()
 	}()
-	// TODO - Try to recover panic here !
+	// TODO:  Try to recover panic here !
 	if clients, ok := EthClientS[chain]; ok {
 		if index, ok := selectorIndex[chain]; ok {
 			if len(clients) == 0 {
@@ -70,7 +70,7 @@ func EthClientDebug(chain int64) (*ethclient.Client, string) {
 
 // BatchLogMaxHeight staticky returns block height set in mainnet.json !
 func BatchLogMaxHeight(chain int64) uint64 {
-	return 3
+	return 15
 	r := uint64(SupportedNetworks[chain].BatchLogMaxHeight)
 	if r == 0 {
 		return 1
@@ -87,7 +87,7 @@ func BatchLogMaxHeight(chain int64) uint64 {
 func MulticallMaxSize(chain int64) uint64 {
 	r := uint64(SupportedNetworks[chain].MulticallMaxSize)
 	if r == 0 {
-		// TODO make this dynamic
+		// TODO: make this dynamic
 		return 1
 	} else {
 		return r

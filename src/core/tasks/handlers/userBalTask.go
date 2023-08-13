@@ -18,8 +18,6 @@ import (
 
 // UpdateUserBalTaskHandler Updates Online User's Balance and then vacuums log record from database to save space
 func UpdateUserBalTaskHandler(ctx context.Context, task *asynq.Task) error {
-	// TODO - Why fixed timeout ?
-
 	blockTask := schema.BatchBlockTask{}
 	err := json.Unmarshal(task.Payload(), &blockTask)
 	if err != nil {
