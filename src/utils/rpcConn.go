@@ -33,7 +33,7 @@ func GetNetworkRpcUrls(rpcs []*schema.RPC) []string {
 
 // NetworkConnectionCheck check if rpc is connected + does have getLogs method !
 func NetworkConnectionCheck(CallCount *DebugCounter, FailedCallCount *DebugCounter, Logger *zap.SugaredLogger, network *schema.Network, timeout time.Duration) {
-	// TODO - Add test opts !
+	// TODO:  Add test opts !
 	Logger.Infof("---------------------------> %s\n", network.Name)
 	c, cancel := context.WithTimeout(context.Background(), timeout)
 	for _, rpc := range network.Rpc {
@@ -78,7 +78,7 @@ func NetworkConnectionCheck(CallCount *DebugCounter, FailedCallCount *DebugCount
 }
 
 // func NetworkConnectionCheckGoodRPCsOnly(network *schema.Network) {
-// 	// TODO - Add test opts !
+// 	// TODO: Add test opts !
 // 	log.Info("----------RESULT CHECK-----------")
 // 	c, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 // 	for _, rpc := range network.GoodRpc {

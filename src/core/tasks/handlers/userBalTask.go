@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/big"
-	"sort"
 	"time"
 
 	"github.com/PiperFinance/BS/src/conf"
@@ -19,42 +18,57 @@ import (
 
 // UpdateUserBalTaskHandler Updates Online User's Balance and then vacuums log record from database to save space
 func UpdateUserBalTaskHandler(ctx context.Context, task *asynq.Task) error {
-	// TODO - Why fixed timeout ?
-
-	ctxInsert, cancelInsert := context.WithTimeout(ctx, 5*time.Minute)
-	ctxFind, cancelFind := context.WithTimeout(ctx, 5*time.Minute)
-	// ctxDel, cancelDel := context.WithTimeout(ctx, 5*time.Minute)
-	// defer cancelDel()
-	defer cancelFind()
-	defer cancelInsert()
 	blockTask := schema.BatchBlockTask{}
 	err := json.Unmarshal(task.Payload(), &blockTask)
 	if err != nil {
 		return err
 	}
+	if err := updateUserBalJob(ctx, blockTask); err != nil {
+		return err
+	}
+	for i := blockTask.FromBlockNumber; i <= blockTask.ToBlockNumber; i++ {
+		bm := schema.BlockM{BlockNumber: i, ChainId: blockTask.ChainId}
+		bm.SetAdded()
+		if _, err := conf.GetMongoCol(blockTask.ChainId, conf.BlockColName).ReplaceOne(
+			ctx,
+			bson.M{"no": i}, &bm); err != nil {
+			return err
+		}
+	}
+	return err
+}
 
+func queryLogsForTransfers(ctx context.Context, bt schema.BatchBlockTask) (
+	blockTransfers map[uint64][]schema.LogTransfer,
+	indicesToStore map[uint64][]int,
+	IdsToVacuum []primitive.ObjectID,
+	err error,
+) {
 	filter := bson.M{
-		"log.blockNumber": bson.D{{Key: "$gte", Value: &blockTask.FromBlockNumber}, {Key: "$lte", Value: &blockTask.ToBlockNumber}},
+		"log.blockNumber": bson.D{{Key: "$gte", Value: &bt.FromBlockNumber}, {Key: "$lte", Value: &bt.ToBlockNumber}},
 		"log.name":        events.TransferE,
 	}
 
-	cursor, err := conf.GetMongoCol(blockTask.ChainId, conf.ParsedLogColName).Find(ctxFind, filter)
+	ctxFind, cancelFind := context.WithTimeout(ctx, 5*time.Minute)
+	defer cancelFind()
+	cursor, err := conf.GetMongoCol(bt.ChainId, conf.ParsedLogColName).Find(ctxFind, filter)
 	defer func() {
 		if err := cursor.Close(ctxFind); err != nil {
 			conf.Logger.Error(err)
 		}
 	}()
 	if err != nil {
-		return err
+		return
 	}
-	blockTransfers := make(map[uint64][]schema.LogTransfer)
-	indicesToStore := make(map[uint64][]int, 0)
-	IdsToVacuum := make([]primitive.ObjectID, 0)
+
+	blockTransfers = make(map[uint64][]schema.LogTransfer)
+	indicesToStore = make(map[uint64][]int, 0)
+	IdsToVacuum = make([]primitive.ObjectID, 0)
 
 	for cursor.Next(ctx) {
 		transfer := schema.LogTransfer{}
 		if err := cursor.Decode(&transfer); err != nil {
-			conf.Logger.Errorw("UserBal", "err", err, "block", blockTask)
+			conf.Logger.Errorw("UserBal", "err", err, "block", bt)
 			continue
 		}
 		_, ok := blockTransfers[transfer.BlockNumber]
@@ -71,16 +85,16 @@ func UpdateUserBalTaskHandler(ctx context.Context, task *asynq.Task) error {
 			indicesToStore[transfer.BlockNumber] = append(indicesToStore[transfer.BlockNumber], len(blockTransfers[transfer.BlockNumber])-1)
 		}
 	}
+	return
+}
 
-	keys := make([]uint64, 0, len(blockTransfers))
-	for k := range blockTransfers {
-		keys = append(keys, k)
+func updateUserBalJob(ctx context.Context, bt schema.BatchBlockTask) error {
+	blockTransfers, indicesToStore, IdsToVacuum, err := queryLogsForTransfers(ctx, bt)
+	if err != nil {
+		return err
 	}
-	sort.Slice(keys, func(i, j int) bool {
-		return keys[i] < keys[j]
-	})
 
-	for _, blockNum := range keys {
+	for _, blockNum := range utils.SortedKeys[uint64, []schema.LogTransfer](blockTransfers) {
 		_transfers, ok := blockTransfers[blockNum]
 		if !ok {
 			continue
@@ -89,7 +103,7 @@ func UpdateUserBalTaskHandler(ctx context.Context, task *asynq.Task) error {
 			conf.Logger.Infof("processing [%d] block transfers", blockNum)
 			thisBlock := schema.BlockTask{
 				BlockNumber: blockNum,
-				ChainId:     blockTask.ChainId,
+				ChainId:     bt.ChainId,
 			}
 			if err := processTransferLogs(ctx, thisBlock, _transfers); err != nil {
 				return err
@@ -98,11 +112,13 @@ func UpdateUserBalTaskHandler(ctx context.Context, task *asynq.Task) error {
 	}
 
 	if len(IdsToVacuum) > 0 {
-		if err := conf.RedisClient.SetLogsIDsToVaccum(ctx, blockTask.ChainId, IdsToVacuum); err != nil {
+		if err := conf.RedisClient.SetParsedLogsIDsToVaccum(ctx, bt.ChainId, IdsToVacuum); err != nil {
 			return err
 		}
 	}
 
+	ctxInsert, cancelInsert := context.WithTimeout(ctx, 5*time.Minute)
+	defer cancelInsert()
 	for blockNum, idx := range indicesToStore {
 		if len(idx) > 0 {
 			tmp := make([]interface{}, 0)
@@ -113,7 +129,7 @@ func UpdateUserBalTaskHandler(ctx context.Context, task *asynq.Task) error {
 				}
 			}
 			if len(tmp) > 0 {
-				if _, err := conf.GetMongoCol(blockTask.ChainId, conf.TransfersColName).InsertMany(ctxInsert, tmp); err != nil {
+				if _, err := conf.GetMongoCol(bt.ChainId, conf.TransfersColName).InsertMany(ctxInsert, tmp); err != nil {
 					return err
 				}
 			} else {
@@ -121,14 +137,5 @@ func UpdateUserBalTaskHandler(ctx context.Context, task *asynq.Task) error {
 			}
 		}
 	}
-	for i := blockTask.FromBlockNumber; i <= blockTask.ToBlockNumber; i++ {
-		bm := schema.BlockM{BlockNumber: i, ChainId: blockTask.ChainId}
-		bm.SetAdded()
-		if _, err := conf.GetMongoCol(blockTask.ChainId, conf.BlockColName).ReplaceOne(
-			ctx,
-			bson.M{"no": i}, &bm); err != nil {
-			return err
-		}
-	}
-	return err
+	return nil
 }

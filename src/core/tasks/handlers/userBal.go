@@ -128,7 +128,7 @@ func updateTokens(ctx context.Context, block schema.BlockTask, transfers []schem
 	for _, token := range uniqueTokens {
 		if count, err := col.CountDocuments(ctx, bson.D{{Key: "_id", Value: token}}); count == 0 || err == mongo.ErrNoDocuments {
 			// tokens = append(tokens, )
-			// TODO - check err later
+			// TODO: - check err later
 			col.InsertOne(ctx, bson.D{{Key: "_id", Value: token}})
 		} else if err != nil {
 			return err
@@ -260,7 +260,7 @@ func processUserBal(ctx context.Context, blockTask schema.BlockTask, user common
 	// 	conf.Logger.Errorw("Negative Bal", "newBal", _bal.String(), "old", oldBal.String(), "block", blockTask, "user", user.String(), "tok", token.String())
 	// }
 
-	// TODO - Make this Update Many
+	// TODO: - Make this Update Many
 	_, err := userBalanceCol(blockTask.ChainId).UpdateOne(ctx, filter, update)
 	if err != nil {
 		return nil, err

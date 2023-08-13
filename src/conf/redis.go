@@ -123,7 +123,7 @@ type logIdVaccum struct {
 	Ids []primitive.ObjectID `json:"ids"`
 }
 
-func (r *RedisClientExtended) SetLogsIDsToVaccum(ctx context.Context, chain int64, ObjIds []primitive.ObjectID) error {
+func (r *RedisClientExtended) SetParsedLogsIDsToVaccum(ctx context.Context, chain int64, ObjIds []primitive.ObjectID) error {
 	k := fmt.Sprintf(VaccumeObjIDRKey, chain)
 	ids := logIdVaccum{Ids: ObjIds}
 	if cmd := r.Get(ctx, k); cmd.Err() == nil {
@@ -141,7 +141,7 @@ func (r *RedisClientExtended) SetLogsIDsToVaccum(ctx context.Context, chain int6
 	return res.Err()
 }
 
-func (r *RedisClientExtended) GetLogsIDsToVaccum(ctx context.Context, chain int64) ([]primitive.ObjectID, error) {
+func (r *RedisClientExtended) GetParsedLogsIDsToVaccum(ctx context.Context, chain int64) ([]primitive.ObjectID, error) {
 	k := fmt.Sprintf(VaccumeObjIDRKey, chain)
 	if cmd := r.Get(ctx, k); cmd.Err() == nil {
 		prevIds := logIdVaccum{}
@@ -161,8 +161,8 @@ type VaccumBlockRange struct {
 	ToBlock   uint64 `json:"tb"`
 }
 
-// SetLogsToVaccum Adds Block Range for later vaccum, corresponds to PasredLogs collection
-func (r *RedisClientExtended) SetLogsToVaccum(ctx context.Context, chain int64, fromBlock uint64, toBlock uint64) error {
+// SetRawLogsToVaccum Adds Block Range for later vaccum, corresponds to PasredLogs collection
+func (r *RedisClientExtended) SetRawLogsToVaccum(ctx context.Context, chain int64, fromBlock uint64, toBlock uint64) error {
 	k := fmt.Sprintf(VaccumeBlockRKey, chain)
 	vacRng := VaccumBlockRange{FromBlock: fromBlock, ToBlock: toBlock}
 	val, err := json.Marshal(vacRng)
@@ -173,9 +173,9 @@ func (r *RedisClientExtended) SetLogsToVaccum(ctx context.Context, chain int64, 
 	return res.Err()
 }
 
-// GetLogsToVaccum Block Range vaccum, corresponds to PasredLogs collection
+// GetRawLogsToVaccum Block Range vaccum, corresponds to PasredLogs collection
 // stop at (nil, nil) response
-func (r *RedisClientExtended) GetLogsToVaccum(ctx context.Context, chain int64) (*VaccumBlockRange, error) {
+func (r *RedisClientExtended) GetRawLogsToVaccum(ctx context.Context, chain int64) (*VaccumBlockRange, error) {
 	k := fmt.Sprintf(VaccumeBlockRKey, chain)
 	vacRng := VaccumBlockRange{}
 	if cmd := r.LPop(ctx, k); cmd.Err() == nil {

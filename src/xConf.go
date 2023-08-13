@@ -31,7 +31,7 @@ func (r *StartConf) xChainSchedule() []conf.QueueSchedules {
 func (r *StartConf) xHandlers() []conf.MuxHandler {
 	return []conf.MuxHandler{
 		{Key: tasks.BlockScanKey, Handler: handlers.BlockScanTaskHandler, Q: asynq.Queue(conf.ScanQ)},                    // 1
-		{Key: tasks.FetchBlockEventsKey, Handler: handlers.BlockEventsTaskHandler, Q: asynq.Queue(conf.FetchQ)},          // 2
+		{Key: tasks.FetchBlockEventsKey, Handler: handlers.FetchBlockTaskHandler, Q: asynq.Queue(conf.FetchQ)},           // 2
 		{Key: tasks.ParseBlockEventsKey, Handler: handlers.ParseBlockEventsTaskHandler, Q: asynq.Queue(conf.ParseQ)},     // 3
 		{Key: tasks.UpdateUserBalanceKey, Handler: handlers.UpdateUserBalTaskHandler, Q: asynq.Queue(conf.ProcessQ)},     // 4
 		{Key: tasks.UpdateUserApproveKey, Handler: handlers.UpdateUserApproveTaskHandler, Q: asynq.Queue(conf.ProcessQ)}, // 4
@@ -52,7 +52,6 @@ func (r *StartConf) xUrls() []api.Route {
 		{Path: "/stats/", Method: api.Get, Handler: views.Status},
 		{Path: "/stats/call", Method: api.Get, Handler: views.CallStatus},
 		{Path: "/stats/block", Method: api.Get, Handler: views.NewBlockStatus},
-		// TODO !
 		{Path: "/stats/block/missed", Method: api.Get, Handler: views.MissedBlocks},
 		{Path: "/stats/block/simple", Method: api.Get, Handler: views.NewBlockStatusSimple},
 		{Path: "/stats/block/stats", Method: api.Get, Handler: views.BlockStats},
