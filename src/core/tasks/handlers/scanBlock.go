@@ -25,9 +25,20 @@ func BlockScanTaskHandler(ctx context.Context, task *asynq.Task) error {
 	return err
 }
 
+func saveBlocks(ctx context.Context, chain int64, from, to uint64) error {
+	newBlocks := make([]interface{}, 0)
+	for i := from; i <= to; i++ {
+		b := schema.BlockM{BlockNumber: i, ChainId: chain}
+		b.SetScanned()
+		newBlocks = append(newBlocks, b)
+	}
+	_, err := conf.GetMongoCol(chain, conf.BlockColName).InsertMany(ctx, newBlocks)
+	return err
+}
+
 // scanBlockJob Enqueues a task to fetch events if new block range is met the  height
 // from head up current block - delay
-// 🚧 inner app queries are gte -> lt
+// 🚧 inner app queries are gte -> lte
 func scanBlockJob(ctx context.Context, blockTask schema.BatchBlockTask, aqCl asynq.Client) error {
 	var head uint64
 	chain := blockTask.ChainId
@@ -40,7 +51,6 @@ func scanBlockJob(ctx context.Context, blockTask schema.BatchBlockTask, aqCl asy
 	if cmd := conf.RedisClient.Get(ctx, tasks.LastScannedBlockKey(chain)); cmd.Err() != nil {
 		return cmd.Err()
 	} else {
-		// NOTE - Next Iterations there is head block and is parsed below
 		if r, parseErr := cmd.Int(); parseErr != nil {
 			conf.Logger.Errorf("blockScanTask: %s \nPossible issue is that somethings overwrote %s's value", parseErr, tasks.LastScannedBlockKey(chain))
 			return err
@@ -48,32 +58,27 @@ func scanBlockJob(ctx context.Context, blockTask schema.BatchBlockTask, aqCl asy
 			head = uint64(r)
 		}
 	}
-	// NOTE: remove please
+	// Head : is Last Scanned Block
+	// currentBlock : is Head of Network in called by web3
+	// batch size : is dynamic size per chain
+
+	// h = 100 	bs = 5 		cb = 116
+	// h + bs = 105 > 106 [OK]
+	// cb - h = 16
+	//  --------      = 3.1 ~= 2
+	//     bs (5)
+	// (100-104) (105-109) (110-114)
 
 	if head+batchSize < currentBlock {
-		conf.Logger.Infow("BlockScan", "block", currentBlock, "head", head, "b-size", batchSize)
+		batchCount := (currentBlock - head) / batchSize
+		conf.Logger.Infow("BlockScan", "block", currentBlock, "head", head, "b-size", batchSize, "b-count", batchCount)
+
 		newHead := head
-		newBlocks := make([]interface{}, 0)
-		for newHead < currentBlock {
-			b := schema.BlockM{BlockNumber: newHead, ChainId: chain}
-			b.SetScanned()
-			newBlocks = append(newBlocks, b)
-			newHead++
-		}
 
-		batchCount := (newHead - head) / batchSize
-		if batchCount == 0 {
-			return nil
-		}
-
-		if _, err := conf.GetMongoCol(blockTask.ChainId, conf.BlockColName).InsertMany(ctx, newBlocks); err != nil {
-			return err
-		}
-
-		for j := uint64(0); j < batchCount; j += 2 {
+		for j := uint64(0); j < batchCount; j++ {
 			b := schema.BatchBlockTask{
 				FromBlockNumber: head + (j * batchSize),
-				ToBlockNumber:   head + ((j + 1) * batchSize),
+				ToBlockNumber:   head + ((j + 1) * batchSize) - 1,
 				ChainId:         chain,
 			}
 			if b.ToBlockNumber > currentBlock {
@@ -82,13 +87,16 @@ func scanBlockJob(ctx context.Context, blockTask schema.BatchBlockTask, aqCl asy
 			if b.FromBlockNumber == b.ToBlockNumber {
 				break
 			}
+			if err := saveBlocks(ctx, chain, b.FromBlockNumber, b.ToBlockNumber); err != nil {
+				return err
+			}
 			if _err := enqueuer.EnqueueFetchBlockJob(aqCl, b); _err != nil {
 				return _err
 			}
 			for i := b.FromBlockNumber; i <= b.ToBlockNumber; i++ {
 				conf.Logger.Infow("Enqueue Scan", "block", i)
 			}
-
+			newHead = b.ToBlockNumber + 1
 			conf.NewBlockCount.AddFor(chain, uint64(b.ToBlockNumber-b.FromBlockNumber))
 		}
 

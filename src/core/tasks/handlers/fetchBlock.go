@@ -13,6 +13,19 @@ import (
 	"github.com/hibiken/asynq"
 )
 
+// FetchBlockTaskHandlerDummie
+func FetchBlockTaskHandlerDummie(ctx context.Context, task *asynq.Task) error {
+	bt := schema.BatchBlockTask{}
+	if err := json.Unmarshal(task.Payload(), &bt); err != nil {
+		return err
+	}
+
+	for i := bt.FromBlockNumber; i <= bt.ToBlockNumber; i++ {
+		conf.Logger.Infow("Fetch ", "Block", i)
+	}
+	return nil
+}
+
 // FetchBlockTaskHandler Uses FetchBlockEventsKey and requires BlockTask as arg
 // Calls for events and store them to mongo !
 func FetchBlockTaskHandler(ctx context.Context, task *asynq.Task) error {

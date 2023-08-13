@@ -6,4 +6,4 @@ data/mongodb/
 src/__debug_bin
 config
 *.log
-__debug_bin4272436474
+__debug_bin*

@@ -11,7 +11,6 @@ import (
 )
 
 var (
-	// EthClient  *ethclient.Client
 	EthClientS           map[int64][]*ethclient.Client
 	selectorMutex        sync.Mutex
 	selectorIndex        map[int64]int
@@ -71,12 +70,16 @@ func EthClientDebug(chain int64) (*ethclient.Client, string) {
 
 // BatchLogMaxHeight staticky returns block height set in mainnet.json !
 func BatchLogMaxHeight(chain int64) uint64 {
+	return 3
 	r := uint64(SupportedNetworks[chain].BatchLogMaxHeight)
 	if r == 0 {
-		// TODO make this dynamic
 		return 1
 	} else {
-		return r
+		if r == 0 {
+			return 1
+		} else {
+			return r
+		}
 	}
 }
 
