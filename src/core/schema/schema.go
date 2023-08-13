@@ -20,8 +20,8 @@ type LogColl struct {
 	Data        []byte         `bson:"data" json:"data" `
 	BlockNumber uint64         `json:"blockNumber" bson:"blockNumber"`
 	// BlockId     primitive.ObjectID `bson:"block_id"`
-	TxHash    common.Hash `json:"transactionHash" bson:"transactionHash" `
-	TxIndex   uint        `bson:"transactionIndex" json:"transactionIndex"`
+	TxHash    common.Hash `json:"txHash" bson:"txHash" `
+	TxIndex   uint        `bson:"txIdx" json:"txId"`
 	BlockHash common.Hash `json:"blockHash" bson:"blockHash"`
 	Index     uint        `bson:"logIndex" json:"logIndex"`
 	Removed   bool        `json:"removed" bson:"removed"`
@@ -32,8 +32,10 @@ type Log struct {
 	ID             primitive.ObjectID `bson:"_id,omitempty" json:"_id,"`
 	Name           string             `bson:"name" json:"name"`
 	Status         string             `bson:"status" json:"status"`
-	EmitterAddress common.Address     `json:"address" bson:"address"` // NOTE - transaction executor
+	EmitterAddress common.Address     `json:"address" bson:"address"` // NOTE - Token / Contract which emitted event
 	BlockNumber    uint64             `json:"blockNumber" bson:"blockNumber"`
+	TrxHash        common.Hash        `json:"txHash" bson:"txHash"`
+	TrxIndex       uint               `json:"txIdx" bson:"txIdx"`
 }
 
 type LogTransfer struct {

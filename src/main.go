@@ -27,6 +27,8 @@ func init() {
 	conf.LoadMainNets()
 	fmt.Println("BOOT : Loading Networks ...")
 	conf.LoadNetwork()
+	fmt.Println("BOOT : Initializing project workspace ...")
+	conf.LoadProjectInit()
 	fmt.Println("BOOT : Loading Q ...")
 	conf.LoadQueue()
 }
@@ -34,7 +36,10 @@ func init() {
 // ONLY FOR TESTING PURPOSES ...
 
 func main() {
-	// (&StartConf{}).StartApi()
-	(&StartConf{}).StartAll()
+	if conf.Config.IsLocal {
+		(&StartConf{}).StartLocalConf()
+	} else {
+		(&StartConf{}).StartAll()
+	}
 	select {}
 }

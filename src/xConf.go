@@ -23,7 +23,8 @@ func (r *StartConf) xChainSchedule() []conf.QueueSchedules {
 		sq = append(sq, conf.QueueSchedules{Cron: fmt.Sprintf("@every %ds", (14 + rand.Intn(6))), Payload: utils.MustBlockTaskGen(chainId), Q: asynq.Queue(conf.ScanQ), Timeout: conf.Config.ScanTaskTimeout, Key: tasks.BlockScanKey})
 	}
 	// Check online users
-	sq = append(sq, conf.QueueSchedules{Cron: "@every 1m", Q: asynq.Queue(conf.ScanQ), Timeout: conf.Config.UpdateOnlineUsersTaskTimeout, Key: tasks.UpdateOnlineUsersKey})
+	sq = append(sq, conf.QueueSchedules{Cron: "@every 4m", Q: asynq.Queue(conf.ScanQ), Timeout: conf.Config.UpdateOnlineUsersTaskTimeout, Key: tasks.UpdateOnlineUsersKey})
+	// sq = append(sq, conf.QueueSchedules{Cron: "@every 1m", Q: asynq.Queue(conf.HouseKeeping), Timeout: conf.Config.VaccumLogsTaskTimeout, Key: tasks.VacuumLogsKey})
 	return sq
 }
 
@@ -35,7 +36,7 @@ func (r *StartConf) xHandlers() []conf.MuxHandler {
 		{Key: tasks.UpdateUserBalanceKey, Handler: handlers.UpdateUserBalTaskHandler, Q: asynq.Queue(conf.ProcessQ)},     // 4
 		{Key: tasks.UpdateUserApproveKey, Handler: handlers.UpdateUserApproveTaskHandler, Q: asynq.Queue(conf.ProcessQ)}, // 4
 		{Key: tasks.UpdateOnlineUsersKey, Handler: handlers.OnlineUsersHandler, Q: asynq.Queue(conf.UsersQ)},             //~TBD
-		{Key: tasks.VacuumLogsKey, Handler: handlers.VacuumLogHandler, Q: asynq.Queue(conf.UnImportantQ)},                //~TBD
+		{Key: tasks.VacuumLogsKey, Handler: handlers.VacuumLogHandler, Q: asynq.Queue(conf.HouseKeeping)},                //~TBD
 	}
 }
 
@@ -87,6 +88,17 @@ func (r *StartConf) StartAll() {
 	r.StartScheduler() // Scheduled Producer
 	conf.Logger.Info("Starting AsynQMon")
 	r.StartMon() // asynqMon
+	conf.Logger.Info("Starting Api")
+	r.StartApi()
+}
+
+func (r *StartConf) StartLocalConf() {
+	conf.Logger.Info("Starting Worker")
+	r.StartWorker() // Consumer
+	conf.Logger.Info("Starting Client")
+	r.StartClient() // Producer
+	conf.Logger.Info("Starting Scheduler")
+	r.StartScheduler() // Scheduled Producer
 	conf.Logger.Info("Starting Api")
 	r.StartApi()
 }

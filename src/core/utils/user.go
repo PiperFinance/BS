@@ -14,6 +14,8 @@ import (
 )
 
 func IsRegistered(add common.Address) bool {
+	// TODO - remove this
+	return true
 	found, ok := conf.OnlineUsers.AllAdd[add]
 	return ok && found
 }
