@@ -24,7 +24,7 @@ func (r *StartConf) xChainSchedule() []conf.QueueSchedules {
 	}
 	// Check online users
 	sq = append(sq, conf.QueueSchedules{Cron: "@every 4m", Q: asynq.Queue(conf.ScanQ), Timeout: conf.Config.UpdateOnlineUsersTaskTimeout, Key: tasks.UpdateOnlineUsersKey})
-	// sq = append(sq, conf.QueueSchedules{Cron: "@every 1m", Q: asynq.Queue(conf.HouseKeeping), Timeout: conf.Config.VaccumLogsTaskTimeout, Key: tasks.VacuumLogsKey})
+	sq = append(sq, conf.QueueSchedules{Cron: "@every 5m", Q: asynq.Queue(conf.HouseKeeping), Timeout: conf.Config.VaccumLogsTaskTimeout, Key: tasks.VacuumLogsKey})
 	return sq
 }
 
