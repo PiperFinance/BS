@@ -2,7 +2,10 @@ package conf
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"strconv"
+	"sync"
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -10,6 +13,7 @@ import (
 	"github.com/go-redsync/redsync/v4"
 	redsyncredis "github.com/go-redsync/redsync/v4/redis"
 	"github.com/go-redsync/redsync/v4/redis/goredis/v8"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type RedisMutexLock string
@@ -21,9 +25,14 @@ const (
 	UserApproveRMutex = RedisMutexLock("UA")
 	LogProcessRMutex  = RedisMutexLock("LP")
 	LogFlushRMutex    = RedisMutexLock("LF")
+	VaccumeBlockRKey  = "BS:VB:%d"
+	VaccumeObjIDRKey  = "BS:VID:%d"
 )
 
-var RedisClient *RedisClientExtended // RedisUrl    string
+var (
+	RedisClient       *RedisClientExtended // RedisUrl    string
+	vaccumeObjIdMutex = sync.Mutex{}
+)
 
 type RedisClientExtended struct {
 	redis.Client
@@ -77,6 +86,18 @@ func (r *RedisClientExtended) ChainMutex(chainId int64, key RedisMutexLock) *red
 	return r.mutexes[chainId][key]
 }
 
+func (r *RedisClientExtended) IncrHSet(context context.Context, key string, field string) error {
+	var val int64
+	if cmd := r.HGet(context, key, field); cmd.Err() != nil && cmd.Err() != redis.Nil {
+		return cmd.Err()
+	} else {
+		val, _ = strconv.ParseInt(cmd.Val(), 10, 64)
+	}
+
+	cmd := r.HSet(context, key, field, val+1)
+	return cmd.Err()
+}
+
 func (r *RedisClientExtended) GetOrSet(context context.Context, key string, value string) (string, error) {
 	return r.GetOrSetTTL(context, key, value, redis.KeepTTL)
 }
@@ -98,7 +119,76 @@ func (r *RedisClientExtended) GetOrSetTTL(
 	return value, nil
 }
 
+type logIdVaccum struct {
+	Ids []primitive.ObjectID `json:"ids"`
+}
+
+func (r *RedisClientExtended) SetLogsIDsToVaccum(ctx context.Context, chain int64, ObjIds []primitive.ObjectID) error {
+	k := fmt.Sprintf(VaccumeObjIDRKey, chain)
+	ids := logIdVaccum{Ids: ObjIds}
+	if cmd := r.Get(ctx, k); cmd.Err() == nil {
+		prevIds := logIdVaccum{}
+		if err := json.Unmarshal([]byte(cmd.Val()), &prevIds); err != nil {
+			return err
+		}
+		ids.Ids = append(ids.Ids, prevIds.Ids...)
+	}
+	val, err := json.Marshal(ids)
+	if err != nil {
+		return err
+	}
+	res := r.Set(ctx, k, val, -1)
+	return res.Err()
+}
+
+func (r *RedisClientExtended) GetLogsIDsToVaccum(ctx context.Context, chain int64) ([]primitive.ObjectID, error) {
+	k := fmt.Sprintf(VaccumeObjIDRKey, chain)
+	if cmd := r.Get(ctx, k); cmd.Err() == nil {
+		prevIds := logIdVaccum{}
+		if err := json.Unmarshal([]byte(cmd.Val()), &prevIds); err != nil {
+			return nil, err
+		}
+		return prevIds.Ids, nil
+	} else if cmd.Err() == redis.Nil {
+		return nil, nil
+	} else {
+		return nil, cmd.Err()
+	}
+}
+
+type VaccumBlockRange struct {
+	FromBlock uint64 `json:"fb"`
+	ToBlock   uint64 `json:"tb"`
+}
+
+// SetLogsToVaccum Adds Block Range for later vaccum, corresponds to PasredLogs collection
+func (r *RedisClientExtended) SetLogsToVaccum(ctx context.Context, chain int64, fromBlock uint64, toBlock uint64) error {
+	k := fmt.Sprintf(VaccumeBlockRKey, chain)
+	vacRng := VaccumBlockRange{FromBlock: fromBlock, ToBlock: toBlock}
+	val, err := json.Marshal(vacRng)
+	if err != nil {
+		return err
+	}
+	res := r.RPush(ctx, k, val)
+	return res.Err()
+}
+
+// GetLogsToVaccum Block Range vaccum, corresponds to PasredLogs collection
+// stop at (nil, nil) response
+func (r *RedisClientExtended) GetLogsToVaccum(ctx context.Context, chain int64) (*VaccumBlockRange, error) {
+	k := fmt.Sprintf(VaccumeBlockRKey, chain)
+	vacRng := VaccumBlockRange{}
+	if cmd := r.LPop(ctx, k); cmd.Err() == nil {
+		if err := json.Unmarshal([]byte(cmd.Val()), &vacRng); err != nil {
+			return nil, err
+		}
+	} else if cmd.Err() == redis.Nil {
+		return nil, nil
+	}
+	return &vacRng, nil
+}
+
 // UserTokenHSKey Hash Set containing user's token + balance in each chain
 func UserTokenHSKey(chain int64, user common.Address, token common.Address) (string, string) {
-	return fmt.Sprintf("UTHS:%d", chain), fmt.Sprintf("%s-%s", user.String(), token.String())
+	return fmt.Sprintf("BS:UTHS:%d", chain), fmt.Sprintf("%s-%s", user.String(), token.String())
 }

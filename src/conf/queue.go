@@ -47,6 +47,7 @@ const (
 	ParseQ       = "Parse"
 	ProcessQ     = "Process"
 	MainQ        = "main"
+	HouseKeeping = "HouseKeeping"
 	DefaultQ     = "default"
 	UnImportantQ = "Un-Important"
 )
@@ -70,6 +71,7 @@ func LoadQueue() {
 			ScanQ:        3,
 			MainQ:        4,
 			DefaultQ:     3,
+			HouseKeeping: 2,
 			UnImportantQ: 1,
 		},
 	})

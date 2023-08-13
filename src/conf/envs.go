@@ -31,6 +31,7 @@ type config struct {
 	ParseBlockTimeout            time.Duration `env:"PARSE_BLOCK_TIMEOUT" envDefault:"2m"`
 	FetchBlockTimeout            time.Duration `env:"FETCH_BLOCK_TIMEOUT" envDefault:"5m"`
 	UserBalUpdateTimeout         time.Duration `env:"USER_BAL_UPDATE_TIMEOUT" envDefault:"5m"`
+	VaccumLogsTaskTimeout        time.Duration `env:"VACCUME_LOGS_TIMEOUT" envDefault:"5m"`
 	TestTimeout                  time.Duration `env:"TEST_RPC_CONNECTION_TIMEOUT" envDefault:"15s"`
 	ScanTaskTimeout              time.Duration `env:"SCAN_TASK_TIMEOUT" envDefault:"25s"`
 	UpdateOnlineUsersTaskTimeout time.Duration `env:"ONLINE_USERS_TASK_TIMEOUT" envDefault:"25s"`
@@ -45,6 +46,7 @@ type config struct {
 	TokenPriceURL                url.URL       `env:"TP_URL" envDefault:"http://154.49.243.32:6004"`
 	TokenListUrl                 url.URL       `env:"TOKEN_LIST_URL" envDefault:"https://github.com/PiperFinance/CD/blob/main/tokens/outVerified/all_tokens.json?raw=true"`
 	TokensDir                    string        `env:"TOKEN_LIST_DIR" envDefault:"data/all_tokens.json"`
+	IsLocal                      bool          `env:"IS_LOCAL" envDefault:"false"`
 	ZapLogLevel                  zapcore.Level
 }
 

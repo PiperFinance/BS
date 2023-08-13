@@ -64,6 +64,11 @@ func LoadMongo() {
 				Keys:    bson.D{{Key: "no", Value: -1}},
 				Options: options.Index().SetUnique(true),
 			})
+		GetMongoCol(chain, LogColName).Indexes().CreateOne(
+			ctx, mongo.IndexModel{
+				Keys:    bson.D{{Key: "logIndex", Value: -1}, {Key: "blockNumber", Value: -1}},
+				Options: options.Index().SetUnique(true),
+			})
 		GetMongoCol(chain, BlockColName).Indexes().CreateOne(
 			ctx, mongo.IndexModel{Keys: bson.D{{Key: "no", Value: -1}, {Key: "status", Value: 1}}})
 		GetMongoCol(chain, TokenColName).Indexes().CreateOne(
