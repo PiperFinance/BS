@@ -19,7 +19,7 @@ func vaccumRawLogs(ctx context.Context, chain int64) error {
 		// _, err = conf.GetMongoCol(blockTask.ChainId, conf.LogColName).DeleteMany(ctxDel, filter)
 	*/
 	for {
-		vacRng, err := conf.RedisClient.GetLogsToVaccum(ctx, chain)
+		vacRng, err := conf.RedisClient.GetRawLogsToVaccum(ctx, chain)
 		if err != nil {
 			return err
 		} else if vacRng == nil {
@@ -36,7 +36,7 @@ func vaccumRawLogs(ctx context.Context, chain int64) error {
 
 // vaccumParsedLogOID Parsed Log that are read and saved into db (as approve, transfer , ... )
 func vaccumParsedLogOID(ctx context.Context, chain int64) error {
-	ids, err := conf.RedisClient.GetLogsIDsToVaccum(ctx, chain)
+	ids, err := conf.RedisClient.GetParsedLogsIDsToVaccum(ctx, chain)
 	if err != nil {
 		return err
 	} else if ids == nil {
