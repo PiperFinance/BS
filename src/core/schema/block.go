@@ -1,6 +1,8 @@
 package schema
 
-import "time"
+import (
+	"time"
+)
 
 type BatchBlockTask struct {
 	FromBlockNumber uint64 `bson:"from_no"`
