@@ -121,12 +121,18 @@ func updateUserBalJob(ctx context.Context, bt schema.BatchBlockTask) error {
 	defer cancelInsert()
 	for blockNum, idx := range indicesToStore {
 		if len(idx) > 0 {
+			trxs, ok := blockTransfers[blockNum]
+			if !ok {
+				conf.Logger.Warnw("Something is wrong", "trxs", trxs)
+				continue
+			}
 			tmp := make([]interface{}, 0)
 			for _, j := range idx {
-				trxs, ok := blockTransfers[blockNum]
-				if ok && len(trxs) > j {
-					blockTransfers[blockNum][j].ID = primitive.NilObjectID
-					tmp = append(tmp, blockTransfers[blockNum][j])
+				if j >= 0 && ok && len(trxs) > j {
+					// BUG: Code panics here index out of range
+					z := trxs[j]
+					z.ID = primitive.NilObjectID
+					tmp = append(tmp, z)
 				}
 			}
 			if len(tmp) > 0 {
