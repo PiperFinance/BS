@@ -15,7 +15,7 @@ func SortedKeys[K constraints.Ordered, V any](anyMap map[K]V) []K {
 		keys = append(keys, k)
 	}
 	less := func(i, j int) bool {
-		return (keys[i] > keys[j])
+		return (keys[i] < keys[j])
 	}
 	sort.Slice(keys, less)
 	return keys
