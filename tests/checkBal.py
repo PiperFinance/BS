@@ -26,6 +26,7 @@ def xbalRemote():
                 Web3(Web3.HTTPProvider(rpc))
                 .eth.contract(Web3.to_checksum_address(tok), abi=abi)
                 .functions.balanceOf(Web3.to_checksum_address(add))
+                .call()
             ),
             client.BS_56.UsersBalance.find_one({"tokenStr": tok, "userStr": add}),
             Web3(Web3.HTTPProvider(rpc)).eth.block_number,
