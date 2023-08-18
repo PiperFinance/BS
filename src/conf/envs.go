@@ -34,6 +34,7 @@ type config struct {
 	VaccumLogsTaskTimeout        time.Duration `env:"VACCUME_LOGS_TIMEOUT" envDefault:"5m"`
 	TestTimeout                  time.Duration `env:"TEST_RPC_CONNECTION_TIMEOUT" envDefault:"15s"`
 	ScanTaskTimeout              time.Duration `env:"SCAN_TASK_TIMEOUT" envDefault:"25s"`
+	ProcessBlockTimeout          time.Duration `env:"PROCESS_BLOCK_TASK_TIMEOUT" envDefault:"2m"`
 	UpdateOnlineUsersTaskTimeout time.Duration `env:"ONLINE_USERS_TASK_TIMEOUT" envDefault:"25s"`
 	LogLevel                     string        `env:"LOG_LEVEL" envDefault:"warn"`
 	LogDir                       string        `env:"LOG_DIR" envDefault:"/var/bs/log"`
