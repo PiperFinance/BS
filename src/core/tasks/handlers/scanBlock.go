@@ -25,6 +25,7 @@ func BlockScanTaskHandler(ctx context.Context, task *asynq.Task) error {
 	return err
 }
 
+// saveBlocks insert newly scanned blocks into db ( with unique )
 func saveBlocks(ctx context.Context, chain int64, from, to uint64) error {
 	newBlocks := make([]interface{}, 0)
 	for i := from; i <= to; i++ {
@@ -45,7 +46,7 @@ func scanBlockJob(ctx context.Context, blockTask schema.BatchBlockTask, aqCl asy
 	batchSize := conf.BatchLogMaxHeight(chain)
 	currentBlock, err := conf.LatestBlock(ctx, blockTask.ChainId)
 	if err != nil {
-		return &utils.RpcError{Err: err, ChainId: blockTask.ChainId, ToBlockNumber: blockTask.ToBlockNumber, FromBlockNumber: blockTask.FromBlockNumber, Name: "BlockScan"}
+		return &utils.RpcError{Err: err, ChainId: blockTask.ChainId, ToBlockNumber: blockTask.ToBlockNum, FromBlockNumber: blockTask.FromBlockNum, Name: "BlockScan"}
 	}
 
 	if cmd := conf.RedisClient.Get(ctx, tasks.LastScannedBlockKey(chain)); cmd.Err() != nil {
@@ -58,46 +59,48 @@ func scanBlockJob(ctx context.Context, blockTask schema.BatchBlockTask, aqCl asy
 			head = uint64(r)
 		}
 	}
-	// Head : is Last Scanned Block
-	// currentBlock : is Head of Network in called by web3
-	// batch size : is dynamic size per chain
-
-	// h = 100 	bs = 5 		cb = 116
-	// h + bs = 105 > 106 [OK]
-	// cb - h = 16
-	//  --------      = 3.1 ~= 2
-	//     bs (5)
-	// (100-104) (105-109) (110-114)
+	/*
+		NOTE:
+			Head : is Last Scanned Block
+			currentBlock : is Head of Network in called by web3
+			batch size : is dynamic size per chain
+			h = 100 	bs = 5 		cb = 116
+			h + bs = 105 > 106 [OK]
+			cb - h (16)
+		 	 --------      = 3.1 ~= 2
+		    	bs (5)
+			(100-104) (105-109) (110-114)
+	*/
 
 	if head+batchSize < currentBlock {
 		batchCount := (currentBlock - head) / batchSize
-		conf.Logger.Infow("BlockScan", "block", currentBlock, "head", head, "b-size", batchSize, "b-count", batchCount)
-
 		newHead := head
+		conf.Logger.Infow("BlockScan", "block", currentBlock, "head", head, "b-size", batchSize, "b-count", batchCount)
 
 		for j := uint64(0); j < batchCount; j++ {
 			b := schema.BatchBlockTask{
-				FromBlockNumber: head + (j * batchSize),
-				ToBlockNumber:   head + ((j + 1) * batchSize) - 1,
-				ChainId:         chain,
+				FromBlockNum: head + (j * batchSize),
+				ToBlockNum:   head + ((j + 1) * batchSize) - 1,
+				ChainId:      chain,
 			}
-			if b.ToBlockNumber > currentBlock {
-				b.ToBlockNumber = currentBlock
+			if b.ToBlockNum > currentBlock {
+				b.ToBlockNum = currentBlock
 			}
-			if b.FromBlockNumber == b.ToBlockNumber {
+			if b.FromBlockNum == b.ToBlockNum {
 				break
 			}
-			if err := saveBlocks(ctx, chain, b.FromBlockNumber, b.ToBlockNumber); err != nil {
+			if err := saveBlocks(ctx, chain, b.FromBlockNum, b.ToBlockNum); err != nil {
 				return err
 			}
-			if _err := enqueuer.EnqueueFetchBlockJob(aqCl, b); _err != nil {
-				return _err
+			if err := enqueuer.EnqueueProcessBlockJob(aqCl, b); err != nil {
+				return err
 			}
-			for i := b.FromBlockNumber; i <= b.ToBlockNumber; i++ {
+			for i := b.FromBlockNum; i <= b.ToBlockNum; i++ {
 				conf.Logger.Infow("Enqueue Scan", "block", i)
 			}
-			newHead = b.ToBlockNumber + 1
-			conf.NewBlockCount.AddFor(chain, uint64(b.ToBlockNumber-b.FromBlockNumber))
+			newHead = b.ToBlockNum + 1
+			// NOTE: DEBUG
+			conf.NewBlockCount.AddFor(chain, uint64(b.ToBlockNum-b.FromBlockNum))
 		}
 
 		if cmd := conf.RedisClient.Set(ctx, tasks.LastScannedBlockKey(chain), newHead, 0); cmd.Err() != nil {
