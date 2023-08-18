@@ -5,10 +5,10 @@ import (
 )
 
 type BatchBlockTask struct {
-	FromBlockNumber uint64 `bson:"from_no"`
-	ToBlockNumber   uint64 `bson:"to_no"`
-	BlockNumber     uint64 `bson:"no"`
-	ChainId         int64  `bson:"chain"`
+	FromBlockNum uint64 `bson:"from_no"`
+	ToBlockNum   uint64 `bson:"to_no"`
+	BlockNumber  uint64 `bson:"no"`
+	ChainId      int64  `bson:"chain"`
 }
 
 type BlockTask struct {

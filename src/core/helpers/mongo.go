@@ -8,12 +8,8 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 )
 
-// func SaveBlockTask(ctx context.Context, bt schema.BatchBlockTask) {
-// 	for _, blok
-// }
-
 func SetBTFetched(ctx context.Context, bt schema.BatchBlockTask) {
-	for i := bt.FromBlockNumber; i <= bt.ToBlockNumber; i++ {
+	for i := bt.FromBlockNum; i <= bt.ToBlockNum; i++ {
 		bm := schema.BlockM{BlockNumber: i, ChainId: bt.ChainId}
 		bm.SetFetched()
 		if _, err := conf.GetMongoCol(bt.ChainId, conf.BlockColName).ReplaceOne(
@@ -25,7 +21,7 @@ func SetBTFetched(ctx context.Context, bt schema.BatchBlockTask) {
 }
 
 func SetBTParsed(ctx context.Context, bt schema.BatchBlockTask) {
-	for i := bt.FromBlockNumber; i <= bt.ToBlockNumber; i++ {
+	for i := bt.FromBlockNum; i <= bt.ToBlockNum; i++ {
 		bm := schema.BlockM{BlockNumber: i, ChainId: bt.ChainId}
 		bm.SetParsed()
 		if _, err := conf.GetMongoCol(bt.ChainId, conf.BlockColName).ReplaceOne(
@@ -37,7 +33,7 @@ func SetBTParsed(ctx context.Context, bt schema.BatchBlockTask) {
 }
 
 func SetBTAdded(ctx context.Context, bt schema.BatchBlockTask) {
-	for i := bt.FromBlockNumber; i <= bt.ToBlockNumber; i++ {
+	for i := bt.FromBlockNum; i <= bt.ToBlockNum; i++ {
 		bm := schema.BlockM{BlockNumber: i, ChainId: bt.ChainId}
 		bm.SetAdded()
 		if _, err := conf.GetMongoCol(bt.ChainId, conf.BlockColName).ReplaceOne(
