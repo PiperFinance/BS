@@ -2,8 +2,6 @@ package handlers
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 	"math/big"
 	"time"
 
@@ -11,32 +9,9 @@ import (
 	"github.com/PiperFinance/BS/src/core/events"
 	"github.com/PiperFinance/BS/src/core/schema"
 	"github.com/PiperFinance/BS/src/core/utils"
-	"github.com/hibiken/asynq"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
-
-// UpdateUserBalTaskHandler Updates Online User's Balance and then vacuums log record from database to save space
-func UpdateUserBalTaskHandler(ctx context.Context, task *asynq.Task) error {
-	blockTask := schema.BatchBlockTask{}
-	err := json.Unmarshal(task.Payload(), &blockTask)
-	if err != nil {
-		return err
-	}
-	if err := updateUserBalJob(ctx, blockTask); err != nil {
-		return err
-	}
-	for i := blockTask.FromBlockNumber; i <= blockTask.ToBlockNumber; i++ {
-		bm := schema.BlockM{BlockNumber: i, ChainId: blockTask.ChainId}
-		bm.SetAdded()
-		if _, err := conf.GetMongoCol(blockTask.ChainId, conf.BlockColName).ReplaceOne(
-			ctx,
-			bson.M{"no": i}, &bm); err != nil {
-			return err
-		}
-	}
-	return err
-}
 
 func queryLogsForTransfers(ctx context.Context, bt schema.BatchBlockTask) (
 	blockTransfers map[uint64][]schema.LogTransfer,
@@ -45,7 +20,7 @@ func queryLogsForTransfers(ctx context.Context, bt schema.BatchBlockTask) (
 	err error,
 ) {
 	filter := bson.M{
-		"log.blockNumber": bson.D{{Key: "$gte", Value: &bt.FromBlockNumber}, {Key: "$lte", Value: &bt.ToBlockNumber}},
+		"log.blockNumber": bson.D{{Key: "$gte", Value: &bt.FromBlockNum}, {Key: "$lte", Value: &bt.ToBlockNum}},
 		"log.name":        events.TransferE,
 	}
 
@@ -88,12 +63,7 @@ func queryLogsForTransfers(ctx context.Context, bt schema.BatchBlockTask) (
 	return
 }
 
-func updateUserBalJob(ctx context.Context, bt schema.BatchBlockTask) error {
-	blockTransfers, indicesToStore, IdsToVacuum, err := queryLogsForTransfers(ctx, bt)
-	if err != nil {
-		return err
-	}
-
+func updateUserBalJob(ctx context.Context, bt schema.BatchBlockTask, blockTransfers map[uint64][]schema.LogTransfer) error {
 	for _, blockNum := range utils.SortedKeys[uint64, []schema.LogTransfer](blockTransfers) {
 		_transfers, ok := blockTransfers[blockNum]
 		if !ok {
@@ -111,38 +81,5 @@ func updateUserBalJob(ctx context.Context, bt schema.BatchBlockTask) error {
 		}
 	}
 
-	if len(IdsToVacuum) > 0 {
-		if err := conf.RedisClient.SetParsedLogsIDsToVaccum(ctx, bt.ChainId, IdsToVacuum); err != nil {
-			return err
-		}
-	}
-
-	ctxInsert, cancelInsert := context.WithTimeout(ctx, 5*time.Minute)
-	defer cancelInsert()
-	for blockNum, idx := range indicesToStore {
-		if len(idx) > 0 {
-			trxs, ok := blockTransfers[blockNum]
-			if !ok {
-				conf.Logger.Warnw("Something is wrong", "trxs", trxs)
-				continue
-			}
-			tmp := make([]interface{}, 0)
-			for _, j := range idx {
-				if j >= 0 && ok && len(trxs) > j {
-					// BUG: Code panics here index out of range
-					z := trxs[j]
-					z.ID = primitive.NilObjectID
-					tmp = append(tmp, z)
-				}
-			}
-			if len(tmp) > 0 {
-				if _, err := conf.GetMongoCol(bt.ChainId, conf.TransfersColName).InsertMany(ctxInsert, tmp); err != nil {
-					return err
-				}
-			} else {
-				fmt.Println(tmp)
-			}
-		}
-	}
 	return nil
 }

@@ -67,43 +67,6 @@ func processTransferLogs(ctx context.Context, block schema.BlockTask, transfers 
 		}
 	}
 
-	// NOTE: DEBUG
-	col := userBalanceCol(block.ChainId)
-	for _, trx := range transfers {
-		curs, err := col.Find(ctx, bson.M{"user": trx.From, "token": trx.EmitterAddress})
-		if err != nil {
-			conf.Logger.Error(err)
-		} else {
-			for curs.Next(ctx) {
-				val := schema.UserBalance{}
-				curs.Decode(&val)
-				bal, _ := val.GetBalance()
-				if bal.Cmp(big.NewInt(0)) == -1 {
-					conf.RedisClient.IncrHSet(ctx, fmt.Sprintf("BS:NVR:%d", 56), val.TokenStr)
-					if val.TokenStr == "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c" {
-						conf.Logger.Errorw("Negative Value Record", "trx", trx, "bal", bal.String(), "rec", val, "ObjId", trx.ID)
-					}
-				}
-			}
-		}
-		curs, err = col.Find(ctx, bson.M{"user": trx.To, "token": trx.EmitterAddress})
-		if err != nil {
-			conf.Logger.Error(err)
-		} else {
-			for curs.Next(ctx) {
-				val := schema.UserBalance{}
-				curs.Decode(&val)
-				bal, _ := val.GetBalance()
-				if bal.Cmp(big.NewInt(0)) == -1 {
-					conf.RedisClient.IncrHSet(ctx, fmt.Sprintf("BS:NVR:%d", 56), val.TokenStr)
-					if val.TokenStr == "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c" {
-						conf.Logger.Errorw("Negative Value Record", "trx", trx, "bal", bal.String(), "rec", val, "ObjId", trx.ID)
-					}
-				}
-			}
-		}
-	}
-
 	return nil
 }
 
