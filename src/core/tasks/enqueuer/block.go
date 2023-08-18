@@ -13,6 +13,19 @@ const (
 	BlockTaskGroup = "Block"
 )
 
+func EnqueueProcessBlockJob(aqCl asynq.Client, blockTask schema.BatchBlockTask) error {
+	payload, err := json.Marshal(blockTask)
+	if err != nil {
+		return err
+	}
+	_, err = aqCl.Enqueue(
+		asynq.NewTask(tasks.ProccessBlockKey, payload),
+		asynq.Queue(conf.ProcessQ),
+		asynq.Timeout(conf.Config.ProcessBlockTimeout),
+	)
+	return err
+}
+
 func EnqueueFetchBlockJob(aqCl asynq.Client, blockTask schema.BatchBlockTask) error {
 	payload, err := json.Marshal(blockTask)
 	if err != nil {
