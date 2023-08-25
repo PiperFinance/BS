@@ -1,63 +1,52 @@
-package handlers
+package jobs
 
 import (
 	"context"
 	"fmt"
 	"math/big"
-
-	"github.com/ethereum/go-ethereum/common"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
+	"sync"
 
 	"github.com/PiperFinance/BS/src/conf"
 	contract_helpers "github.com/PiperFinance/BS/src/contracts/helpers"
 	"github.com/PiperFinance/BS/src/core/schema"
+	"github.com/PiperFinance/BS/src/core/utils"
+	"github.com/ethereum/go-ethereum/common"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func updateUserTokens(ctx context.Context, bt schema.BlockTask, usersTokens []contract_helpers.UserToken) error {
-	if len(usersTokens) < 1 {
-		return nil
-	}
-	conf.NewUsersCount.AddFor(bt.ChainId, uint64(len(usersTokens)))
-	conf.MultiCallCount.Add(bt.ChainId)
-	// TODO: chunk batch calls !
-	bal := contract_helpers.EasyBalanceOf{UserTokens: usersTokens, ChainId: bt.ChainId, BlockNumber: int64(bt.BlockNumber) - 1}
-	if err := bal.Execute(ctx); err != nil {
+func submitAllTransfers(ctx context.Context, block schema.BlockTask, transfers []schema.LogTransfer) error {
+	if err := updateTokens(ctx, block, transfers); err != nil {
 		return err
 	}
-	col := conf.GetMongoCol(bt.ChainId, conf.UserBalColName)
-	balances := make([]interface{}, 0)
+	newUsers, err := findNewUsers(ctx, block, transfers)
+	if err != nil {
+		return err
+	}
+	wg := sync.WaitGroup{}
+	for _, chunk := range utils.ChunkNewUserCalls(block.ChainId, newUsers) {
+		wg.Add(1)
+		go func(_chunk []contract_helpers.UserToken) {
+			if _err := updateUserTokens(ctx, block, _chunk); err != nil {
+				err = _err
+			}
+			wg.Done()
+		}(chunk)
+	}
+	wg.Wait()
+	if err != nil {
+		return err
+	}
+	for _, trx := range transfers {
+		if err := sumbitTransfer(ctx, block, trx); err != nil {
+			conf.Logger.Errorw(err.Error(), "block", block.BlockNumber, "chain", block.ChainId)
+		}
+	}
 
-	for _, userToken := range bal.UserTokens {
-		if userToken.Balance == nil {
-			conf.Logger.Errorf("token:%s user:%d %+v", userToken.User.String(), userToken.Token.String(), userToken)
-			continue
-		}
-		balances = append(balances, schema.UserBalance{
-			User:      userToken.User,
-			Token:     userToken.Token,
-			UserStr:   userToken.User.String(),
-			TokenStr:  userToken.Token.String(),
-			TokenId:   conf.FindTokenId(bal.ChainId, userToken.Token),
-			TrxCount:  0,
-			ChangedAt: bt.BlockNumber,
-			StartedAt: bt.BlockNumber,
-			Balance:   userToken.Balance.String(),
-		})
-		if userToken.Balance.Cmp(big.NewInt(0)) == -1 {
-			conf.Logger.Errorf("Negative Balance %v", userToken)
-		}
-	}
-	if len(balances) > 0 {
-		// NOTE: DEBUG - After running this shows no sign of a negative value
-		if _, err := col.InsertMany(ctx, balances); err != nil {
-			return err
-		}
-	}
 	return nil
 }
 
-func processTransferLog(ctx context.Context, block schema.BlockTask, transfer schema.LogTransfer) error {
+func sumbitTransfer(ctx context.Context, block schema.BlockTask, transfer schema.LogTransfer) error {
 	var amount *big.Int
 	if b, ok := transfer.GetAmount(); ok {
 		amount = b

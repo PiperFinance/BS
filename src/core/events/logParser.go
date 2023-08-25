@@ -74,6 +74,7 @@ func ParseLog(vLog types.Log) (interface{}, error) {
 			return WithdrawalEventParser(vLog)
 		case transferESigHash.Hex():
 			return TransferEventParser(vLog)
+
 		// TODO: - Add other event types as time goes
 
 		// case approvalESigHash.Hex():

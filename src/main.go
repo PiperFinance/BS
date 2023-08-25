@@ -8,7 +8,7 @@ import (
 )
 
 func init() {
-	// NOTE - DB Sync !
+	// NOTE: DB Sync !
 	fmt.Println("BOOT : Loading Configs ... ")
 	conf.LoadConfig()
 	fmt.Println("BOOT : Loading Debug Tools ... ")
