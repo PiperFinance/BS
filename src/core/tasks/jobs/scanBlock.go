@@ -21,7 +21,7 @@ func saveBlocks(ctx context.Context, chain int64, from, to uint64) error {
 		newBlocks = append(newBlocks, b)
 	}
 	_, err := conf.GetMongoCol(chain, conf.BlockColName).InsertMany(ctx, newBlocks)
-	if strings.Contains(err.Error(), "duplicate") {
+	if err != nil && strings.Contains(err.Error(), "duplicate") {
 		return nil
 	}
 	return err
