@@ -10,7 +10,9 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+// updateTokens goes over tokens and makes all EmitterAddress(tokens) are stored in db
 func updateTokens(ctx context.Context, block schema.BlockTask, transfers []schema.LogTransfer) error {
+	// TODO: calculate token's transfer volume here as well
 	col := conf.GetMongoCol(block.ChainId, conf.TokenColName)
 	uniqueTokens := make([]common.Address, 0)
 	var tokenExists bool

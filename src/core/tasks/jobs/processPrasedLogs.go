@@ -32,10 +32,6 @@ func PrcoessParsedLogs(ctx context.Context, bt schema.BatchBlockTask, blockParse
 			if ok {
 				bppl.transfers = append(bppl.transfers, tr)
 			}
-			// switch log.(type) {
-			// case schema.LogTransfer:
-			// 	bppl.transfers = append(bppl.transfers, (log).(schema.LogTransfer))
-			// }
 		}
 		bppl.submit(ctx)
 	}

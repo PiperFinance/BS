@@ -23,7 +23,7 @@ type LogColl struct {
 	TxHash    common.Hash `json:"txHash" bson:"txHash" `
 	TxIndex   uint        `bson:"txIdx" json:"txId"`
 	BlockHash common.Hash `json:"blockHash" bson:"blockHash"`
-	Index     uint        `bson:"logIndex" json:"logIndex"`
+	LogIndex  uint        `bson:"logIndex" json:"logIndex"`
 	Removed   bool        `json:"removed" bson:"removed"`
 	Parsed    bool        `json:"parsed" bson:"parsed"` // Flag for parsing
 }
@@ -32,10 +32,11 @@ type Log struct {
 	ID             primitive.ObjectID `bson:"_id,omitempty" json:"_id,"`
 	Name           string             `bson:"name" json:"name"`
 	Status         string             `bson:"status" json:"status"`
-	EmitterAddress common.Address     `json:"address" bson:"address"` // NOTE - Token / Contract which emitted event
+	EmitterAddress common.Address     `json:"address" bson:"address"` // NOTE: Token / Contract which emitted event
 	BlockNumber    uint64             `json:"blockNumber" bson:"blockNumber"`
 	TrxHash        common.Hash        `json:"txHash" bson:"txHash"`
 	TrxIndex       uint               `json:"txIdx" bson:"txIdx"`
+	LogIndex       uint               `bson:"logIndex" json:"logIndex"` // NOTE: index of log/event in block
 }
 
 type LogTransfer struct {

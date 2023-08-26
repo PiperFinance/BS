@@ -31,18 +31,21 @@ func UpdateUserBalJob(ctx context.Context, bt schema.BatchBlockTask, blockTransf
 	return nil
 }
 
+// findNewUsers users that are found for the first time
 func findNewUsers(
 	ctx context.Context,
 	block schema.BlockTask,
 	transfers []schema.LogTransfer,
 ) ([]contract_helpers.UserToken, error) {
 	newUsers := make([]contract_helpers.UserToken, 0)
+	// c ,cancel := context.WithCancel(ctx,)
 	for _, transfer := range transfers {
 		token := transfer.EmitterAddress
+
 		for _, add := range []common.Address{transfer.From, transfer.To} {
 			if err, yes := utils.IsNew(ctx, block.ChainId, add, token); err == nil && yes {
-				// NOTE - check if there any duplication
-				utils.AddNew(ctx, block.ChainId, add, token)
+				// NOTE: check if there any duplication
+
 				newUsers = append(newUsers, contract_helpers.UserToken{User: add, Token: token})
 			} else if err != nil {
 				return nil, err

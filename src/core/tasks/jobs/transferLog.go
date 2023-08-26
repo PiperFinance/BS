@@ -16,13 +16,18 @@ import (
 )
 
 func submitAllTransfers(ctx context.Context, block schema.BlockTask, transfers []schema.LogTransfer) error {
+	// NOTE: Store new token's in mongodb
 	if err := updateTokens(ctx, block, transfers); err != nil {
 		return err
 	}
+
+	// NOTE: find new users
 	newUsers, err := findNewUsers(ctx, block, transfers)
 	if err != nil {
 		return err
 	}
+
+	// NOTE: Chunk Call new users
 	wg := sync.WaitGroup{}
 	for _, chunk := range utils.ChunkNewUserCalls(block.ChainId, newUsers) {
 		wg.Add(1)
@@ -35,23 +40,38 @@ func submitAllTransfers(ctx context.Context, block schema.BlockTask, transfers [
 	}
 	wg.Wait()
 	if err != nil {
+		// NOTE: even if one of the results respond with err the whole task will be retried
 		return err
 	}
+
+	// NOTE:  submits transfers in userbalance collection
 	for _, trx := range transfers {
 		if err := sumbitTransfer(ctx, block, trx); err != nil {
 			conf.Logger.Errorw(err.Error(), "block", block.BlockNumber, "chain", block.ChainId)
 		}
 	}
 
+	// NOTE: store transfer maybe in db
+	for _, trx := range transfers {
+		if _, err := conf.GetMongoCol(block.ChainId, conf.TransfersColName).InsertOne(ctx, trx); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
+// sumbitTransfer increase to address of transfer and subtracts amount from
 func sumbitTransfer(ctx context.Context, block schema.BlockTask, transfer schema.LogTransfer) error {
 	var amount *big.Int
 	if b, ok := transfer.GetAmount(); ok {
 		amount = b
 	} else {
 		return fmt.Errorf("transfer log get amount failure, transfer=%+v", transfer)
+	}
+
+	if err := conf.RedisClient.ReentrancyCheck(ctx, block.ChainId, fmt.Sprintf("%d-%d", transfer.BlockNumber, transfer.LogIndex)); err != nil {
+		return err
 	}
 
 	if _, err := processUserBal(
@@ -70,6 +90,7 @@ func sumbitTransfer(ctx context.Context, block schema.BlockTask, transfer schema
 	return nil
 }
 
+// processUserBal executes update query in db
 func processUserBal(ctx context.Context, bt schema.BlockTask, user common.Address, token common.Address, amount *big.Int) (*schema.UserBalance, error) {
 	userBal := schema.UserBalance{
 		User:      user,

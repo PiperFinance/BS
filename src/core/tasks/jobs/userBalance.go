@@ -9,13 +9,15 @@ import (
 	"github.com/PiperFinance/BS/src/core/schema"
 )
 
+// updateUserTokens
+// - uses multicall to update user bal
+// - store user - token on both mongo and redis
 func updateUserTokens(ctx context.Context, bt schema.BlockTask, usersTokens []contract_helpers.UserToken) error {
 	if len(usersTokens) < 1 {
 		return nil
 	}
 	conf.NewUsersCount.AddFor(bt.ChainId, uint64(len(usersTokens)))
 	conf.MultiCallCount.Add(bt.ChainId)
-	// TODO: chunk batch calls !
 	bal := contract_helpers.EasyBalanceOf{UserTokens: usersTokens, ChainId: bt.ChainId, BlockNumber: int64(bt.BlockNumber) - 1}
 	if err := bal.Execute(ctx); err != nil {
 		return err
@@ -44,7 +46,7 @@ func updateUserTokens(ctx context.Context, bt schema.BlockTask, usersTokens []co
 		}
 	}
 	if len(balances) > 0 {
-		// DEBUG - After running this shows no sign of a negative value
+		// NOTE: DEBUG - After running this shows no sign of a negative value
 		if _, err := col.InsertMany(ctx, balances); err != nil {
 			return err
 		}

@@ -7,8 +7,8 @@ import (
 	_ "github.com/joho/godotenv/autoload"
 )
 
+// init App startup configurations
 func init() {
-	// NOTE: DB Sync !
 	fmt.Println("BOOT : Loading Configs ... ")
 	conf.LoadConfig()
 	fmt.Println("BOOT : Loading Debug Tools ... ")

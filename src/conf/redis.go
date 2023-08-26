@@ -188,6 +188,24 @@ func (r *RedisClientExtended) GetRawLogsToVaccum(ctx context.Context, chain int6
 	return &vacRng, nil
 }
 
+// ReentrancyCheck Returns ok if no previous record is found / err if redis say so =)
+func (r *RedisClientExtended) ReentrancyCheck(ctx context.Context, chainId int64, field string) error {
+	k := fmt.Sprintf("BS:RC:%d", chainId)
+	if cmd := r.HExists(ctx, k, field); cmd.Err() == redis.Nil || (cmd.Err() == nil && !cmd.Val()) {
+		// TODO: Check err
+		r.HSet(ctx, k, field, true)
+		return nil
+	} else if cmd.Err() == nil {
+		if !cmd.Val() {
+			return nil
+		} else {
+			return fmt.Errorf("Tried to re enter using key %s ", field)
+		}
+	} else {
+		return cmd.Err()
+	}
+}
+
 // UserTokenHSKey Hash Set containing user's token + balance in each chain
 func UserTokenHSKey(chain int64, user common.Address, token common.Address) (string, string) {
 	return fmt.Sprintf("BS:UTHS:%d", chain), fmt.Sprintf("%s-%s", user.String(), token.String())
