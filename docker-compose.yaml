@@ -1,7 +1,6 @@
-version: '3'
+version: "3"
 
-x-scanner:
-  &scanner
+x-scanner: &scanner
   build:
     context: .
     dockerfile: Dockerfile
@@ -19,8 +18,7 @@ x-scanner:
       max-size: "5M"
       max-file: "2"
 
-x-db:
-  &db
+x-db: &db
   REDIS_URL: redis://bs_redis:6379
   REDIS_PORT: 6379
   REDIS_HOST: bs_redis
@@ -48,6 +46,8 @@ services:
       TEST_RPC_CONNECTION_TIMEOUT: 12s
       RPC_ERROR_SILENCE: "true"
       PARSE_ERROR_SILENCE: "true"
+      MULTICALL_ERROR_SILENCE: "true"
+      SAVE_ALL_TRANSFER_LOGS: "false"
       SUPPORTED_CHAINS: 1,250,56,137,43114,42161,9001,100,1284,10
       BS_URL: http://BS:6001
       PS_URL: http://PS:6002
@@ -71,7 +71,7 @@ services:
     networks:
       - bs_redis_db
     healthcheck:
-      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
     volumes:
       - ./data/redis:/data
     command: >
