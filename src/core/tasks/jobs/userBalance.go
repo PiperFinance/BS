@@ -27,7 +27,9 @@ func updateUserTokens(ctx context.Context, bt schema.BlockTask, usersTokens []co
 
 	for _, userToken := range bal.UserTokens {
 		if userToken.Balance == nil {
-			conf.Logger.Errorf("token:%s user:%d %+v", userToken.User.String(), userToken.Token.String(), userToken)
+			if !conf.Config.SilenceMulticallErrs {
+				conf.Logger.Errorf("token:%s user:%d %+v", userToken.User.String(), userToken.Token.String(), userToken)
+			}
 			continue
 		}
 		balances = append(balances, schema.UserBalance{

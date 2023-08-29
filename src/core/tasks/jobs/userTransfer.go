@@ -27,7 +27,6 @@ func UpdateUserBalJob(ctx context.Context, bt schema.BatchBlockTask, blockTransf
 			}
 		}
 	}
-
 	return nil
 }
 
@@ -38,7 +37,6 @@ func findNewUsers(
 	transfers []schema.LogTransfer,
 ) ([]contract_helpers.UserToken, error) {
 	newUsers := make([]contract_helpers.UserToken, 0)
-	// c ,cancel := context.WithCancel(ctx,)
 	for _, transfer := range transfers {
 		token := transfer.EmitterAddress
 

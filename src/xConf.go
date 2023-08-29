@@ -20,7 +20,7 @@ func (r *StartConf) xChainSchedule() []conf.QueueSchedules {
 	// NOTE - Enqueuing Jobs via scheduler... Use only supported Chains !
 	sq := make([]conf.QueueSchedules, 0)
 	for chainId := range conf.SupportedNetworks {
-		sq = append(sq, conf.QueueSchedules{Cron: fmt.Sprintf("@every %ds", (1 + rand.Intn(5))), Payload: utils.MustBlockTaskGen(chainId), Q: asynq.Queue(conf.ScanQ), Timeout: conf.Config.ScanTaskTimeout, Key: tasks.BlockScanKey})
+		sq = append(sq, conf.QueueSchedules{Cron: fmt.Sprintf("@every %ds", (2 + rand.Intn(4))), Payload: utils.MustBlockTaskGen(chainId), Q: asynq.Queue(conf.ScanQ), Timeout: conf.Config.ScanTaskTimeout, Key: tasks.BlockScanKey})
 	}
 	// Check online users
 	sq = append(sq, conf.QueueSchedules{Cron: "@every 4m", Q: asynq.Queue(conf.ScanQ), Timeout: conf.Config.UpdateOnlineUsersTaskTimeout, Key: tasks.UpdateOnlineUsersKey})

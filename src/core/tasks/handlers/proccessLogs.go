@@ -36,6 +36,7 @@ func ProccessBlockTaskHandler(ctx context.Context, task *asynq.Task) error {
 		return err
 	}
 	err = jobs.PrcoessParsedLogs(ctx, bt, transfers)
+	// helpers.SetBTAdded(ctx, bt)
 	helpers.SetBTFetched(ctx, bt)
 
 	checkResults(ctx, bt)

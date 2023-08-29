@@ -52,9 +52,11 @@ func submitAllTransfers(ctx context.Context, block schema.BlockTask, transfers [
 	}
 
 	// NOTE: store transfer maybe in db
-	for _, trx := range transfers {
-		if _, err := conf.GetMongoCol(block.ChainId, conf.TransfersColName).InsertOne(ctx, trx); err != nil {
-			return err
+	if conf.Config.SaveAllTransferLogs {
+		for _, trx := range transfers {
+			if _, err := conf.GetMongoCol(block.ChainId, conf.TransfersColName).InsertOne(ctx, trx); err != nil {
+				return err
+			}
 		}
 	}
 
