@@ -48,6 +48,7 @@ services:
       PARSE_ERROR_SILENCE: "true"
       MULTICALL_ERROR_SILENCE: "true"
       SAVE_ALL_TRANSFER_LOGS: "false"
+      # Easier Chains are 1,56,137,43114,9001,100,1284,10
       SUPPORTED_CHAINS: 1,250,56,137,43114,42161,9001,100,1284,10
       BS_URL: http://BS:6001
       PS_URL: http://PS:6002

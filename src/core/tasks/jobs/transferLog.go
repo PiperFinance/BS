@@ -15,6 +15,8 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+var submitionLock = sync.Mutex{}
+
 func submitAllTransfers(ctx context.Context, block schema.BlockTask, transfers []schema.LogTransfer) error {
 	// NOTE: Store new token's in mongodb
 	if err := updateTokens(ctx, block, transfers); err != nil {
@@ -46,9 +48,11 @@ func submitAllTransfers(ctx context.Context, block schema.BlockTask, transfers [
 
 	// NOTE:  submits transfers in userbalance collection
 	for _, trx := range transfers {
+		submitionLock.Lock()
 		if err := sumbitTransfer(ctx, block, trx); err != nil {
 			conf.Logger.Errorw(err.Error(), "block", block.BlockNumber, "chain", block.ChainId)
 		}
+		submitionLock.Unlock()
 	}
 
 	// NOTE: store transfer maybe in db

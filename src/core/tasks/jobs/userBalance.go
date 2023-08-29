@@ -3,11 +3,18 @@ package jobs
 import (
 	"context"
 	"math/big"
+	"sync"
 
 	"github.com/PiperFinance/BS/src/conf"
 	contract_helpers "github.com/PiperFinance/BS/src/contracts/helpers"
 	"github.com/PiperFinance/BS/src/core/schema"
 )
+
+var insertUpdates sync.Mutex
+
+func init() {
+	insertUpdates = sync.Mutex{}
+}
 
 // updateUserTokens
 // - uses multicall to update user bal
@@ -27,9 +34,7 @@ func updateUserTokens(ctx context.Context, bt schema.BlockTask, usersTokens []co
 
 	for _, userToken := range bal.UserTokens {
 		if userToken.Balance == nil {
-			if !conf.Config.SilenceMulticallErrs {
-				conf.Logger.Errorf("token:%s user:%d %+v", userToken.User.String(), userToken.Token.String(), userToken)
-			}
+			conf.Logger.Errorf("token:%s user:%d %+v", userToken.User.String(), userToken.Token.String(), userToken)
 			continue
 		}
 		balances = append(balances, schema.UserBalance{
@@ -49,6 +54,8 @@ func updateUserTokens(ctx context.Context, bt schema.BlockTask, usersTokens []co
 	}
 	if len(balances) > 0 {
 		// NOTE: DEBUG - After running this shows no sign of a negative value
+		insertUpdates.Lock()
+		defer insertUpdates.Unlock()
 		if _, err := col.InsertMany(ctx, balances); err != nil {
 			return err
 		}
