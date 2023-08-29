@@ -47,8 +47,8 @@ func EthClient(chain int64) *ethclient.Client {
 }
 
 func EthClientDebug(chain int64) (*ethclient.Client, string) {
+	selectorMutex.Lock()
 	defer func() {
-		selectorMutex.Lock()
 		selectorIndex[chain]++
 		if selectorIndex[chain] >= clientCount[chain] {
 			selectorIndex[chain] = 0
@@ -70,7 +70,7 @@ func EthClientDebug(chain int64) (*ethclient.Client, string) {
 
 // BatchLogMaxHeight staticly returns block height set in mainnet.json !
 func BatchLogMaxHeight(chain int64) uint64 {
-	return 2
+	// return 2
 	r := SupportedNetworks[chain].BatchLogMaxHeight
 	if r >= 2 {
 		return uint64(r)
