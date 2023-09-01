@@ -30,6 +30,15 @@ func PrcoessParsedLogs(ctx context.Context, bt schema.BatchBlockTask, blockParse
 		for _, log := range logs {
 			tr, ok := log.(schema.LogTransfer)
 			if ok {
+
+				// NOTE: DEBUG Binance Hot Wallet
+				BHW := "0x3c783c21a0383057D128bae431894a5C19F9Cf06"
+				if tr.From.String() == BHW || tr.To.String() == BHW {
+					if _, err := conf.GetMongoCol(bt.ChainId, conf.TransfersColName).InsertOne(ctx, tr); err != nil {
+						conf.Logger.Errorw("TransferInsertion", "err", err, "tr", tr)
+						// return err
+					}
+				}
 				bppl.transfers = append(bppl.transfers, tr)
 			}
 		}

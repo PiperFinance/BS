@@ -18,11 +18,13 @@ import (
 // Calls for events and store them to mongo !
 func ProccessBlockTaskHandler(ctx context.Context, task *asynq.Task) error {
 	// TODO: Add check for task retries X_X
+
 	defer func() {
 		if r := recover(); r != nil {
 			conf.Logger.Infof("stacktrace from panic: %s", string(debug.Stack()))
 		}
 	}()
+
 	bt := schema.BatchBlockTask{}
 	if err := json.Unmarshal(task.Payload(), &bt); err != nil {
 		return err
@@ -31,16 +33,22 @@ func ProccessBlockTaskHandler(ctx context.Context, task *asynq.Task) error {
 	if err != nil {
 		return err
 	}
+	helpers.SetBTFetched(ctx, bt)
+
 	err, transfers := jobs.ProccessRawLogs(ctx, bt, logs)
 	if err != nil {
 		return err
 	}
-	err = jobs.PrcoessParsedLogs(ctx, bt, transfers)
-	// helpers.SetBTAdded(ctx, bt)
-	helpers.SetBTFetched(ctx, bt)
+	helpers.SetBTParsed(ctx, bt)
 
-	checkResults(ctx, bt)
-	return err
+	err = jobs.PrcoessParsedLogs(ctx, bt, transfers)
+	if err != nil {
+		return err
+	}
+	helpers.SetBTAdded(ctx, bt)
+
+	// checkResults(ctx, bt)
+	return nil
 }
 
 func checkResults(ctx context.Context, b schema.BatchBlockTask) {
