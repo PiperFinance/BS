@@ -93,6 +93,10 @@ func (easBal *EasyBalanceOf) Execute(ctx context.Context) error {
 		return &utils.RpcError{Err: err, ChainId: easBal.ChainId, BlockNumber: uint64(easBal.BlockNumber), Name: "MultiCall"}
 	} else {
 		for i, _res := range res {
+			// NOTE: weird panic case :|
+			if i >= len(easBal.UserTokens) {
+				continue
+			}
 			if _res.Success {
 				easBal.UserTokens[i].Balance = ParseBigIntResult(_res.ReturnData)
 			} else {
