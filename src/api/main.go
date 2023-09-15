@@ -1,5 +1,9 @@
 package api
 
+//         ╓                                                          ╖
+//         ║              Block Scanner Access Api routes              ║
+//         ╙                                                          ╜
+
 import (
 	"github.com/gofiber/fiber/v2"
 )

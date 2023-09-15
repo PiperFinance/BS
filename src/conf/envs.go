@@ -51,6 +51,7 @@ type config struct {
 	TokenListUrl                 url.URL       `env:"TOKEN_LIST_URL" envDefault:"https://github.com/PiperFinance/CD/blob/main/tokens/outVerified/all_tokens.json?raw=true"`
 	TokensDir                    string        `env:"TOKEN_LIST_DIR" envDefault:"data/all_tokens.json"`
 	IsLocal                      bool          `env:"IS_LOCAL" envDefault:"false"`
+	IsPlayground                 bool          `env:"IS_PLAYGROUND" envDefault:"false"`
 	ZapLogLevel                  zapcore.Level
 }
 

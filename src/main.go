@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/PiperFinance/BS/src/conf"
+	BSP "github.com/PiperFinance/BS/src/playground"
 	_ "github.com/joho/godotenv/autoload"
 )
 
@@ -36,7 +37,9 @@ func init() {
 // ONLY FOR TESTING PURPOSES ...
 
 func main() {
-	if conf.Config.IsLocal {
+	if conf.Config.IsPlayground {
+		BSP.PlayHere()
+	} else if conf.Config.IsLocal {
 		(&StartConf{}).StartLocalConf()
 	} else {
 		(&StartConf{}).StartAll()
