@@ -4,11 +4,12 @@ import (
 	"fmt"
 
 	"github.com/PiperFinance/BS/src/conf"
+	BSP "github.com/PiperFinance/BS/src/playground"
 	_ "github.com/joho/godotenv/autoload"
 )
 
+// init App startup configurations
 func init() {
-	// NOTE - DB Sync !
 	fmt.Println("BOOT : Loading Configs ... ")
 	conf.LoadConfig()
 	fmt.Println("BOOT : Loading Debug Tools ... ")
@@ -36,7 +37,9 @@ func init() {
 // ONLY FOR TESTING PURPOSES ...
 
 func main() {
-	if conf.Config.IsLocal {
+	if conf.Config.IsPlayground {
+		BSP.PlayHere()
+	} else if conf.Config.IsLocal {
 		(&StartConf{}).StartLocalConf()
 	} else {
 		(&StartConf{}).StartAll()

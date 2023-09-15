@@ -10,6 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 
 	"github.com/PiperFinance/BS/src/conf"
+	"github.com/PiperFinance/BS/src/core/schema"
 	"github.com/PiperFinance/BS/src/utils"
 )
 
@@ -73,6 +74,7 @@ func ParseLog(vLog types.Log) (interface{}, error) {
 			return WithdrawalEventParser(vLog)
 		case transferESigHash.Hex():
 			return TransferEventParser(vLog)
+
 		// TODO: - Add other event types as time goes
 
 		// case approvalESigHash.Hex():
@@ -93,7 +95,9 @@ func ParseLog(vLog types.Log) (interface{}, error) {
 }
 
 // ParseLogs Parsers different types of log event and store them to database
-func ParseLogs(ctx context.Context, mongoCol *mongo.Collection, logCursor *mongo.Cursor) {
+func ParseLogs(ctx context.Context, bt schema.BatchBlockTask, logCursor *mongo.Cursor) {
+	parsedLogsCol := conf.GetMongoCol(bt.ChainId, conf.ParsedLogColName)
+
 	nextCtx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
 	parsedLogs := make([]interface{}, 0)
@@ -119,7 +123,7 @@ func ParseLogs(ctx context.Context, mongoCol *mongo.Collection, logCursor *mongo
 		}
 	}
 	if len(parsedLogs) > 0 {
-		_, insertionErr := mongoCol.InsertMany(ctx, parsedLogs)
+		_, insertionErr := parsedLogsCol.InsertMany(ctx, parsedLogs)
 		if insertionErr != nil {
 			conf.Logger.Errorf("ParseLogs: [%T] : %s", insertionErr, insertionErr)
 		}

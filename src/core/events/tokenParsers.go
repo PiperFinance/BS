@@ -50,6 +50,8 @@ func WithdrawalEventParser(vLog types.Log) (interface{}, error) {
 	log.Name = EventName
 	log.Status = schema.Fetched
 	log.BlockNumber = vLog.BlockNumber
+	log.TrxIndex = vLog.TxIndex
+	log.LogIndex = vLog.Index
 	return log, err
 }
 
@@ -69,7 +71,8 @@ func DepositEventParser(vLog types.Log) (interface{}, error) {
 	log.Status = schema.Fetched
 	log.BlockNumber = vLog.BlockNumber
 	log.TrxHash = vLog.TxHash
-	log.TrxIndex = vLog.Index
+	log.TrxIndex = vLog.TxIndex
+	log.LogIndex = vLog.Index
 	return log, err
 }
 
@@ -83,15 +86,14 @@ func TransferEventParser(vLog types.Log) (interface{}, error) {
 	}
 	log.From = common.HexToAddress(vLog.Topics[1].Hex())
 	log.To = common.HexToAddress(vLog.Topics[2].Hex())
-	// log.ToStr = log.To.String()
-	// log.FromStr = log.From.String()
 	log.TokensStr = log.Tokens.String()
 	log.EmitterAddress = vLog.Address
 	log.Name = EventName
 	log.Status = schema.Fetched
 	log.BlockNumber = vLog.BlockNumber
 	log.TrxHash = vLog.TxHash
-	log.TrxIndex = vLog.Index
+	log.TrxIndex = vLog.TxIndex
+	log.LogIndex = vLog.Index
 	return log, err
 }
 
@@ -111,7 +113,8 @@ func ApproveEventParser(vLog types.Log) (interface{}, error) {
 	log.Status = schema.Fetched
 	log.BlockNumber = vLog.BlockNumber
 	log.TrxHash = vLog.TxHash
-	log.TrxIndex = vLog.Index
+	log.TrxIndex = vLog.TxIndex
+	log.LogIndex = vLog.Index
 	return log, nil
 }
 
@@ -131,7 +134,8 @@ func ApproveForAllEventParser(vLog types.Log) (interface{}, error) {
 	log.Name = EventName
 	log.BlockNumber = vLog.BlockNumber
 	log.TrxHash = vLog.TxHash
-	log.TrxIndex = vLog.Index
+	log.TrxIndex = vLog.TxIndex
+	log.LogIndex = vLog.Index
 	return log, nil
 }
 
@@ -150,7 +154,8 @@ func URLEventParser(vLog types.Log) (interface{}, error) {
 	log.Status = schema.Fetched
 	log.BlockNumber = vLog.BlockNumber
 	log.TrxHash = vLog.TxHash
-	log.TrxIndex = vLog.Index
+	log.TrxIndex = vLog.TxIndex
+	log.LogIndex = vLog.Index
 	return log, nil
 }
 
@@ -172,7 +177,8 @@ func TransferBatchEventParser(vLog types.Log) (interface{}, error) {
 	log.Status = schema.Fetched
 	log.BlockNumber = vLog.BlockNumber
 	log.TrxHash = vLog.TxHash
-	log.TrxIndex = vLog.Index
+	log.TrxIndex = vLog.TxIndex
+	log.LogIndex = vLog.Index
 	return log, nil
 }
 
@@ -194,6 +200,7 @@ func TransferSingleEventParser(vLog types.Log) (interface{}, error) {
 	log.Name = EventName
 	log.BlockNumber = vLog.BlockNumber
 	log.TrxHash = vLog.TxHash
-	log.TrxIndex = vLog.Index
+	log.TrxIndex = vLog.TxIndex
+	log.LogIndex = vLog.Index
 	return log, nil
 }

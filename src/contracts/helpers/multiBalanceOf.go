@@ -93,10 +93,16 @@ func (easBal *EasyBalanceOf) Execute(ctx context.Context) error {
 		return &utils.RpcError{Err: err, ChainId: easBal.ChainId, BlockNumber: uint64(easBal.BlockNumber), Name: "MultiCall"}
 	} else {
 		for i, _res := range res {
+			// NOTE: weird panic case :|
+			if i >= len(easBal.UserTokens) {
+				continue
+			}
 			if _res.Success {
 				easBal.UserTokens[i].Balance = ParseBigIntResult(_res.ReturnData)
 			} else {
-				conf.Logger.Errorw("Multicall", "res", _res.ReturnData, "chain", easBal.ChainId, "block", easBal.BlockNumber, "user", easBal.UserTokens[i].User.String(), "token", easBal.UserTokens[i].Token.String())
+				if !conf.Config.SilenceMulticallErrs {
+					conf.Logger.Errorw("Multicall", "res", _res.ReturnData, "chain", easBal.ChainId, "block", easBal.BlockNumber, "user", easBal.UserTokens[i].User.String(), "token", easBal.UserTokens[i].Token.String())
+				}
 				easBal.UserTokens[i].Balance = big.NewInt(0)
 			}
 		}

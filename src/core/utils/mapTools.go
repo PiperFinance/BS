@@ -6,6 +6,7 @@ import (
 	"golang.org/x/exp/constraints"
 )
 
+// SortedKeys sorts map keys in desc order
 func SortedKeys[K constraints.Ordered, V any](anyMap map[K]V) []K {
 	if len(anyMap) == 0 {
 		return make([]K, 0)

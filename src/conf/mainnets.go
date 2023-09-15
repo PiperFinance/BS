@@ -2,7 +2,7 @@ package conf
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"os"
 	"time"
 
@@ -26,7 +26,7 @@ func LoadMainNets() {
 		Logger.Panicf("%+v", err)
 	}
 
-	byteValue, err := ioutil.ReadAll(jsonFile)
+	byteValue, err := io.ReadAll(jsonFile)
 	if err != nil {
 		Logger.Panic(err)
 	}

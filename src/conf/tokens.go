@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 	"strings"
@@ -30,7 +30,7 @@ func LoadTokens() {
 		if err != nil {
 			Logger.Panicln(err)
 		}
-		byteValue, err = ioutil.ReadAll(resp.Body)
+		byteValue, err = io.ReadAll(resp.Body)
 		if err != nil {
 			Logger.Panicf("HTTPTokenLoader: %s", err)
 		}
@@ -45,7 +45,7 @@ func LoadTokens() {
 		if err != nil {
 			Logger.Panicf("JSONTokenLoader: %s", err)
 		}
-		byteValue, err = ioutil.ReadAll(jsonFile)
+		byteValue, err = io.ReadAll(jsonFile)
 		if err != nil {
 			Logger.Panicf("JSONTokenLoader: %s", err)
 		}

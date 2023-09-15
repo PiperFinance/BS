@@ -6,6 +6,7 @@ const (
 	lastScannedBlockKey  = "block:lastScanned"
 	FetchBlockEventsKey  = "block:fetch_events"
 	BlockScanKey         = "block:scan"
+	ProccessBlockKey     = "block:process"
 	ParseBlockEventsKey  = "block:parse_events"
 	UpdateUserBalanceKey = "user:update_bal"
 	UpdateUserApproveKey = "user:update_aprv"

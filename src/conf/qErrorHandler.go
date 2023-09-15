@@ -36,7 +36,11 @@ func (er *QueueErrorHandler) HandleError(ctx context.Context, task *asynq.Task, 
 		if errType(blockTask.ChainId, err) == nil {
 			return
 		}
-		_ = blockTask.BlockNumber
+		// if strings.Contains(err.Error(), "panic") {
+		// 	Logger.Panicw("QErr", "task", task.Type(), "Retires", retried, "block", blockTask, "err", err)
+		// } else {
+		// 	Logger.Errorw("QErr", "task", task.Type(), "Retires", retried, "block", blockTask, "err", err)
+		// }
 		Logger.Errorw("QErr", "task", task.Type(), "Retires", retried, "block", blockTask, "err", err)
 	} else {
 		Logger.Errorw("QErr", "task", task.Type(), "Retries", retried, "err", err)

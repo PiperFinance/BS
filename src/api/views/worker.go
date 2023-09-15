@@ -156,7 +156,7 @@ func MissedBlocks(c *fiber.Ctx) error {
 		r[chain] = make([]MissBlockResp, 0)
 		col := conf.GetMongoCol(chain, conf.BlockColName)
 		filter := bson.M{
-			"status": bson.D{{Key: "$ne", Value: schema.Added}},
+			"status": bson.D{{Key: "$ne", Value: schema.Fetched}},
 			"no":     bson.D{{Key: "$lt", Value: block - conf.Config.BlockHeadDelay - conf.BatchLogMaxHeight(chain)}},
 		}
 		if curs, err := col.Find(c.Context(), filter); err != nil {
