@@ -43,7 +43,7 @@ func ScanBlockJob(ctx context.Context, blockTask schema.BatchBlockTask, aqCl asy
 		return cmd.Err()
 	} else {
 		if r, parseErr := cmd.Int(); parseErr != nil {
-			conf.Logger.Errorf("blockScanTask: %s \nPossible issue is that somethings overwrote %s's value", parseErr, tasks.LastScannedBlockKey(chain))
+			conf.Logger.Errorf("blockScanTask: %s \n Possible issue is that somethings overwrote %s's value", parseErr, tasks.LastScannedBlockKey(chain))
 			return err
 		} else {
 			head = uint64(r)
@@ -52,7 +52,7 @@ func ScanBlockJob(ctx context.Context, blockTask schema.BatchBlockTask, aqCl asy
 	/*
 		NOTE:
 			Head : is Last Scanned Block
-			currentBlock : is Head of Network in called by web3
+			current Block : is Head of Network in called by Web3
 			batch size : is dynamic size per chain
 			h = 100 	bs = 5 		cb = 116
 			h + bs = 105 > 106 [OK]

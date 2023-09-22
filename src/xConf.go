@@ -24,7 +24,7 @@ func (r *StartConf) xChainSchedule() []conf.QueueSchedules {
 	}
 	// Check online users
 	sq = append(sq, conf.QueueSchedules{Cron: "@every 4m", Q: asynq.Queue(conf.ScanQ), Timeout: conf.Config.UpdateOnlineUsersTaskTimeout, Key: tasks.UpdateOnlineUsersKey})
-	// sq = append(sq, conf.QueueSchedules{Cron: "@every 5m", Q: asynq.Queue(conf.HouseKeeping), Timeout: conf.Config.VaccumLogsTaskTimeout, Key: tasks.VacuumLogsKey})
+	sq = append(sq, conf.QueueSchedules{Cron: "@every 5m", Q: asynq.Queue(conf.HouseKeeping), Timeout: conf.Config.VaccumLogsTaskTimeout, Key: tasks.VacuumLogsKey})
 	return sq
 }
 
@@ -83,8 +83,8 @@ func (r *StartConf) StartAll() {
 	r.StartClient() // Producer
 	conf.Logger.Info("Starting Scheduler")
 	r.StartScheduler() // Scheduled Producer
-	conf.Logger.Info("Starting AsynQMon")
-	r.StartMon() // asynqMon
+	conf.Logger.Info("Starting Asynq Mon")
+	r.StartMon() // asynq Mon
 	conf.Logger.Info("Starting Api")
 	r.StartApi()
 }

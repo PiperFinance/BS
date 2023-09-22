@@ -1,4 +1,4 @@
-package jobs
+package trx_handler
 
 import (
 	"context"
@@ -19,17 +19,17 @@ func init() {
 // updateUserTokens
 // - uses multicall to update user bal
 // - store user - token on both mongo and redis
-func updateUserTokens(ctx context.Context, bt schema.BlockTask, usersTokens []contract_helpers.UserToken) error {
+func (h *UserTrxHandler) updateUserTokens(ctx context.Context, chainId int64, blockNumber uint64, usersTokens []contract_helpers.UserToken) error {
 	if len(usersTokens) < 1 {
 		return nil
 	}
-	conf.NewUsersCount.AddFor(bt.ChainId, uint64(len(usersTokens)))
-	conf.MultiCallCount.Add(bt.ChainId)
-	bal := contract_helpers.EasyBalanceOf{UserTokens: usersTokens, ChainId: bt.ChainId, BlockNumber: int64(bt.BlockNumber) - 1}
+	conf.NewUsersCount.AddFor(chainId, uint64(len(usersTokens)))
+	conf.MultiCallCount.Add(chainId)
+	bal := contract_helpers.EasyBalanceOf{UserTokens: usersTokens, ChainId: chainId, BlockNumber: int64(blockNumber) - 1}
 	if err := bal.Execute(ctx); err != nil {
 		return err
 	}
-	col := conf.GetMongoCol(bt.ChainId, conf.UserBalColName)
+	col := conf.GetMongoCol(chainId, conf.UserBalColName)
 	balances := make([]interface{}, 0)
 
 	for _, userToken := range bal.UserTokens {
@@ -44,8 +44,8 @@ func updateUserTokens(ctx context.Context, bt schema.BlockTask, usersTokens []co
 			TokenStr:  userToken.Token.String(),
 			TokenId:   conf.FindTokenId(bal.ChainId, userToken.Token),
 			TrxCount:  0,
-			ChangedAt: bt.BlockNumber,
-			StartedAt: bt.BlockNumber,
+			ChangedAt: blockNumber,
+			StartedAt: blockNumber,
 			Balance:   userToken.Balance.String(),
 		})
 		if userToken.Balance.Cmp(big.NewInt(0)) == -1 {

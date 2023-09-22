@@ -190,16 +190,20 @@ func (r *RedisClientExtended) GetRawLogsToVaccum(ctx context.Context, chain int6
 
 // ReentrancyCheck Returns ok if no previous record is found / err if redis say so =)
 func (r *RedisClientExtended) ReentrancyCheck(ctx context.Context, chainId int64, field string) error {
+	return r.ReentrancyCheckSet(ctx, chainId, field, 1)
+}
+
+func (r *RedisClientExtended) ReentrancyCheckSet(ctx context.Context, chainId int64, field string, value uint64) error {
 	k := fmt.Sprintf("BS:RC:%d:%s", chainId, field)
 	if cmd := r.Get(ctx, k); cmd.Err() == redis.Nil {
-		cmdInsert := r.Set(ctx, k, true, Config.ReentrancyCheckTTL)
+		cmdInsert := r.Set(ctx, k, value, Config.ReentrancyCheckTTL)
 		return cmdInsert.Err()
 	} else {
-		ok, err := cmd.Bool()
+		ok, err := cmd.Uint64()
 		if err != nil {
 			return err
 		}
-		if ok {
+		if ok > 0 {
 			return fmt.Errorf("Tried to re enter using key %s ", field)
 		}
 	}

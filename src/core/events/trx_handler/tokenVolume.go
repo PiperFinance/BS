@@ -1,4 +1,4 @@
-package jobs
+package trx_handler
 
 import (
 	"context"
@@ -11,12 +11,16 @@ import (
 )
 
 // updateTokens goes over tokens and makes all EmitterAddress(tokens) are stored in db
-func updateTokens(ctx context.Context, block schema.BlockTask, transfers []schema.LogTransfer) error {
+func (h *UserTrxHandler) updateTokens(ctx context.Context, chainId int64, transfers []*schema.LogTransfer) error {
 	// TODO: calculate token's transfer volume here as well
-	col := conf.GetMongoCol(block.ChainId, conf.TokenColName)
+	col := conf.GetMongoCol(chainId, conf.TokenColName)
 	uniqueTokens := make([]common.Address, 0)
 	var tokenExists bool
-	for _, transfer := range transfers {
+	for i, transfer := range transfers {
+		if transfer == nil {
+			conf.Logger.Error(i)
+			continue
+		}
 		_token := transfer.EmitterAddress
 		tokenExists = true
 		for _, token := range uniqueTokens {

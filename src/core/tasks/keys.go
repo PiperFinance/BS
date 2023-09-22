@@ -3,17 +3,17 @@ package tasks
 import "fmt"
 
 const (
-	lastScannedBlockKey  = "block:lastScanned"
-	FetchBlockEventsKey  = "block:fetch_events"
-	BlockScanKey         = "block:scan"
-	ProccessBlockKey     = "block:process"
-	ParseBlockEventsKey  = "block:parse_events"
-	UpdateUserBalanceKey = "user:update_bal"
-	UpdateUserApproveKey = "user:update_aprv"
-	UpdateOnlineUsersKey = "user:online_user"
-	VacuumLogsKey        = "chore:vacuum"
-	VacuumLogsLockKey    = "chore:vacuum-lock"
-	VacuumLogsHeight     = 100
+	lastScannedBlockKey  = "b:lastScanned"
+	FetchBlockEventsKey  = "b:fetch_events"
+	BlockScanKey         = "b:scan"
+	ProccessBlockKey     = "b:process"
+	ParseBlockEventsKey  = "b:parse_events"
+	UpdateUserBalanceKey = "u:update_bal"
+	UpdateUserApproveKey = "u:update_aprv"
+	UpdateOnlineUsersKey = "u:online_user"
+	VacuumLogsKey        = "c:vacuum"
+	VacuumLogsLockKey    = "c:vacuum-lock"
+	VacuumLogsHeight     = 2000
 )
 
 func LastScannedBlockKey(chain int64) string {

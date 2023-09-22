@@ -10,7 +10,7 @@ import (
 	"github.com/hibiken/asynq"
 )
 
-// BlockScanTaskHandler Uses BlockScanKey and requires no arg
+// BlockScanTaskHandler Uses Block Scan Key and requires no arg
 // Start Scanning For new blocks -> enqueues a new fetch block task at the end
 func BlockScanTaskHandler(ctx context.Context, task *asynq.Task) error {
 	blockTask := schema.BatchBlockTask{}

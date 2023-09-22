@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/PiperFinance/BS/src/conf"
+	"github.com/PiperFinance/BS/src/core/events"
 	BSP "github.com/PiperFinance/BS/src/playground"
 	_ "github.com/joho/godotenv/autoload"
 )
@@ -32,6 +33,8 @@ func init() {
 	conf.LoadProjectInit()
 	fmt.Println("BOOT : Loading Q ...")
 	conf.LoadQueue()
+	fmt.Println("BOOT : Loading Default Parser ...")
+	events.LoadParserDeps()
 }
 
 // ONLY FOR TESTING PURPOSES ...

@@ -21,11 +21,6 @@ var (
 	mux               *asynq.ServeMux
 )
 
-//	type queueStatus struct {
-//		Client    bool
-//		Worker    bool
-//		Scheduler bool
-//	}
 type QueueSchedules struct {
 	Cron    string
 	Key     string
@@ -49,7 +44,7 @@ const (
 	MainQ        = "main"
 	HouseKeeping = "HouseKeeping"
 	DefaultQ     = "default"
-	UnImportantQ = "Un-Important"
+	LowPriorityQ = "Unimportant"
 )
 
 func LoadQueue() {
@@ -72,13 +67,13 @@ func LoadQueue() {
 			MainQ:        4,
 			DefaultQ:     3,
 			HouseKeeping: 2,
-			UnImportantQ: 1,
+			LowPriorityQ: 1,
 		},
 	})
 	mux = asynq.NewServeMux()
 	// Block Related
 
-	loc, err := time.LoadLocation("America/Los_Angeles")
+	loc, err := time.LoadLocation("UTC")
 	if err != nil {
 		Logger.Panic(err)
 	}

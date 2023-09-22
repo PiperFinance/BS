@@ -2,30 +2,13 @@ package schema
 
 import (
 	"math/big"
-	"time"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/rpc"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-type Block struct {
-	FetchedAt   time.Time       `bson:"fetched_at" json:"fetched_at"`
-	BlockNumber rpc.BlockNumber `bson:"block_number" json:"block_number"`
-}
-
-type LogColl struct {
-	Address     common.Address `json:"address" bson:"address" `
-	Topics      []common.Hash  `bson:"topics" json:"topics" `
-	Data        []byte         `bson:"data" json:"data" `
-	BlockNumber uint64         `json:"blockNumber" bson:"blockNumber"`
-	// BlockId     primitive.ObjectID `bson:"block_id"`
-	TxHash    common.Hash `json:"txHash" bson:"txHash" `
-	TxIndex   uint        `bson:"txIdx" json:"txId"`
-	BlockHash common.Hash `json:"blockHash" bson:"blockHash"`
-	LogIndex  uint        `bson:"logIndex" json:"logIndex"`
-	Removed   bool        `json:"removed" bson:"removed"`
-	Parsed    bool        `json:"parsed" bson:"parsed"` // Flag for parsing
+type ILog interface {
+	GetType() string
 }
 
 type Log struct {
@@ -39,6 +22,10 @@ type Log struct {
 	LogIndex       uint               `bson:"logIndex" json:"logIndex"` // NOTE: index of log/event in block
 }
 
+func (l Log) GetType() string {
+	return "Log"
+}
+
 type LogTransfer struct {
 	Log
 	ID        primitive.ObjectID `bson:"_id,omitempty" json:"_id,omitempty"`
@@ -48,18 +35,26 @@ type LogTransfer struct {
 	Tokens    *big.Int           `bson:"-" json:"-"`
 }
 
+func (l LogTransfer) GetType() string {
+	return "Transfer"
+}
+
 func (l *LogTransfer) GetAmount() (*big.Int, bool) {
 	v := big.Int{}
 	return v.SetString(l.TokensStr, 10)
 }
 
-// FIXME - Conflict With ERC721 Approval Event which states which NFT in collection is approved
+// FIXME: Conflict With ERC721 Approval Event which states which NFT in collection is approved
 type LogApproval struct {
 	Log
 	TokenOwner common.Address `bson:"owner" json:"owner"`
 	Spender    common.Address `bson:"spender" json:"spender"`
 	TokensStr  string         `bson:"tokens" json:"tokens"`
 	Tokens     *big.Int       `bson:"-" json:"-"`
+}
+
+func (l LogApproval) GetType() string {
+	return "Approve"
 }
 
 func (l *LogApproval) GetAmount() (*big.Int, bool) {

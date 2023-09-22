@@ -26,6 +26,7 @@ func EnqueueProcessBlockJob(aqCl asynq.Client, blockTask schema.BatchBlockTask) 
 	return err
 }
 
+// EnqueueFetchBlockJob This function is deprecated in favour of a faster all in one flow
 func EnqueueFetchBlockJob(aqCl asynq.Client, blockTask schema.BatchBlockTask) error {
 	payload, err := json.Marshal(blockTask)
 	if err != nil {
@@ -39,6 +40,7 @@ func EnqueueFetchBlockJob(aqCl asynq.Client, blockTask schema.BatchBlockTask) er
 	return err
 }
 
+// EnqueueParseBlockJob  This function is deprecated in favour of a faster all in one flow
 func EnqueueParseBlockJob(aqCl asynq.Client, blockTask schema.BatchBlockTask) error {
 	payload, err := json.Marshal(blockTask)
 	if err != nil {

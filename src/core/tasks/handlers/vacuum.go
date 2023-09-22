@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"context"
-	"sync"
 
 	"github.com/PiperFinance/BS/src/conf"
 	"github.com/hibiken/asynq"
@@ -34,7 +33,7 @@ func vaccumRawLogs(ctx context.Context, chain int64) error {
 	}
 }
 
-// vaccumParsedLogOID Parsed Log that are read and saved into db (as approve, transfer , ... )
+// vaccumParsedLogOID ObjectId Parsed Log that are read and saved into db (as approve, transfer , ... )
 func vaccumParsedLogOID(ctx context.Context, chain int64) error {
 	ids, err := conf.RedisClient.GetParsedLogsIDsToVaccum(ctx, chain)
 	if err != nil {
@@ -52,25 +51,16 @@ func vaccumParsedLogOID(ctx context.Context, chain int64) error {
 
 // VacuumLogHandler Acts as entry point for periodic house cleaning periodic tasks
 func VacuumLogHandler(ctx context.Context, task *asynq.Task) error {
-	// return nil
-	wg := sync.WaitGroup{}
-	wg.Add(2)
 	for _, chain := range conf.Config.SupportedChains {
-		go func(chain int64) {
-			defer wg.Done()
-			err := vaccumRawLogs(ctx, chain)
-			if err != nil {
-				conf.Logger.Errorw("vaccumRawLogs", "err", err, "chain", chain)
-			}
-		}(chain)
-		go func(chain int64) {
-			defer wg.Done()
-			err := vaccumParsedLogOID(ctx, chain)
-			if err != nil {
-				conf.Logger.Errorw("vaccumParsedLogOID", "err", err, "chain", chain)
-			}
-		}(chain)
+		// NOTE: This should not be triggered since no log is being stored
+		err := vaccumRawLogs(ctx, chain)
+		if err != nil {
+			conf.Logger.Errorw("vaccumRawLogs", "err", err, "chain", chain)
+		}
+		err = vaccumParsedLogOID(ctx, chain)
+		if err != nil {
+			conf.Logger.Errorw("vaccumParsedLogOID", "err", err, "chain", chain)
+		}
 	}
-	wg.Wait()
 	return nil
 }

@@ -7,3 +7,5 @@ src/__debug_bin
 config
 *.log
 __debug_bin*
+
+dist/

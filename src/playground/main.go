@@ -10,9 +10,13 @@ import (
 	"log"
 
 	"github.com/PiperFinance/BS/src/conf"
+	"github.com/PiperFinance/BS/src/core/events"
 )
 
 func PlayHere() {
+	parser := events.NewEventParser()
+	_ = parser
+
 	cl, rpc := conf.EthClientDebug(56)
 	fmt.Printf("RPC: %s", rpc)
 	block, err := cl.BlockByNumber(context.Background(), nil)

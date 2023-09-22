@@ -9,15 +9,6 @@ import (
 	"github.com/PiperFinance/BS/src/core/tasks"
 )
 
-// if res := conf.RedisClient.Get(c.Context(), tasks.LastScannedBlockKey); res.Err() == nil {
-// 	lb, err := res.Uint64()
-// 	if err != nil {
-// 		return err
-// 	} else {
-// 		lastBlock = lb
-// 	}
-// }
-
 func GetLastBlock(chain int64) (uint64, error) {
 	var lastBlock uint64
 	ctx := context.TODO()
@@ -29,7 +20,7 @@ func GetLastBlock(chain int64) (uint64, error) {
 		val, castErr := res.Uint64()
 		lastBlock = val
 		if castErr != nil {
-			return lastBlock, fmt.Errorf("Can not cast to %d uint , err: %s", lastBlock, castErr)
+			return lastBlock, fmt.Errorf("can not cast to %d uint , err: %s", lastBlock, castErr)
 		}
 	}
 	return lastBlock, nil
