@@ -1,17 +1,20 @@
-FROM golang:1.20-alpine AS builder
+FROM golang:1.21-alpine AS builder
 
 RUN apk update && apk add alpine-sdk git && rm -rf /var/cache/apk/*
 
-RUN mkdir -p /api
-WORKDIR /api
+RUN mkdir -p /main
+WORKDIR /main
+
 ENV PORT=8000
 COPY  ./go.mod .
 COPY ./go.sum .
 ENV GOPROXY=https://goproxy.cn,direct
 
 RUN go mod download
-COPY ./src ./src
-RUN GOOS=linux GOARCH=amd64 CGO_ENABLED=0  go build -o ./app  
+COPY ./ ./
+
+RUN GOOS=linux GOARCH=amd64 CGO_ENABLED=0  go build -o ./app
+
 
 FROM alpine:latest
 
@@ -20,9 +23,10 @@ RUN apk update \
     && apk add --no-cache tzdata \
     && rm -rf /var/cache/apk/*
 
-RUN mkdir -p /api
-WORKDIR /api
-COPY --from=builder /api/app .
+RUN mkdir -p /main
+WORKDIR /main
+
+COPY --from=builder /main/app .
 ADD https://raw.githubusercontent.com/PiperFinance/CD/main/chains/mainnetV2.json /data/mainnets.json  
 
 RUN rm -rf /var/bs/log/ | true \ 
@@ -32,4 +36,4 @@ RUN rm -rf /var/bs/log/ | true \
 
 EXPOSE 7654
 
-ENTRYPOINT /api/app
+ENTRYPOINT /main/app
