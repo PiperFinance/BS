@@ -1,0 +1,11 @@
+.vscode/
+.idea/
+.env
+data/redis/
+data/mongodb/
+src/__debug_bin
+config
+*.log
+__debug_bin*
+
+dist/
